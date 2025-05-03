@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Alamat;
+use Illuminate\Http\Request;
+use Exception;
+
+use Illuminate\Support\Facades\Log;
+
+class AlamatController extends Controller
+{
+    public function index()
+    {
+        try {
+            $alamat = Alamat::all();
+            return response()->json($alamat);
+        } catch (Exception $e) {
+            Log::error('Error fetching addresses: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch addresses'], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $alamat = Alamat::create($request->all());
+            return response()->json($alamat, 201);
+        } catch (Exception $e) {
+            Log::error('Error creating address: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create address'], 500);
+        }
+    }
+    public function show($id)
+    {
+        try {
+            $alamat = Alamat::findOrFail($id);
+            return response()->json($alamat);
+        } catch (Exception $e) {
+            Log::error('Error fetching address: ' . $e->getMessage());
+            return response()->json(['error' => 'Address not found'], 404);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $alamat = Alamat::findOrFail($id);
+            $alamat->update($request->all());
+            return response()->json($alamat);
+        } catch (Exception $e) {
+            Log::error('Error updating address: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update address'], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $alamat = Alamat::findOrFail($id);
+            $alamat->delete();
+            return response()->json(['message' => 'Address deleted successfully']);
+        } catch (Exception $e) {
+            Log::error('Error deleting address: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete address'], 500);
+        }
+    }
+
+    public function getAlamatByUserId($userId)
+    {
+        try {
+            $alamat = Alamat::where('user_id', $userId)->get();
+            return response()->json($alamat);
+        } catch (Exception $e) {
+            Log::error('Error fetching addresses by user ID: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch addresses'], 500);
+        }
+    }
+}
