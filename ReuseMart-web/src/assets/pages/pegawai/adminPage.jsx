@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
-import NavbarLandingpage from "../../components/navbar.jsx";
+import NavbarLandingpage from "../../components/Navbar/navbar.jsx";
 import PegawaiModal from "../../components/Admin/pegawaiModal.jsx";
 
 
@@ -34,8 +34,8 @@ const pegawaiDummy4 = {
 }
 
 const PegawaiCard = ({ pegawai, onDeleteClick }) => (
-    <Col md={10} className="justify-content-center mx-auto">  
-        <Card>     
+    <Col md={10} className="justify-content-center mx-auto">
+        <Card>
             <Card.Body>
                 <Row className="align-items-center">
                     <Col md={2}><strong>{pegawai.name}</strong></Col>
@@ -67,7 +67,7 @@ const AdminPage = () => {
             ...Array(3).fill(pegawaiDummy3),
             ...Array(4).fill(pegawaiDummy4)
         ];
-            setPegawaiList(data);
+        setPegawaiList(data);
     }, []);
 
     const handleDelete = () => {
@@ -77,12 +77,12 @@ const AdminPage = () => {
             setShowDeleteModal(false);
         }
     };
-    
+
     const onDeleteClick = (pegawai) => {
         setPegawaiToDelete(pegawai);
         setShowDeleteModal(true);
     };
-        
+
     return (
         <div>
             <NavbarLandingpage />
@@ -102,10 +102,10 @@ const AdminPage = () => {
                 </Row>
             </Container>
             <br />
-            <Container className="mt-4"> 
+            <Container className="mt-4">
                 <Row>
                     <Col md={10} className="mx-auto">
-                        <p className="lead" style={{textDecoration:'underline'}} >Customer Service</p>
+                        <p className="lead" style={{ textDecoration: 'underline' }} >Customer Service</p>
                     </Col>
                 </Row>
                 <Row>
@@ -119,10 +119,10 @@ const AdminPage = () => {
                 </Row>
             </Container>
 
-            <Container className="mt-4"> 
+            <Container className="mt-4">
                 <Row>
                     <Col md={10} className="mx-auto">
-                        <p className="lead"  style={{textDecoration:'underline'}}>Pegawai Gudang</p>
+                        <p className="lead" style={{ textDecoration: 'underline' }}>Pegawai Gudang</p>
                     </Col>
                 </Row>
                 <Row>
@@ -135,7 +135,7 @@ const AdminPage = () => {
                         ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
+            <Container className="mt-4">
                 <Row>
                     <Col md={10} className="mx-auto">
                         <p className="lead">Kurir</p>
@@ -151,7 +151,7 @@ const AdminPage = () => {
                         ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
+            <Container className="mt-4">
                 <Row>
                     <Col md={10} className="mx-auto">
                         <p className="lead">Hunter</p>
@@ -165,7 +165,7 @@ const AdminPage = () => {
                                 <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
                             </Col>
                         ))}
-                    </Row>
+                </Row>
             </Container>
 
             <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
@@ -181,4 +181,4 @@ const AdminPage = () => {
     );
 }
 
-    export default AdminPage;
+export default AdminPage;
