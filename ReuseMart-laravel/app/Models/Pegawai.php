@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 
-class Pegawai extends Model
+class Pegawai extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens, Notifiable;
+
     protected $table = 'pegawai';
     protected $primaryKey = 'id_pegawai';
+    public $timestamps = false;
+
     protected $fillable = [
         'id_jabatan',
         'first_name',
@@ -17,12 +22,14 @@ class Pegawai extends Model
         'email',
         'password',
         'no_telp',
-        'hunter',
+        'isHunter',
     ];
+
+    protected $hidden = ['password', 'remember_token'];
 
     public function jabatan()
     {
-        return $this->belongsTo(Jabatan::class, 'id_jabatan');
+        return $this->belongsTo(Jabatan::class, 'id_jabatan', 'id_jabatan');
     }
 
     public function pengiriman()
@@ -38,10 +45,5 @@ class Pegawai extends Model
     public function redeem()
     {
         return $this->hasMany(Redeem::class, 'id_pegawai');
-    }
-
-    public function pegawai()
-    {
-        return $this->hasMany(Pegawai::class, 'id_pegawai');
     }
 }
