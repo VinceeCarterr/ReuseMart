@@ -40,7 +40,7 @@ const LandingPage = () => {
         setAuthMode(mode);
         setShowAuthModal(true);
     };
-      
+
     const handleAuthClose = () => {
         setShowAuthModal(false);
     };
