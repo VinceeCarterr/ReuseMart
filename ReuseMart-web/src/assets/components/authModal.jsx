@@ -1,11 +1,69 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './authModal.css';
 
 const AuthModal = ({ show, onHide, mode, onSwitch }) => {
   const isLogin = mode === "login";
   const [isOrg, setIsOrg] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    setError('');
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/login', {
+        email,
+        password
+      });
+
+      const { access_token, type, user, pegawai } = response.data;
+
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('type', type);
+      localStorage.setItem('profile', JSON.stringify(user || pegawai));
+
+      if (type === 'pegawai' && pegawai?.jabatan === 'Admin') {
+        navigate('/produk');
+      } else {
+        navigate('/');
+      }
+
+      setTimeout(() => {
+        onHide();
+      }, 100);
+    } catch (err) {
+      const message = err.response?.data?.error || 'Login failed';
+      setError(message);
+    }
+  };
+
+  const handleRegister = async () => {
+    setError('');
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/register', {
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+        no_telp: phone,
+        id_role: isOrg ? 3 : 1,
+      });
+
+      console.log('Register success:', response.data);
+      onSwitch("login");
+    } catch (err) {
+      const message = err.response?.data?.error || 'Register failed';
+      setError(message);
+    }
+  };
 
   return (
     <Modal show={show} onHide={onHide} centered backdrop={true} className="auth-modal">
@@ -33,14 +91,23 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                 <Form.Label className="fw-bold text-start d-block">First Name</Form.Label>
                 <div className="input-icon">
                   <i className="bi bi-person"></i>
-                  <Form.Control type="text" placeholder="Bobby" />
+                  <Form.Control
+                    type="text"
+                    placeholder=""
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
                 </div>
               </Col>
               <Col>
                 <Form.Label className="fw-bold text-start d-block">Last Name</Form.Label>
                 <div className="input-icon">
-                  <i className="bi bi-person"></i>
-                  <Form.Control type="text" placeholder="Suhartono" />
+                  <Form.Control
+                    type="text"
+                    placeholder=""
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </div>
               </Col>
             </Row>
@@ -60,7 +127,12 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             <Form.Label className="fw-bold">Email</Form.Label>
             <div className="input-icon">
               <i className="bi bi-envelope"></i>
-              <Form.Control type="email" placeholder="ReUseMart@gmail.com" />
+              <Form.Control
+                type="email"
+                placeholder="ReUseMart@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
           </Form.Group>
 
@@ -69,7 +141,12 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
               <Form.Label className="fw-bold">Nomor Telepon</Form.Label>
               <div className="input-icon">
                 <i className="bi bi-telephone"></i>
-                <Form.Control type="text" placeholder="081234567890" />
+                <Form.Control
+                  type="text"
+                  placeholder=""
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
               </div>
             </Form.Group>
           )}
@@ -78,7 +155,13 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             <Form.Label className="fw-bold">Password</Form.Label>
             <div className="input-icon">
               <i className="bi bi-lock"></i>
-              <Form.Control type="password" placeholder="********" />
+              <Form.Control
+                type="password"
+                placeholder="********"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           </Form.Group>
 
@@ -103,12 +186,18 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             </p>
           )}
 
-          <Button variant="success" className="w-100">
+          {error && <p className="text-danger">{error}</p>}
+
+          <Button
+            variant="success"
+            className="w-100"
+            onClick={isLogin ? handleLogin : handleRegister}
+          >
             {isLogin ? "Masuk" : "Daftar"}
           </Button>
         </Form>
       </Modal.Body>
-    </Modal >
+    </Modal>
   );
 };
 

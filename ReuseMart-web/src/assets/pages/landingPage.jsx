@@ -3,7 +3,8 @@ import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 
 import "./landingPage.css";
 
-import NavbarLandingPage from "../components/navbar.jsx";
+// import NavbarLandingPage from "../components/Navbar/navbar.jsx";
+import NavbarPembeli from "../components/Navbar/navbarPembeli.jsx";
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -44,7 +45,7 @@ const LandingPage = () => {
     const handleAuthClose = () => {
         setShowAuthModal(false);
     };
-    
+
     useEffect(() => {
         AOS.init({ duration: 800 });
     }, []);
@@ -58,7 +59,7 @@ const LandingPage = () => {
     useEffect(() => {
         const el = scrollRef.current;
         if (!el) return;
-    
+
         const onWheel = (e) => {
             if (e.deltaY === 0) return;
             e.preventDefault();
@@ -67,14 +68,14 @@ const LandingPage = () => {
                 behavior: "smooth",
             });
         };
-    
+
         el.addEventListener("wheel", onWheel);
         return () => el.removeEventListener("wheel", onWheel);
     }, []);
 
     return (
         <div>
-            <NavbarLandingPage onLoginClick={() => handleAuthOpen("login")} onRegisterClick={() => handleAuthOpen("register")}/>
+            <NavbarPembeli onLoginClick={() => handleAuthOpen("login")} onRegisterClick={() => handleAuthOpen("register")} />
             <AuthModal show={showAuthModal} onHide={handleAuthClose} mode={authMode} onSwitch={setAuthMode} />
 
             {/* Hero Section */}
