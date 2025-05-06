@@ -2,16 +2,15 @@ import React from "react";
 import { Form, Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaClock, FaUserCircle } from "react-icons/fa";
-import "./navbarPembeli.css";
+import "./navbarPenitip.css";
 
-const NavbarPembeli = () => {
+const NavbarPenitip = () => {
     const userName = "John Doe";
 
     return (
-        <div className="py-3 navbar-pembeli">
+        <div className="py-3 navbar-penitip">
             <div className="container-fluid">
                 <div className="row align-items-center">
-                    {/* Logo */}
                     <div className="col text-center fw-bold text-success">
                         <Link to="/" className="text-decoration-none d-flex align-items-center justify-content-center">
                             <img src="/logo_ReuseMart.png" alt="ReuseMart Logo" style={{ height: "60px" }} />
@@ -19,7 +18,6 @@ const NavbarPembeli = () => {
                         </Link>
                     </div>
 
-                    {/* Search Bar */}
                     <div className="col-6">
                         <Form className="d-flex">
                             <Form.Control
@@ -50,7 +48,7 @@ const NavbarPembeli = () => {
                             </Dropdown.Toggle>
 
                             <Dropdown.Menu>
-                                <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
+                                <Dropdown.Item as={Link} to="/profilePenitip">Profil</Dropdown.Item>
                                 <Dropdown.Item as={Link} to="/orders">Pesanan Saya</Dropdown.Item>
                                 <Dropdown.Item as={Link} to="/logout">Keluar</Dropdown.Item>
                             </Dropdown.Menu>

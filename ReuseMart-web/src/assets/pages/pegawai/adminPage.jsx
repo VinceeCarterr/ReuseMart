@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import NavbarLandingpage from "../../components/navbar.jsx";
-import PegawaiModal from "../../components/Admin/pegawaiModal.jsx";"../../components/Admin/pegawaiModal.jsx";
+import NavbarLandingpage from "../../components/Navbar/navbar.jsx";
+import PegawaiModal from "../../components/Admin/pegawaiModal.jsx"; "../../components/Admin/pegawaiModal.jsx";
 
 
 const pegawaiDummy = {
@@ -59,15 +59,15 @@ const AdminPage = () => {
         ];
         setPegawaiList(data);
     }, []);
-    
+
     return (
         <div>
-            <NavbarLandingpage/>
+            <NavbarLandingpage />
             <PegawaiModal show={showModal} onHide={() => setShowModal(false)} />
-            <Container className ="mt-5"> 
+            <Container className="mt-5">
                 <Row>
                     <Col className="md-6">
-                        <h2 className = "test-success fw-bold welcome-heading">Daftar Pegawai</h2>
+                        <h2 className="test-success fw-bold welcome-heading">Daftar Pegawai</h2>
                     </Col>
                     <Col className="md-6 d-flex justify-content-end">
                         <Button variant="success" className="btn btn-primary" onClick={() => setShowModal(true)}>Tambah Pegawai </Button>
@@ -76,52 +76,52 @@ const AdminPage = () => {
             </Container>
 
             <br />
-            <Container className="mt-4"> 
-            <p className="lead">Customer Service</p>
+            <Container className="mt-4">
+                <p className="lead">Customer Service</p>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Customer Service")
+                        .filter(pegawai => pegawai.jabatan === "Customer Service")
                         .map((pegawai, index) => (
                             <Col key={index} md={4} className="mb-4">
-                                <PegawaiCard pegawai={pegawai}/>
+                                <PegawaiCard pegawai={pegawai} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
-                <p className="lead">Pegawai Gudang</p>  
+            <Container className="mt-4">
+                <p className="lead">Pegawai Gudang</p>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Pegawai Gudang")
+                        .filter(pegawai => pegawai.jabatan === "Pegawai Gudang")
                         .map((pegawai, index) => (
                             <Col key={index} md={4} className="mb-4">
-                                <PegawaiCard pegawai={pegawai}/>
+                                <PegawaiCard pegawai={pegawai} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
-                <p className="lead">Kurir</p> 
+            <Container className="mt-4">
+                <p className="lead">Kurir</p>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Kurir")
+                        .filter(pegawai => pegawai.jabatan === "Kurir")
                         .map((pegawai, index) => (
                             <Col key={index} md={4} className="mb-4">
-                                <PegawaiCard pegawai={pegawai}/>
+                                <PegawaiCard pegawai={pegawai} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
+            <Container className="mt-4">
                 <p className="lead">Hunter</p>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Hunter")
+                        .filter(pegawai => pegawai.jabatan === "Hunter")
                         .map((pegawai, index) => (
                             <Col key={index} md={4} className="mb-4">
-                                <PegawaiCard pegawai={pegawai}/>
+                                <PegawaiCard pegawai={pegawai} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
         </div>
