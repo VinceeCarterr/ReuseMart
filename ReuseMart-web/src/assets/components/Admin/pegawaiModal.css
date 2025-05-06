@@ -1,0 +1,40 @@
+.pegawai-modal .modal-content {
+    border-radius: 20px;
+    border: none;
+    max-width: 450px;
+    margin: auto;
+}
+    
+.pegawai-modal .modal-body {
+    padding: 2rem 2rem !important;
+    text-align: center;
+}
+    
+.pegawai-modal .modal-backdrop.show {
+    opacity: 0.8;
+}
+    
+.input-icon {
+    position: relative;
+}
+    
+.input-icon i {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: gray;
+}
+    
+.input-icon input {
+    padding-left: 35px !important;
+}
+    
+.modal-body h2 {
+    font-weight: 200;
+}
+    
+.modal-body button {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
