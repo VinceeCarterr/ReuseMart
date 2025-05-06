@@ -85,7 +85,7 @@ const AdminPage = () => {
         
     return (
         <div>
-            <NavbarLandingpage/>
+            <NavbarLandingpage />
             <PegawaiModal show={showModal} onHide={() => setShowModal(false)} />
             <Container className="mt-5">
                 <Row>
@@ -115,7 +115,7 @@ const AdminPage = () => {
                             <Col key={index} md={12} className="mb-2">
                                 <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
 
@@ -127,12 +127,12 @@ const AdminPage = () => {
                 </Row>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Pegawai Gudang")
+                        .filter(pegawai => pegawai.jabatan === "Pegawai Gudang")
                         .map((pegawai, index) => (
                             <Col key={index} md={12} className="mb-2">
                                 <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
             <Container className="mt-4"> 
@@ -143,12 +143,12 @@ const AdminPage = () => {
                 </Row>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Kurir")
+                        .filter(pegawai => pegawai.jabatan === "Kurir")
                         .map((pegawai, index) => (
                             <Col key={index} md={12} className="mb-2">
                                 <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
                             </Col>
-                    ))}
+                        ))}
                 </Row>
             </Container>
             <Container className="mt-4"> 
@@ -159,7 +159,7 @@ const AdminPage = () => {
                 </Row>
                 <Row>
                     {pegawaiList
-                        .filter(pegawai=>pegawai.jabatan ==="Hunter")
+                        .filter(pegawai => pegawai.jabatan === "Hunter")
                         .map((pegawai, index) => (
                             <Col key={index} md={12} className="mb-2">
                                 <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
