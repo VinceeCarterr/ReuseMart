@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
-import NavbarLandingpage from "../../components/navbar.jsx";
+import NavbarLandingpage from "../../components/Navbar/navbar.jsx";
 import PegawaiModal from "../../components/Admin/pegawaiModal.jsx";
 
 

@@ -2,11 +2,13 @@
   border-radius: 20px;
   border: none;
   max-width: 450px;
-  margin: auto;
+  margin: 0;
+  position: relative;
+  justify-content: center;
 }
 
 .auth-modal .modal-body {
-  padding: 2rem 2rem !important;
+  padding: 2rem !important;
   text-align: center;
 }
 
@@ -14,20 +16,44 @@
   opacity: 0.8;
 }
 
+
 .input-icon {
+  display: flex;
+  align-items: center;
   position: relative;
 }
-
 .input-icon i {
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
+  margin-right: 0.75rem;
   color: gray;
+  flex-shrink: 0;
+}
+.input-icon .form-control {
+  flex: 1;
+}
+.invalid-text {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+.input-icon.email-field .form-control.is-invalid {
+  background-position: right 0.75rem center !important;
 }
 
-.input-icon input {
-  padding-left: 35px !important;
+/* Password wrapper */
+.password-field {
+  display: flex;
+  align-items: center;
+}
+.lock-icon {
+  font-size: 1.25rem;
+  color: gray;
+}
+.password-toggler {
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
 }
 
 .modal-body h2 {
@@ -39,31 +65,38 @@
   font-weight: bold;
 }
 
-.auth-switch-text {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  font-size: 0.9rem;
+.auth-toast-container {
+  position: fixed;
+  top: 10rem;
+  left: 48%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  width: auto;
+  padding: 5px 10px;
+  justify-content: center;
 }
 
-.custom-checkbox .form-check-input {
-  width: 18px;
-  height: 18px;
-  background-color: #e0e0e0;
-  border: 1px solid #ccc;
-  cursor: pointer;
+.auth-toast {
+  min-width: 320px;
+  background-color: #f44336 !important;   
+  border: none !important;
+  color: #fff !important;
+  border-radius: 10px;                      
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.custom-checkbox .form-check-input:checked {
-  background-color: #6c757d;
-  border-color: #6c757d;
+.auth-toast .toast-body {
+  font-size: 1.5rem;
+  padding: 1rem 1.5rem;
+  color: #fff !important;
+  text-align: center;
 }
 
-.custom-checkbox .form-check-input {
-  border-radius: 4px;
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0%);     opacity: 1; }
 }
 
-.underline-green {
-  border-bottom: 3px solid #198754;
-  display: inline-block;
-  padding-bottom: 2px;
+.slide-down-toast {
+  animation: slideDown 0.5s ease-out;
 }
