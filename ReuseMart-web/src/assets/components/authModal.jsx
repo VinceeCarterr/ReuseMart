@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Toast } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/api.js";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './authModal.css';
 
@@ -47,20 +47,30 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     setError("");
     if (!validateEmail()) return;
     try {
-      const { data } = await axios.post("/api/login", { email, password });
+      const { data } = await api.post("login", { email, password });
       const { access_token, type, user, pegawai } = data;
+
       localStorage.setItem("token", access_token);
       localStorage.setItem("type", type);
       localStorage.setItem("profile", JSON.stringify(user || pegawai));
+
       setToastVariant("success");
       setToastMsg("Login berhasil!");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
+
       if (type === "pegawai" && pegawai?.jabatan === "Admin") {
         navigate("/admin");
       } else {
         navigate("/");
       }
+
+      if (type === "user" && user?.role === "Pembeli") {
+        navigate("/pembeliLP");
+      } else {
+        navigate("/");
+      }
+
       setTimeout(onHide, 100);
     } catch (err) {
       const message = err.response?.data?.error || "Data Invalid!";
@@ -100,7 +110,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     if (!valid) return;
 
     try {
-      await axios.post("/api/register", {
+      await api.post("/register", {
         first_name: firstName,
         last_name: lastName,
         email,

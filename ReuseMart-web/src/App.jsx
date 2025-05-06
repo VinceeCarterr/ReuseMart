@@ -5,6 +5,7 @@ import ProductPage from "./assets/pages/productPage.jsx";
 import AdminPage from "./assets/pages/pegawai/adminPage.jsx";
 import ProfilePenitipPage from "./assets/pages/penitip/profilePenitipPage.jsx";
 import AlamatPage from "./assets/pages/pembeli/alamatPage.jsx";
+import PembeliLandingPage from "./assets/pages/pembeli/pembeliLandingPage.jsx";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/profilePenitip" element={<ProfilePenitipPage />} />
           <Route path="/alamat" element={<AlamatPage />} />
+          <Route path="/pembeliLP" element={<PembeliLandingPage />} />
         </Routes>
       </div>
     </Router>
