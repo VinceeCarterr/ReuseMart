@@ -42,7 +42,7 @@ class PegawaiController extends Controller
             'email'      => 'required|email|unique:pegawai,email',
             'password'   => 'required|string|min:6',
             'no_telp'    => 'required|string|max:15',
-            'komisi'     => 'nullable|double|max:19',
+            'komisi'     => 'nullable|numeric|max:19',
         ]);
 
         if ($validator->fails()) {

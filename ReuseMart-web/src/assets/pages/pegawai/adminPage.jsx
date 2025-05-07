@@ -105,7 +105,23 @@ const AdminPage = () => {
             <Container className="mt-4">
                 <Row>
                     <Col md={10} className="mx-auto">
-                        <p className="lead" style={{ textDecoration: 'underline' }} >Customer Service</p>
+                        <p className="lead" style={{textDecoration:'underline'}} >Admin</p>
+                    </Col>
+                </Row>
+                <Row>
+                    {pegawaiList
+                        .filter(pegawai => pegawai.jabatan === "Admin")
+                        .map((pegawai, index) => (
+                            <Col key={index} md={12} className="mb-2">
+                                <PegawaiCard pegawai={pegawai} onDeleteClick={onDeleteClick} />
+                            </Col>
+                        ))}
+                </Row>
+            </Container>
+            <Container className="mt-4"> 
+                <Row>
+                    <Col md={10} className="mx-auto">
+                        <p className="lead" style={{textDecoration:'underline'}} >Customer Service</p>
                     </Col>
                 </Row>
                 <Row>
