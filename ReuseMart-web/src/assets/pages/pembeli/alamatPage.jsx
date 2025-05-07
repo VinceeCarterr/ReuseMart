@@ -2,6 +2,7 @@ import NavbarPembeli from "../../components/Navbar/navbarPembeli";
 import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
+import AlamatModal from "../../components/Pembeli/alamatModal";
 
 const AlamatCard = ({ alamat, onDeleteClick, onSetDefault }) => (
     <Col md={12} className="justify-content-center mx-auto">
@@ -155,7 +156,7 @@ const AlamatPage = () => {
     return (
         <div>
             <NavbarPembeli />
-            {/* <AlamatModal show={showModal} onHide={() => setShowModal(false)} /> */}
+            <AlamatModal show={showModal} onHide={() => setShowModal(false)} />
             <Container className="mt-5">
                 <Row>
                     <Col md={12} className="mx-auto">

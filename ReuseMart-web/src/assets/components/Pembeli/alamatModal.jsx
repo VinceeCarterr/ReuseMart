@@ -1,83 +1,123 @@
 import { useState } from 'react';
-import { Modal, Button, Form, Row, Col, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import "./alamatModal.css";
 
-const PegawaiModal = ({ show, onHide }) => {
-    const [selectedJabatan, setSelectedJabatan] = useState("Pilih Jabatan");
+const AlamatModal = ({ show, onHide }) => {
+    const [selectedKecamatan, setSelectedKecamatan] = useState("");
+    const [selectedKodePos, setSelectedKodePos] = useState("");
 
-    const handleSelect = (eventKey) => {
-        setSelectedJabatan(eventKey);
+    const kecamatanToKodePos = {
+        Danurejan: ["55211", "55212", "55213"],
+        GedongTengen: ["55271", "55272"],
+        Gondokusuman: ["55221", "55222", "55223", "55224", "55225"],
+        Gondomanan: ["55121", "55122"],
+        Jetis: ["55231", "55232", "55233"],
+        Kotagede: ["55171", "55172", "55173"],
+        Kraton: ["55131", "55132", "55133"],
+        Mantrijeron: ["55141", "55142", "55143"],
+        Mergangsan: ["55151", "55152", "55153"],
+        Ngampilan: ["55261", "55262"],
+        Pakualaman: ["55111", "55112"],
+        Tegalrejo: ["55241", "55242", "55243", "55244"],
+        Umbulharjo: ["55161", "55162", "55163", "55164", "55165", "55166", "55167"],
+        Wirobrajan: ["55251", "55252", "55253"],
     };
 
+    const handleKecamatanChange = (e) => {
+        const kecamatan = e.target.value;
+        setSelectedKecamatan(kecamatan);
+        setSelectedKodePos("");
+    };
+
+    const kodePosOptions = kecamatanToKodePos[selectedKecamatan] || [];
+
     return (
-        <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
+        <Modal show={show} onHide={onHide} centered backdrop={true} className="alamat-modal" size='lg'>
             <Modal.Header closeButton>
-                <Modal.Title>Tambah Pegawai</Modal.Title>
+                <Modal.Title className="w-100 text-center">Tambah Alamat</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form>
                     <Row className="mt-3">
                         <Col>
                             <Form.Group>
-                                <Form.Label>First Name</Form.Label>
-                                <Form.Control type="text" placeholder="Masukkan nama depan" />
+                                <Form.Label>Label</Form.Label>
+                                <Form.Control type="text" placeholder="Masukkan Label" />
                             </Form.Group>
                         </Col>
                         <Col>
                             <Form.Group>
-                                <Form.Label>Last Name</Form.Label>
-                                <Form.Control type="text" placeholder="Masukkan nama belakang" />
+                                <Form.Label>Kota</Form.Label>
+                                <Form.Control type="text" placeholder="Yogyakarta" disabled />
                             </Form.Group>
                         </Col>
                     </Row>
+
                     <Row className="mt-3">
                         <Col md={6}>
                             <Form.Group>
-                                <Form.Label>Email</Form.Label>
-                                <Form.Control type="email" placeholder="Masukkan Email" />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group>
-                                <Form.Label>Nomor Telepon</Form.Label>
-                                <Form.Control type="text" placeholder="Masukkan Nomor Telepon" />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    <Row className="mt-3">
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Password</Form.Label>
-                                <Form.Control type="password" placeholder="Masukkan Password" />
-                            </Form.Group>
-                        </Col>
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Jabatan</Form.Label>
+                                <Form.Label>Kecamatan</Form.Label>
                                 <Form.Select
-                                    value={selectedJabatan}
-                                    onChange={(e) => setSelectedJabatan(e.target.value)}
+                                    value={selectedKecamatan}
+                                    onChange={handleKecamatanChange}
                                 >
-                                    <option value="">Pilih Jabatan</option>
-                                    <option value="Customer Service">Customer Service</option>
-                                    <option value="Pegawai Gudang">Pegawai Gudang</option>
-                                    <option value="Kurir">Kurir</option>
-                                    <option value="Hunter">Hunter</option>
+                                    <option value="">Pilih Kecamatan</option>
+                                    {Object.keys(kecamatanToKodePos).map((kec) => (
+                                        <option key={kec} value={kec}>{kec}</option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Kode Pos</Form.Label>
+                                <Form.Select
+                                    value={selectedKodePos}
+                                    onChange={(e) => setSelectedKodePos(e.target.value)}
+                                    disabled={!selectedKecamatan}
+                                >
+                                    <option value="">Pilih Kode Pos</option>
+                                    {kodePosOptions.map((kode) => (
+                                        <option key={kode} value={kode}>{kode}</option>
+                                    ))}
                                 </Form.Select>
                             </Form.Group>
                         </Col>
                     </Row>
-                    <Form.Group className="mt-3">
-                        <Form.Label>Profile Picture </Form.Label>
-                        <Form.Control type='file' placeholder='Upload Profile Picture'></Form.Control>
-                    </Form.Group>
+
+                    <Row className="mt-3">
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Alamat Lengkap</Form.Label>
+                                <Form.Control type="text" placeholder="Masukkan alamat lengkap" />
+                            </Form.Group>
+                        </Col>
+                        <Col>
+                            <Form.Group>
+                                <Form.Label>Catatan</Form.Label>
+                                <Form.Control type="text" placeholder="Masukkan Catatan" />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
                     <br />
-                    <Button variant="success" onClick={onHide}>
-                        Daftar
-                    </Button>
+                    <div className="d-flex justify-content-end">
+                        <Row>
+                            <div className="d-flex justify-content-between">
+                                <Button variant="secondary" onClick={onHide}>
+                                    Batal
+                                </Button>
+
+                                <Button variant="success" onClick={onHide} className="ms-2">
+                                    Tambah
+                                </Button>
+                            </div>
+                        </Row>
+                    </div>
                 </Form>
             </Modal.Body>
         </Modal>
     );
 };
 
-export default PegawaiModal;
+export default AlamatModal;
