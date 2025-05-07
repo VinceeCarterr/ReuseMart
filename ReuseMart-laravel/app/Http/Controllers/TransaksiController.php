@@ -69,21 +69,20 @@ class TransaksiController extends Controller
 
     public function history(Request $request)
     {
-        try {
-            $user = $request->user();
+        $transaksis = Transaksi::whereDate('tanggal_transaksi', '<=', Carbon::now()->toDateString())
+            ->orderBy('tanggal_transaksi', 'desc')
+            ->get();
+    
+        return response()->json($transaksis);
+    }
 
-            $transaksis = Transaksi::where('id_user', $user->id)
-                ->where('tanggal_transaksi', '<', Carbon::now())
-                ->orderBy('tanggal_transaksi', 'desc')
-                ->get();
-
-            return response()->json($transaksis);
-        } catch (Exception $e) {
-            Log::error('Error fetching transaction history: ' . $e->getMessage());
-            return response()->json(
-                ['error' => 'Failed to fetch transaction history'],
-                500
-            );
-        }
+    public function historyByUserId(Request $request)
+    {
+        $idUser = $request->user()->id_user;
+        $transaksis = Transaksi::where('id_user', $idUser)
+            ->whereDate('tanggal_transaksi', '<=', Carbon::now()->toDateString())
+            ->orderBy('tanggal_transaksi', 'desc')
+            ->get();
+        return response()->json($transaksis);
     }
 }

@@ -14,4 +14,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:Admin')->post('/pegawai/register', [PegawaiController::class, 'register']);
     Route::get('transaksi/history', [TransaksiController::class, 'history']);
+    Route::get('transaksi/history/{id}', [TransaksiController::class, 'historyByUserId']);
 });

@@ -22,7 +22,7 @@ class Pegawai extends Authenticatable
         'email',
         'password',
         'no_telp',
-        'isHunter',
+        'komisi',
     ];
 
     protected $hidden = ['password', 'remember_token'];
