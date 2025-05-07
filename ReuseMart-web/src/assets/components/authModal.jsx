@@ -43,6 +43,18 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     return true;
   };
 
+  // Form validity flags (still here but not gating submit)
+  const isEmailValid = email.includes("@");
+  const loginFormValid =
+    isLogin && email.trim() && password.trim() && isEmailValid;
+  const registerFormValid =
+    !isLogin &&
+    firstName.trim() &&
+    /^\d{11,15}$/.test(phone) &&
+    /(?=.*[A-Za-z])(?=.*\d)(?=.*\W)/.test(password) &&
+    isEmailValid;
+  const isFormValid = isLogin ? loginFormValid : registerFormValid;
+
   const handleLogin = async () => {
     setError("");
     if (!validateEmail()) return;
@@ -65,8 +77,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
         } else {
           navigate("/");
         }
-      } 
-      else if (type === "user") {
+      } else if (type === "user") {
         if (user?.role === "Pembeli") {
           navigate("/pembeliLP");
         } else {
@@ -110,6 +121,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
 
     if (!validateEmail()) valid = false;
 
+    // show field errors first, then bail if invalid
     if (!valid) return;
 
     try {
@@ -135,9 +147,14 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
         setPhone("");
       }, 2000);
     } catch (err) {
-      const message = err.response?.data?.error || "Registrasi gagal!";
+      const errors = err.response?.data?.errors;
+      console.error("Validation errors:", errors);
       setToastVariant("danger");
-      setToastMsg(message);
+      setToastMsg(
+        errors
+          ? Object.values(errors).flat().join(" | ")
+          : "Data Invalid!"
+      );
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -147,7 +164,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     <>
       <div className="auth-toast-container">
         <Toast
-          className="auth-toast slide-down-toast"
+          className={`auth-toast slide-down-toast ${toastVariant}`}
           show={showToast}
           onClose={() => setShowToast(false)}
           autohide
@@ -203,7 +220,13 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             </p>
           )}
 
-          <Form>
+          <Form
+            onSubmit={e => {
+              e.preventDefault();
+              // always run validation and display errors
+              isLogin ? handleLogin() : handleRegister();
+            }}
+          >
             {!isLogin && (
               isOrg ? (
                 <Form.Group className="mb-3 text-start">
@@ -310,9 +333,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                     className="ps-2 pe-5"
                   />
                   <i
-                    className={`bi ${
-                      showPassword ? "bi-eye-slash" : "bi-eye"
-                    } password-toggler position-absolute top-50 end-0 translate-middle-y me-2`}
+                    className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"} password-toggler position-absolute top-50 end-0 translate-middle-y me-2`}
                     onClick={() => setShowPassword(!showPassword)}
                   />
                 </div>
@@ -345,9 +366,9 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             )}
 
             <Button
+              type="submit"
               variant="success"
               className="w-100"
-              onClick={isLogin ? handleLogin : handleRegister}
             >
               {isLogin ? "Masuk" : "Daftar"}
             </Button>

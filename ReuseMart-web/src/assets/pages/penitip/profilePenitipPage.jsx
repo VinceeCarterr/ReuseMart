@@ -7,11 +7,11 @@ const ProfilePenitipPage = () => {
         firstName: "John",
         lastName: "Doe",
         email: "john@example.com",
-        password: "",
+        password: "asdfasdf",
         no_telp: "081234567890",
         profile_picture: null,
         poin_loyalitas: 120,
-        NIK: "3276xxxxxxxxxxxx",
+        NIK: "220711694",
         rating: 4.8,
         saldo: 150000,
     });
@@ -58,13 +58,6 @@ const ProfilePenitipPage = () => {
                                             />
                                         )}
                                     </div>
-                                    <Form.Group controlId="formFile">
-                                        <Form.Control
-                                            type="file"
-                                            name="profile_picture"
-                                            onChange={handleChange}
-                                        />
-                                    </Form.Group>
                                 </Card>
                             </Col>
 
@@ -81,7 +74,7 @@ const ProfilePenitipPage = () => {
                                                         type="text"
                                                         name="firstName"
                                                         value={formData.firstName}
-                                                        onChange={handleChange}
+                                                        disabled
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -92,7 +85,7 @@ const ProfilePenitipPage = () => {
                                                         type="text"
                                                         name="lastName"
                                                         value={formData.lastName}
-                                                        onChange={handleChange}
+                                                        disabled
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -106,7 +99,7 @@ const ProfilePenitipPage = () => {
                                                         type="email"
                                                         name="email"
                                                         value={formData.email}
-                                                        onChange={handleChange}
+                                                        disabled
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -117,7 +110,7 @@ const ProfilePenitipPage = () => {
                                                         type="password"
                                                         name="password"
                                                         value={formData.password}
-                                                        onChange={handleChange}
+                                                        disabled
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -131,7 +124,7 @@ const ProfilePenitipPage = () => {
                                                         type="text"
                                                         name="no_telp"
                                                         value={formData.no_telp}
-                                                        onChange={handleChange}
+                                                        disabled
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -183,12 +176,6 @@ const ProfilePenitipPage = () => {
                                                 </Form.Group>
                                             </Col>
                                         </Row>
-                                        <div className="d-flex justify-content-end gap-2">
-                                            <Button variant="secondary">Cancel</Button>
-                                            <Button type="submit" variant="danger">
-                                                Save
-                                            </Button>
-                                        </div>
                                     </Form>
                                 </Card>
                             </Col>

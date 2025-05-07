@@ -37,7 +37,7 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
+            'last_name'  => 'nullable|string|max:255',
             'email'      => 'required|email|unique:user,email',
             'password'   => 'required|string|min:6',
             'id_role'    => 'required|exists:role,id_role',
@@ -55,7 +55,7 @@ class UserController extends Controller
         try {
             $user = User::create([
                 'first_name' => $request->first_name,
-                'last_name'  => $request->last_name,
+                'last_name'  => $request->last_name ?? "",
                 'email'      => $request->email,
                 'password'   => Hash::make($request->password),
                 'id_role'    => $request->id_role,
@@ -100,7 +100,7 @@ class UserController extends Controller
             'token_type' => 'Bearer',
             'user' => [
                 'id' => $user->id_user,
-                'name' => $user->first_name . ' ' . $user->last_name,
+                'name' => $user->first_name . ' ' . $user->last_name ?? "",
                 'email' => $user->email,
                 'role' => $user->role->nama_role ?? null,
             ],
@@ -148,7 +148,7 @@ class UserController extends Controller
                 'type' => 'user',
                 'user' => [
                     'id' => $user->id_user,
-                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'name' => $user->first_name . ' ' . $user->last_name ?? "",
                     'email' => $user->email,
                     'role' => $user->role->nama_role ?? null,
                 ]
