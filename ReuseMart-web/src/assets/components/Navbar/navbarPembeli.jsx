@@ -52,7 +52,7 @@ const NavbarPembeli = () => {
                 <FaShoppingCart />
               </Link>
 
-              <Link to="/history" className="text-dark fs-5 icon-link">
+              <Link to="/historyPembeli" className="text-dark fs-5 icon-link">
                 <FaClock />
               </Link>
 

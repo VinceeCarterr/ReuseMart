@@ -6,6 +6,7 @@ import AdminPage from "./assets/pages/pegawai/adminPage.jsx";
 import ProfilePenitipPage from "./assets/pages/penitip/profilePenitipPage.jsx";
 import AlamatPage from "./assets/pages/pembeli/alamatPage.jsx";
 import PembeliLandingPage from "./assets/pages/pembeli/pembeliLandingPage.jsx";
+import HistoryPembeli from "./assets/pages/pembeli/historyPembeli.jsx";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/profilePenitip" element={<ProfilePenitipPage />} />
           <Route path="/alamat" element={<AlamatPage />} />
           <Route path="/pembeliLP" element={<PembeliLandingPage />} />
+          <Route path="/historyPembeli" element={<HistoryPembeli />} />
         </Routes>
       </div>
     </Router>
