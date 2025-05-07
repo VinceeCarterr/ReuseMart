@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Carbon\Carbon; 
 
 class TransaksiController extends Controller
 {
@@ -63,6 +64,26 @@ class TransaksiController extends Controller
         } catch (Exception $e) {
             Log::error('Error deleting transaction: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to delete transaction'], 500);
+        }
+    }
+
+    public function history(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $transaksis = Transaksi::where('id_user', $user->id)
+                ->where('tanggal_transaksi', '<', Carbon::now())
+                ->orderBy('tanggal_transaksi', 'desc')
+                ->get();
+
+            return response()->json($transaksis);
+        } catch (Exception $e) {
+            Log::error('Error fetching transaction history: ' . $e->getMessage());
+            return response()->json(
+                ['error' => 'Failed to fetch transaction history'],
+                500
+            );
         }
     }
 }
