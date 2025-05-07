@@ -59,16 +59,19 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
 
-      if (type === "pegawai" && pegawai?.jabatan === "Admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
-
-      if (type === "user" && user?.role === "Pembeli") {
-        navigate("/pembeliLP");
-      } else {
-        navigate("/");
+      if (type === "pegawai") {
+        if (pegawai?.jabatan?.toLowerCase() === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      } 
+      else if (type === "user") {
+        if (user?.role === "Pembeli") {
+          navigate("/pembeliLP");
+        } else {
+          navigate("/");
+        }
       }
 
       setTimeout(onHide, 100);
