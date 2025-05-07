@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\TransaksiController;
 use Illuminate\Http\Request;
 
 Route::post('/register', [UserController::class, 'register']);
@@ -12,4 +13,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
 
     Route::middleware('role:Admin')->post('/pegawai/register', [PegawaiController::class, 'register']);
+    Route::get('transaksi/history', [TransaksiController::class, 'history']);
 });

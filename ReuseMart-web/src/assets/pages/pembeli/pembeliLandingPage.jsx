@@ -1,15 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 
-import "./landingPage.css";
+import "../landingPage.css";
 
-import NavbarLandingPage from "../components/Navbar/navbar.jsx";
-// import NavbarPembeli from "../components/Navbar/navbarPembeli.jsx";
+import NavbarPembeli from "../../components/Navbar/navbarPembeli.jsx";
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-
-import AuthModal from "../components/authModal.jsx";
 
 const productDummy = {
     title: "Mouse Gede",
@@ -30,21 +27,10 @@ const ProductCard = () => (
     </Card>
 );
 
-const LandingPage = () => {
+const PembeliLandingPage = () => {
     const [highlightProducts, setHighlightProducts] = useState([]);
     const [allProducts, setAllProducts] = useState([]);
-    const [showAuthModal, setShowAuthModal] = useState(false);
-    const [authMode, setAuthMode] = useState("login");
     const scrollRef = useRef(null);
-
-    const handleAuthOpen = (mode) => {
-        setAuthMode(mode);
-        setShowAuthModal(true);
-    };
-
-    const handleAuthClose = () => {
-        setShowAuthModal(false);
-    };
 
     useEffect(() => {
         AOS.init({ duration: 800 });
@@ -75,8 +61,7 @@ const LandingPage = () => {
 
     return (
         <div>
-            <NavbarLandingPage onLoginClick={() => handleAuthOpen("login")} onRegisterClick={() => handleAuthOpen("register")} />
-            <AuthModal show={showAuthModal} onHide={handleAuthClose} mode={authMode} onSwitch={setAuthMode} />
+            <NavbarPembeli onLoginClick={() => handleAuthOpen("login")} onRegisterClick={() => handleAuthOpen("register")} />
 
             {/* Hero Section */}
             <Container className="my-5">
@@ -120,4 +105,4 @@ const LandingPage = () => {
     );
 }
 
-export default LandingPage;
+export default PembeliLandingPage;
