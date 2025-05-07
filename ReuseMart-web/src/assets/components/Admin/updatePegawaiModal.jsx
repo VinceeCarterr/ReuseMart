@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import api from "../../../api/api.js";
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
-const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
+const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
     const [selectedJabatan, setSelectedJabatan] = useState("Pilih Jabatan");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -11,11 +12,31 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
+    useEffect(() => {
+        if (pegawai) {
+            setFirstName(pegawai.first_name || "");
+            setLastName(pegawai.last_name || "");
+            setPassword(pegawai.password || "")
+            setEmail(pegawai.email || "");
+            setNoTelp(pegawai.no_telp || "");
+            const jabatanLabel = {
+                2: 'Customer Service',
+                3: 'Pegawai Gudang',
+                4: 'Kurir',
+                5: 'Hunter',
+                6: 'Admin',
+            }[pegawai.id_jabatan] || "Pilih Jabatan";
+
+            setSelectedJabatan(jabatanLabel);
+        }
+    }, [pegawai]);
+
+
     const handleSelect = (eventKey) => {
         setSelectedJabatan(eventKey);
     };
 
-    const handleTambah = async () => {
+    const handleUpdate = async () => {
         setError('');
 
         let id_jabatan = null;
@@ -37,7 +58,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
         let komisi = 0;
 
         try {
-            const response = await api.post('/pegawai/register', {
+            const response = await api.put(`/pegawai/${pegawai.id_pegawai}`, {
                 id_jabatan,
                 first_name: firstName,
                 last_name: lastName,
@@ -46,13 +67,6 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
                 no_telp: noTelp,
                 komisi,
             });
-
-            setFirstName('');
-            setLastName('');
-            setEmail('');
-            setNoTelp('');
-            setPassword('');
-            setSelectedJabatan('Pilih Jabatan');
             
             console.log('Register success:', response.data);
             onHide();
@@ -70,7 +84,6 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    
                     <Row className="mt-3">
                         <Col>
                             <Form.Group>
@@ -106,7 +119,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
                                 <Form.Control value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Masukkan Password"/>
                             </Form.Group>
                         </Col>
-                        <Col>
+                        <Col md={6}>
                             <Form.Group>
                                 <Form.Label>Jabatan</Form.Label>
                                 <Form.Select
@@ -128,8 +141,8 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
                         <Form.Control type='file' placeholder='Upload Profile Picture'></Form.Control>
                     </Form.Group>
                     <br />  
-                    <Button variant="success" onClick={handleTambah}>
-                        Daftar
+                    <Button variant="success" onClick={handleUpdate}>
+                        Simpan Perubahan
                     </Button>
                 </Form>
             </Modal.Body>
@@ -137,4 +150,4 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
     );
 };
 
-export default PegawaiModal;
+export default UpdatePegawaiModal;
