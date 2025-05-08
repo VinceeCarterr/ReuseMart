@@ -1,4 +1,7 @@
-.mega-dropdown { position: relative; }
+.mega-dropdown {
+    position: relative;
+}
+
 .category-toggle {
     background: #f7f7f7;
     border: 1px solid #ccc;
@@ -26,7 +29,7 @@
     flex-direction: row-reverse;
     background: #fff;
     border: 1px solid #ddd;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 10000;
 }
 
@@ -46,7 +49,7 @@
 
 .mega-menu-item.active,
 .mega-menu-item:hover {
-    background: rgba(25,135,84,0.1);
+    background: rgba(25, 135, 84, 0.1);
     color: #198754;
 }
 
@@ -54,7 +57,7 @@
     width: 70%;
     padding: 1rem;
     display: grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem 1.5rem;
     justify-items: center;
     align-items: center;
@@ -77,14 +80,14 @@
     position: relative;
     z-index: 2000;
     background-color: #fffcf7;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     border-bottom: 4px solid #f0f0f0;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .navbar-pembeli:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-pembeli .logo-container {
@@ -106,8 +109,13 @@
     transition: transform 0.2s;
 }
 
-.logo-img { height: 48px; }
-.logo-text { color: #198754; }
+.logo-img {
+    height: 48px;
+}
+
+.logo-text {
+    color: #198754;
+}
 
 .search-input {
     width: 100%;
@@ -131,7 +139,7 @@
 }
 
 .icon-link:hover {
-    background: rgba(25,135,84,0.1);
+    background: rgba(25, 135, 84, 0.1);
     color: #198754;
     transform: scale(1.15);
 }
@@ -141,7 +149,7 @@
 }
 
 .profile-toggle:hover {
-    background: rgba(25,135,84,0.05);
+    background: rgba(25, 135, 84, 0.05);
     color: #198754 !important;
     border-color: #198754 !important;
     transform: scale(1.05);
@@ -151,6 +159,7 @@
     background-color: #fffcf7;
     border: 1px solid #ddd;
 }
+
 .navbar-pembeli .dropdown-menu .dropdown-item:hover {
     background-color: #e9ecef;
 }
