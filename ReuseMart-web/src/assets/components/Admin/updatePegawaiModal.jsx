@@ -20,7 +20,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             setPassword(pegawai.password || "")
             setEmail(pegawai.email || "");
             setNoTelp(pegawai.no_telp || "");
-            setTglLahir(pegawai.tanggal_lahir||"");
+            setTglLahir(pegawai.tanggal_lahir || "");
             const jabatanLabel = {
                 2: 'Customer Service',
                 3: 'Pegawai Gudang',
@@ -49,11 +49,11 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             id_jabatan = 2;
         } else if (selectedJabatan === 'Pegawai Gudang') {
             id_jabatan = 3;
-        } else if (selectedJabatan==='Kurir'){
+        } else if (selectedJabatan === 'Kurir') {
             id_jabatan = 4;
-        } else if (selectedJabatan==='Hunter'){
+        } else if (selectedJabatan === 'Hunter') {
             id_jabatan = 5;
-        }else {
+        } else {
             setError('Invalid job selection');
             return;
         }
@@ -70,12 +70,23 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                 tanggal_lahir: tglLahir,
                 komisi,
             });
-            
+
             console.log('Register success:', response.data);
             onHide();
             fetchPegawai();
         } catch (err) {
             const message = err.response?.data?.error || 'Register failed';
+            setError(message);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        setError('');
+        try {
+            const response = await api.put(`/pegawai/${pegawai.id_pegawai}/reset-password`);
+            alert('Password berhasil direset ke tanggal lahir.');
+        } catch (err) {
+            const message = err.response?.data?.error || 'Gagal reset password';
             setError(message);
         }
     };
@@ -91,13 +102,13 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Col>
                             <Form.Group>
                                 <Form.Label>First Name</Form.Label>
-                                <Form.Control value ={firstName} onChange ={e => setFirstName(e.target.value)} type="text" placeholder="Masukkan nama depan" />
+                                <Form.Control value={firstName} onChange={e => setFirstName(e.target.value)} type="text" placeholder="Masukkan nama depan" />
                             </Form.Group>
                         </Col>
                         <Col>
                             <Form.Group>
                                 <Form.Label>Last Name</Form.Label>
-                                <Form.Control value={lastName} onChange={e=> setLastName(e.target.value)} type="text" placeholder="Masukkan nama belakang" />
+                                <Form.Control value={lastName} onChange={e => setLastName(e.target.value)} type="text" placeholder="Masukkan nama belakang" />
                             </Form.Group>
                         </Col>
                     </Row>
@@ -105,13 +116,13 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Col md={6}>
                             <Form.Group>
                                 <Form.Label>Email</Form.Label>
-                                <Form.Control value={email} onChange={e=> setEmail(e.target.value)} type="email" placeholder="Masukkan Email" />
+                                <Form.Control value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Masukkan Email" />
                             </Form.Group>
                         </Col>
                         <Col md={6}>
                             <Form.Group>
                                 <Form.Label>Nomor Telepon</Form.Label>
-                                <Form.Control value={noTelp} onChange={e=> setNoTelp(e.target.value)} type="text" placeholder="Masukkan Nomor Telepon"/>
+                                <Form.Control value={noTelp} onChange={e => setNoTelp(e.target.value)} type="text" placeholder="Masukkan Nomor Telepon" />
                             </Form.Group>
                         </Col>
                     </Row>
@@ -119,7 +130,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Col md={6}>
                             <Form.Group >
                                 <Form.Label>Tanggal Lahir </Form.Label>
-                                <Form.Control type='date' value={tglLahir} onChange={e=>setTglLahir(e.target.value)} ></Form.Control>
+                                <Form.Control type='date' value={tglLahir} onChange={e => setTglLahir(e.target.value)} ></Form.Control>
                             </Form.Group>
                         </Col>
                         <Col md={6}>
@@ -141,7 +152,9 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                     </Row>
                     <Row className='mt-4 mb-3'>
                         <Col md={6}>
-                            <Button variant='outline-danger'>Reset Password</Button>
+                            <Button variant='outline-danger' onClick={handleResetPassword}>
+                                Reset Password
+                            </Button>
                         </Col>
                         <Col md={6} >
                             <Button variant="success" onClick={handleUpdate}>
