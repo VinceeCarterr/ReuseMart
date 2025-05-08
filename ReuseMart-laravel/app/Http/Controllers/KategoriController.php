@@ -9,16 +9,29 @@ use Illuminate\Support\Facades\Log;
 
 class KategoriController extends Controller
 {
-   public function index()
-   {
-      try {
-         $kategoris = Kategori::all();
-         return response()->json($kategoris);
-      } catch (Exception $e) {
-         Log::error('Error fetching categories: ' . $e->getMessage());
-         return response()->json(['error' => 'Failed to fetch categories'], 500);
-      }
-   }
+    public function index()
+    {
+        try {
+            // fetch just the fields we need
+            $all = Kategori::select('id_kategori', 'nama_kategori', 'sub_kategori')->get();
+    
+            // group by main category name
+            $grouped = $all->groupBy('nama_kategori')->map(function($items, $namaKategori) {
+                return [
+                    'nama_kategori' => $namaKategori,
+                    'sub_kategori'  => $items->map(fn($i) => [
+                        'id'   => $i->id_kategori,
+                        'nama' => $i->sub_kategori,
+                    ])->values(),
+                ];
+            })->values();
+    
+            return response()->json($grouped);
+        } catch (Exception $e) {
+            Log::error('Error fetching categories: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch categories'], 500);
+        }
+    }
    
     public function store(Request $request)
     {
