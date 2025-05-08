@@ -88,15 +88,15 @@
 }
 
 .navbar-pembeli .logo-container {
-    padding-right: 4rem;
-    padding-left: 4rem;
+    padding-right: 2rem;
+    padding-left: 1rem;
 }
 
 .logo-container {
     position: relative;
     border-right: 1px solid rgba(0,0,0,0.15);
-    padding-left: 4rem;
-    padding-right: 4rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
     margin-right: 2rem;
 }
 

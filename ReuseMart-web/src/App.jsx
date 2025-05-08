@@ -7,6 +7,7 @@ import ProfilePenitipPage from "./assets/pages/penitip/profilePenitipPage.jsx";
 import AlamatPage from "./assets/pages/pembeli/alamatPage.jsx";
 import PembeliLandingPage from "./assets/pages/pembeli/pembeliLandingPage.jsx";
 import HistoryPembeli from "./assets/pages/pembeli/historyPembeli.jsx";
+import CSLandingPage from "./assets/pages/pegawai/CSLandingPage.jsx";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/alamat" element={<AlamatPage />} />
           <Route path="/pembeliLP" element={<PembeliLandingPage />} />
           <Route path="/historyPembeli" element={<HistoryPembeli />} />
+          <Route path="/CSLP" element={<CSLandingPage />} />
         </Routes>
       </div>
     </Router>

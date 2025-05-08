@@ -3,11 +3,14 @@ import { Form, Dropdown, Modal, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
 import api from "../../../api/api.js";
+import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
 const NavbarPembeli = () => {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [groupedCats, setGroupedCats] = useState([]);
   const [activeCatIdx, setActiveCatIdx] = useState(0);
@@ -36,6 +39,9 @@ const NavbarPembeli = () => {
     localStorage.clear();
     navigate("/");
   };
+
+  const openProfileModal = () => setShowProfileModal(true);
+  const closeProfileModal = () => setShowProfileModal(false);
 
   return (
     <>
@@ -119,7 +125,7 @@ const NavbarPembeli = () => {
                   <span className="fw-bold">{userName}</span>
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.Item as={Link} to="/profile">
+                  <Dropdown.Item onClick={openProfileModal}>
                     Profil
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/orders">
@@ -153,6 +159,8 @@ const NavbarPembeli = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <ProfileModal show={showProfileModal} onHide={closeProfileModal} />
     </>
   );
 };

@@ -22,6 +22,96 @@ class UserController extends Controller
         }
     }
 
+    public function me(Request $request)
+    {
+        $user = $request->user()->load('role', 'alamat', 'transaksi');
+        return response()->json($user);
+    }
+    
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            "profile_picture" => "required|image|max:2048",
+        ]);
+
+        $user = $request->user();
+        if ($user->profile_picture) {
+            Storage::disk("public")->delete($user->profile_picture);
+        }
+        $path = $request
+            ->file("profile_picture")
+            ->store("profile_pictures", "public");
+        $user->profile_picture = $path;
+        $user->save();
+
+        return response()->json([
+            "profile_picture" => "/storage/" . $path,
+        ]);
+    }
+
+    public function checkNIK(Request $request)
+    {
+        $exists = User::where('NIK', $request->input('NIK'))->exists();
+        return response()->json(['unique' => !$exists]);
+    }    
+
+    public function penitip()
+    {
+        try {
+            $penitips = User::with(['role','alamat'])
+                            ->where('id_role', 2)
+                            ->get();
+
+            return response()->json($penitips);
+        } catch (Exception $e) {
+            Log::error('Error fetching penitips: '.$e->getMessage());
+            return response()->json(['error'=>'Unable to fetch penitips'], 500);
+        }
+    }
+
+    public function updatePenitip(Request $r, $id)
+    {
+        $data = $r->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'nullable|string|max:255',
+            'email'      => 'required|email|unique:user,email,'.$id.',id_user',
+            'password'   => 'nullable|string|min:6',
+            'no_telp'    => 'required|string|max:15',
+            'saldo'      => 'nullable|numeric',
+            'rating'     => 'nullable|numeric',
+        ]);
+
+        try {
+            $user = User::findOrFail($id);
+            $user->first_name = $data['first_name'];
+            $user->last_name  = $data['last_name']  ?? $user->last_name;
+            $user->email      = $data['email'];
+            $user->no_telp    = $data['no_telp'];
+            $user->saldo      = $data['saldo']       ?? $user->saldo;
+            $user->rating     = $data['rating']      ?? $user->rating;
+            if (!empty($data['password'])) {
+                $user->password = Hash::make($data['password']);
+            }
+            $user->save();
+
+            return response()->json(['message'=>'Penitip updated','user'=>$user]);
+        } catch (Exception $e) {
+            Log::error("Failed updating penitip $id: ".$e->getMessage());
+            return response()->json(['error'=>'Unable to update penitip'], 500);
+        }
+    }
+
+    public function destroyPenitip($id)
+    {
+        try {
+            User::destroy($id);
+            return response()->json(['message'=>'Penitip deleted']);
+        } catch (Exception $e) {
+            Log::error("Failed deleting penitip $id: ".$e->getMessage());
+            return response()->json(['error'=>'Unable to delete penitip'], 500);
+        }
+    }
+
     public function show($id)
     {
         try {
@@ -42,7 +132,7 @@ class UserController extends Controller
             'password'   => 'required|string|min:6',
             'id_role'    => 'required|exists:role,id_role',
             'no_telp'    => 'required|string|max:15',
-            'profile_picture' => 'nullable|numeric',
+            'profile_picture' => 'nullable|image|max:2048',
             'NIK' => 'nullable|string|max:16',
             'rating' => 'nullable|numeric',
             'saldo' => 'nullable|numeric',

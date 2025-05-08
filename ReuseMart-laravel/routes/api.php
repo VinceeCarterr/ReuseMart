@@ -19,12 +19,16 @@ Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::post('user/avatar', [UserController::class, 'updateAvatar']);
     Route::post('/logout', [UserController::class, 'logout']);
+    Route::get('/user', [UserController::class, 'me']);
+    Route::get('penitip', [UserController::class, 'penitip']);
+    Route::put('penitip/{id}', [UserController::class, 'updatePenitip']);
+    Route::delete('penitip/{id}', [UserController::class, 'destroyPenitip']);
+    Route::post('/user/check-nik', [UserController::class, 'checkNIK']);
 
     Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
     Route::get('kategori', [KategoriController::class, 'index']);
-
-});
 
     //alamat
     Route::get('/alamat', [AlamatController::class, 'getAlamatByUserId']);
