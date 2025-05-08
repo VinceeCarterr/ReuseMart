@@ -9,6 +9,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
     const [email, setEmail] = useState("");
     const [noTelp, setNoTelp] = useState("");
     const [password, setPassword] = useState("");
+    const [tglLahir, setTglLahir] = useState("");
     const [error, setError] = useState("");
 
     const handleSelect = (eventKey) => {
@@ -44,6 +45,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
                 email,
                 password,
                 no_telp: noTelp,
+                tanggal_lahir: tglLahir,
                 komisi,
             });
 
@@ -52,6 +54,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
             setEmail('');
             setNoTelp('');
             setPassword('');
+            setTglLahir('');
             setSelectedJabatan('Pilih Jabatan');
             
             console.log('Register success:', response.data);
@@ -123,10 +126,12 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
                             </Form.Group>
                         </Col>
                     </Row>
-                    <Form.Group  className="mt-3">
-                        <Form.Label>Profile Picture </Form.Label>
-                        <Form.Control type='file' placeholder='Upload Profile Picture'></Form.Control>
-                    </Form.Group>
+                    <Col md={6}>
+                        <Form.Group  className="mt-3">
+                            <Form.Label>Tanggal Lahir </Form.Label>
+                            <Form.Control type='date' value={tglLahir} onChange={e=>setTglLahir(e.target.value)}  ></Form.Control>
+                        </Form.Group>
+                    </Col>
                     <br />  
                     <Button variant="success" onClick={handleTambah}>
                         Daftar
