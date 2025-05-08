@@ -2,9 +2,9 @@ import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
-import NavbarLandingpage from "../../components/Navbar/navbar.jsx";
+import NavbarAdmin from "../../components/Navbar/navbarAdmin.jsx";
 import PegawaiModal from "../../components/Admin/pegawaiModal.jsx";
-import UpdatePegawaiModal from "../../components/Admin/UpdatePegawaiModal.jsx";
+import UpdatePegawaiModal from "../../components/Admin/updatePegawaiModal.jsx";
 
 const getJabatanName = (id) => {
     switch (id) {
@@ -114,7 +114,7 @@ const AdminPage = () => {
     return (
         <div>
             
-            <NavbarLandingpage />
+            <NavbarAdmin />
             <UpdatePegawaiModal show={showUpdateModal} onHide={() => setShowUpdateModal(false)} pegawai = {pegawaiToUpdate} fetchPegawai={fetchPegawai}/>
             <PegawaiModal show={showModal} onHide={() => setShowModal(false)} fetchPegawai={fetchPegawai}/>
             <Container className="mt-5" >

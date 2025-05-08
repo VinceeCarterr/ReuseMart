@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Form, Dropdown, Modal, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaClock, FaUserCircle } from "react-icons/fa";
-import "./navbarPembeli.css";
+import "./navbarAdmin.css";
 
-const NavbarPembeli = () => {
+const NavbarAdmin = () => {
     const userName = "John Doe";
     const navigate = useNavigate();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -21,7 +21,7 @@ const NavbarPembeli = () => {
 
     return (
         <>
-        <div className="py-3 navbar-pembeli">
+        <div className="py-3 navbar-ddmin">
             <div className="container-fluid">
             <div className="row align-items-center">
                 {/* Logo */}
@@ -33,12 +33,12 @@ const NavbarPembeli = () => {
                 </div>
 
                 <div className="col d-flex align-items-center justify-content-end gap-3 pe-4">
-                <Link to="/kategori" className="text-dark text-decoration-none fs-5">
-                    Kategori
+                <Link to="/admin" className="text-dark text-decoration-none fs-5">
+                    Pegawai
                 </Link>
 
                 <Link to="/cart" className="text-dark fs-5 icon-link">
-                    <FaShoppingCart />
+                    Organisasi
                 </Link>
 
                 <Link to="/history" className="text-dark fs-5 icon-link">
@@ -85,4 +85,4 @@ const NavbarPembeli = () => {
     );
 };
 
-export default NavbarPembeli;
+export default NavbarAdmin;

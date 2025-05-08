@@ -10,6 +10,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
     const [email, setEmail] = useState("");
     const [noTelp, setNoTelp] = useState("");
     const [password, setPassword] = useState("");
+    const [tglLahir, setTglLahir] = useState("");
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -19,6 +20,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             setPassword(pegawai.password || "")
             setEmail(pegawai.email || "");
             setNoTelp(pegawai.no_telp || "");
+            setTglLahir(pegawai.tanggal_lahir||"");
             const jabatanLabel = {
                 2: 'Customer Service',
                 3: 'Pegawai Gudang',
@@ -65,6 +67,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                 email,
                 password,
                 no_telp: noTelp,
+                tanggal_lahir: tglLahir,
                 komisi,
             });
             
@@ -80,11 +83,11 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
     return (
         <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
             <Modal.Header closeButton>
-                <Modal.Title>Tambah Pegawai</Modal.Title>
+                <Modal.Title>Edit Pegawai</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    <Row className="mt-3">
+                    <Row >
                         <Col>
                             <Form.Group>
                                 <Form.Label>First Name</Form.Label>
@@ -113,10 +116,10 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         </Col>
                     </Row>
                     <Row className="mt-3">
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Password</Form.Label>
-                                <Form.Control value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Masukkan Password"/>
+                        <Col md={6}>
+                            <Form.Group >
+                                <Form.Label>Tanggal Lahir </Form.Label>
+                                <Form.Control type='date' value={tglLahir} onChange={e=>setTglLahir(e.target.value)} ></Form.Control>
                             </Form.Group>
                         </Col>
                         <Col md={6}>
@@ -136,14 +139,16 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                             </Form.Group>
                         </Col>
                     </Row>
-                    <Form.Group  className="mt-3">
-                        <Form.Label>Profile Picture </Form.Label>
-                        <Form.Control type='file' placeholder='Upload Profile Picture'></Form.Control>
-                    </Form.Group>
-                    <br />  
-                    <Button variant="success" onClick={handleUpdate}>
-                        Simpan Perubahan
-                    </Button>
+                    <Row className='mt-4 mb-3'>
+                        <Col md={6}>
+                            <Button variant='outline-danger'>Reset Password</Button>
+                        </Col>
+                        <Col md={6} >
+                            <Button variant="success" onClick={handleUpdate}>
+                                Simpan Perubahan
+                            </Button>
+                        </Col>
+                    </Row>
                 </Form>
             </Modal.Body>
         </Modal>

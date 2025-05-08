@@ -42,6 +42,7 @@ class PegawaiController extends Controller
             'email'      => 'required|email|unique:pegawai,email',
             'password'   => 'required|string|min:6',
             'no_telp'    => 'required|string|max:15',
+            'tanggal_lahir' => 'required|date',
             'komisi'     => 'nullable|numeric|max:19',
         ]);
 
@@ -57,6 +58,7 @@ class PegawaiController extends Controller
                 'email'      => $request->email,
                 'password'   => Hash::make($request->password),
                 'no_telp'    => $request->no_telp,
+                'tanggal_lahir' => $request->tanggal_lahir,
                 'komisi'     => $request->komisi ?? 0,
             ]);
 
@@ -109,7 +111,7 @@ class PegawaiController extends Controller
             $pegawai = Pegawai::findOrFail($id);
 
             $data = $request->only([
-                'first_name', 'last_name', 'email', 'id_jabatan', 'no_telp', 'komisi'
+                'first_name', 'last_name', 'email', 'id_jabatan', 'no_telp', 'tanggal_lahir', 'komisi'
             ]);
 
             if ($request->filled('password')) {
