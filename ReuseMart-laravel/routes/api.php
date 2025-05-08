@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\AlamatController;
 use Illuminate\Http\Request;
 
 Route::post('/register', [UserController::class, 'register']);
@@ -22,4 +24,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
     Route::get('kategori', [KategoriController::class, 'index']);
 
+});
+
+    //alamat
+    Route::get('/alamat', [AlamatController::class, 'getAlamatByUserId']);
+    Route::post('/alamat/create', [AlamatController::class, 'store']);
+    Route::put('/alamat/{id}', [AlamatController::class, 'update']);
+    Route::delete('/alamat/{id}', [AlamatController::class, 'destroy']);
 });
