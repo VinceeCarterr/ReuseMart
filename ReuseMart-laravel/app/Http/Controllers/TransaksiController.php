@@ -69,9 +69,14 @@ class TransaksiController extends Controller
 
     public function history(Request $request)
     {
-        $transaksis = Transaksi::whereDate('tanggal_transaksi', '<=', Carbon::now()->toDateString())
-            ->orderBy('tanggal_transaksi', 'desc')
-            ->get();
+        $transaksis = Transaksi::with([
+            'detilTransaksi.Barang.Penitipan.user',
+            'pengiriman',
+            'pengambilan',
+        ])
+        ->whereDate('tanggal_transaksi','<=', now()->toDateString())
+        ->orderBy('tanggal_transaksi','desc')
+        ->get();
     
         return response()->json($transaksis);
     }
@@ -79,10 +84,18 @@ class TransaksiController extends Controller
     public function historyByUserId(Request $request)
     {
         $idUser = $request->user()->id_user;
-        $transaksis = Transaksi::where('id_user', $idUser)
-            ->whereDate('tanggal_transaksi', '<=', Carbon::now()->toDateString())
-            ->orderBy('tanggal_transaksi', 'desc')
-            ->get();
+    
+        $transaksis = Transaksi::with([
+            'pembayaran',                    
+            'detilTransaksi.Barang.Penitipan.user',
+            'pengiriman',
+            'pengambilan',
+        ])
+        ->where('id_user', $idUser)
+        ->whereDate('tanggal_transaksi','<=', now()->toDateString())
+        ->orderBy('tanggal_transaksi','desc')
+        ->get();
+    
         return response()->json($transaksis);
-    }
+    }    
 }
