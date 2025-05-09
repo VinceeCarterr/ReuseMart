@@ -1,6 +1,6 @@
-// src/assets/components/CS/TambahPenitipModal.jsx
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Form, Row, Col, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Spinner, InputGroup } from "react-bootstrap";
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from "../../../api/api.js";
 import "./TambahPenitipModal.css";
 
@@ -9,6 +9,7 @@ export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
   const [lastName, setLastName]   = useState("");
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [noTelp, setNoTelp]       = useState("");
   const [nik, setNik]             = useState("");
   const [fotoKTP, setFotoKTP]     = useState(null);
@@ -31,6 +32,7 @@ export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
       setLastName("");
       setEmail("");
       setPassword("");
+      setShowPassword(false);
       setNoTelp("");
       setNik("");
       setFotoKTP(null);
@@ -85,18 +87,17 @@ export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
     setLoading(true);
 
     try {
-      // server‐side uniqueness check for NIK
       const { data: { unique } } = await api.post("/user/check-nik", { NIK: nik });
       if (!unique) {
         setNikError("NIK sudah terdaftar");
         setLoading(false);
-        return; // bail out before creating
+        return;
       }
 
-      // proceed to register
+      //register
       const formData = new FormData();
       formData.append("first_name", firstName);
-      formData.append("last_name",  lastName);    // may be blank
+      formData.append("last_name",  lastName);
       formData.append("email",      email);
       formData.append("password",   password);
       formData.append("no_telp",    noTelp);
@@ -127,7 +128,7 @@ export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
     }
   };
 
-  // disable save if loading
+
   const disableSave = loading;
 
   return (
@@ -219,16 +220,25 @@ export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
             <Col>
               <Form.Group className="text-start">
                 <Form.Label className="fw-bold">Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setPasswordError(""); }}
-                  isInvalid={!!passwordError}
-                  disabled={loading}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {passwordError}
-                </Form.Control.Feedback>
+                <InputGroup hasValidation>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setPasswordError(""); }}
+                    isInvalid={!!passwordError}
+                    disabled={loading}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    <i className={showPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
+                  </Button>
+                  <Form.Control.Feedback type="invalid">
+                    {passwordError}
+                  </Form.Control.Feedback>
+                </InputGroup>
               </Form.Group>
             </Col>
             <Col>

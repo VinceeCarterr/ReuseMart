@@ -126,16 +126,16 @@ class UserController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'nullable|string|max:255',
-            'email'      => 'required|email|unique:user,email',
-            'password'   => 'required|string|min:6',
-            'id_role'    => 'required|exists:role,id_role',
-            'no_telp'    => 'required|string|max:15',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'nullable|string|max:255',
+            'email'           => 'required|email|unique:user,email',
+            'password'        => 'required|string|min:6',
+            'id_role'         => 'required|exists:role,id_role',
+            'no_telp'         => 'required|string|max:15',
             'profile_picture' => 'nullable|image|max:2048',
-            'NIK' => 'nullable|string|max:16',
-            'rating' => 'nullable|numeric',
-            'saldo' => 'nullable|numeric',
+            'NIK'             => 'nullable|string|max:16|unique:user,NIK',
+            'rating'          => 'nullable|numeric',
+            'saldo'           => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -143,33 +143,42 @@ class UserController extends Controller
         }
 
         try {
+            // Handle the uploaded profile picture, if any
+            $picturePath = null;
+            if ($request->hasFile('profile_picture')) {
+                $picturePath = $request
+                    ->file('profile_picture')
+                    ->store('profile_pictures', 'public');
+            }
+
             $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name'  => $request->last_name ?? "",
-                'email'      => $request->email,
-                'password'   => Hash::make($request->password),
-                'id_role'    => $request->id_role,
-                'no_telp'    => $request->no_telp,
-                'profile_picture' => $request->profile_picture ?? null,
-                'poin_loyalitas' => 0,
-                'NIK' => $request->NIK ?? null,
-                'rating' => $request->rating ?? null,
-                'saldo' => $request->saldo ?? null,
+                'first_name'      => $request->first_name,
+                'last_name'       => $request->last_name ?? '',
+                'email'           => $request->email,
+                'password'        => Hash::make($request->password),
+                'id_role'         => $request->id_role,
+                'no_telp'         => $request->no_telp,
+                'profile_picture' => $picturePath,            // store the relative path
+                'poin_loyalitas'  => 0,
+                'NIK'             => $request->NIK ?? null,
+                'rating'          => $request->rating ?? null,
+                'saldo'           => $request->saldo ?? null,
             ]);
 
             return response()->json([
-                'message' => 'User registered successfully',
-                'user' => $user,
+                'message'         => 'User registered successfully',
+                'user'            => $user,
+                'profile_picture' => $picturePath ? '/storage/'.$picturePath : null,
             ], 201);
         } catch (Exception $e) {
             Log::error('Register error: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Failed to register user',
-                'exception' => $e->getMessage()
+                'error'     => 'Failed to register user',
+                'exception' => $e->getMessage(),
             ], 500);
         }
     }
-
+    
     public function login(Request $request)
     {
         $request->validate([
