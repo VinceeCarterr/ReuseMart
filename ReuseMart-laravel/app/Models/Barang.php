@@ -24,6 +24,8 @@ class Barang extends Model
         'status_periode',
         'rating',
         'byHunter',
+        'foto1',
+        'foto2',
     ];
 
     public function Kategori()

@@ -16,7 +16,7 @@ function App() {
       <div style={{ backgroundColor: "#FFFCF7", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/produk" element={<ProductPage />} />
+          <Route path="/produk/:id" element={<ProductPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/profilePenitip" element={<ProfilePenitipPage />} />
           <Route path="/alamat" element={<AlamatPage />} />

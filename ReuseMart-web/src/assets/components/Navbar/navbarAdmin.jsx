@@ -37,12 +37,8 @@ const NavbarAdmin = () => {
                                 Pegawai
                             </Link>
 
-                            <Link to="/organisasi" className="text-dark fs-5 icon-link">
+                            <Link to="/organisasi" className="text-dark text-decoration-none fs-5">
                                 Organisasi
-                            </Link>
-
-                            <Link to="/history" className="text-dark fs-5 icon-link">
-                                <FaClock />
                             </Link>
 
                             <Dropdown className="me-5">

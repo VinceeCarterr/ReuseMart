@@ -113,7 +113,6 @@ const AdminPage = () => {
 
     return (
         <div>
-            
             <NavbarAdmin />
             <UpdatePegawaiModal show={showUpdateModal} onHide={() => setShowUpdateModal(false)} pegawai = {pegawaiToUpdate} fetchPegawai={fetchPegawai}/>
             <PegawaiModal show={showModal} onHide={() => setShowModal(false)} fetchPegawai={fetchPegawai}/>
