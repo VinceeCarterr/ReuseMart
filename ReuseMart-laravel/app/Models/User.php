@@ -47,7 +47,7 @@ class User extends Authenticatable
 
     public function req_donasi()
     {
-        return $this->hasMany(ReqDonasi::class, 'id_user');
+        return $this->hasMany(Req_Donasi::class, 'id_user');
     }
 
     public function komentar()
