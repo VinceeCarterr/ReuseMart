@@ -7,47 +7,61 @@ import UbahAlamatModal from "../../components/Pembeli/ubahAlamatModal";
 import api from "../../../api/api.js";
 
 const AlamatCard = ({ alamat, onDeleteClick, onSetDefault, onEditClick }) => (
-    <Col md={12} className="justify-content-center mx-auto">
+    <Col md={12} className="justify-content-center mx-auto mb-2">
         <Card className={alamat.isDefault ? "border border-2 border-success" : ""}>
-            <Card.Body>
-                <Row className="align-items-center">
-                    <Col md={2}>
+            <Card.Body className="p-2">
+                <Row className="align-items-center flex-wrap">
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
                         <strong>{alamat.label}</strong>
-                        {alamat.isDefault && (
-                            <div className="badge bg-success ms-2">Utama</div>
-                        )}
+                        {alamat.isDefault && <div className="badge bg-success ms-2">Utama</div>}
                     </Col>
-                    <Col md={1}>{alamat.kota}</Col>
-                    <Col md={1}>{alamat.kecamatan}</Col>
-                    <Col md={1}>{alamat.kode_pos}</Col>
-                    <Col md={2}>{alamat.alamat}</Col>
-                    <Col md={2}>{alamat.catatan}</Col>
-                    <Col md={3} className="d-flex justify-content-end gap-2">
-                        {!alamat.isDefault && (
+                    <Col md={1} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kota}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kecamatan}
+                    </Col>
+                    <Col md={1} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kode_pos}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.alamat}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.catatan}
+                    </Col>
+                    <Col md={2} className="d-flex align-items-center justify-content-center">
+                        <div className="d-flex justify-content-end gap-2">
+                            {!alamat.isDefault && (
+                                <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => onSetDefault(alamat)}
+                                >
+                                    Utama
+                                </Button>
+                            )}
                             <Button
-                                variant="outline-success"
+                                variant="outline-primary"
                                 size="sm"
-                                onClick={() => onSetDefault(alamat)}
+                                onClick={() => onEditClick(alamat)}
                             >
-                                Jadikan Utama
+                                <Pencil />
                             </Button>
-                        )}
-                        <Button variant="outline-primary" size="sm" onClick={() => onEditClick(alamat)}><Pencil /></Button>
-                        <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => onDeleteClick(alamat)}
-                        >
-                            <Trash />
-                        </Button>
+                            <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => onDeleteClick(alamat)}
+                            >
+                                <Trash />
+                            </Button>
+                        </div>
                     </Col>
                 </Row>
             </Card.Body>
         </Card>
     </Col>
 );
-
-
 
 const AlamatPage = () => {
     const [showModal, setShowModal] = useState(false);

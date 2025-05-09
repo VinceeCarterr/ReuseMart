@@ -1,28 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import NavbarPenitip from "../../components/Navbar/navbarPenitip";
+import api from "../../../api/api.js";
 
 const ProfilePenitipPage = () => {
     const [formData, setFormData] = useState({
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-        password: "asdfasdf",
-        no_telp: "081234567890",
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        no_telp: "",
         profile_picture: null,
-        poin_loyalitas: 120,
-        NIK: "220711694",
-        rating: 4.8,
-        saldo: 150000,
+        poin_loyalitas: 0,
+        NIK: "",
+        rating: 0,
+        saldo: 0,
     });
 
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: files ? files[0] : value,
-        }));
-    };
+    const [show, setShow] = useState(true);
+    const [profile, setProfile] = useState(null);
+
+    useEffect(() => {
+        if (!show) return;
+        setProfile(null);
+
+        api
+            .get("user")
+            .then(({ data }) => {
+                setProfile(data);
+                setFormData({
+                    firstName: data.first_name,
+                    lastName: data.last_name,
+                    email: data.email,
+                    password: "********",
+                    no_telp: data.no_telp,
+                    profile_picture: data.profile_picture,
+                    poin_loyalitas: data.poin_loyalitas,
+                    NIK: data.NIK,
+                    rating: data.rating,
+                    saldo: data.saldo,
+                });
+            })
+            .catch(() => setProfile({}));
+    }, [show]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -32,24 +52,24 @@ const ProfilePenitipPage = () => {
     return (
         <>
             <NavbarPenitip />
-            <Container
-                fluid
-                className="d-flex justify-content-center pt-5"
-            >
+            <Container fluid className="d-flex justify-content-center pt-5">
                 <Row className="w-100">
                     <Col md={{ span: 8, offset: 2 }}>
                         <Row>
-                            {/* Profile Picture Section */}
                             <Col md={4}>
                                 <Card className="text-center p-3 shadow-sm">
                                     <h6 className="fw-bold">Gambar Profil</h6>
                                     <div className="mb-3">
-                                        {formData.profile_picture ? (
+                                        {profile?.profile_picture ? (
                                             <img
-                                                src={URL.createObjectURL(formData.profile_picture)}
+                                                src={profile.profile_picture}
                                                 alt="Profile"
                                                 className="img-fluid rounded-circle"
-                                                style={{ width: "120px", height: "120px", objectFit: "cover" }}
+                                                style={{
+                                                    width: "120px",
+                                                    height: "120px",
+                                                    objectFit: "cover",
+                                                }}
                                             />
                                         ) : (
                                             <div
@@ -61,7 +81,6 @@ const ProfilePenitipPage = () => {
                                 </Card>
                             </Col>
 
-                            {/* Profile Form */}
                             <Col md={8}>
                                 <Card className="p-4 shadow-sm">
                                     <h5 className="fw-bold mb-3">Informasi Akun</h5>
@@ -139,8 +158,8 @@ const ProfilePenitipPage = () => {
                                                     />
                                                 </Form.Group>
                                             </Col>
-
                                         </Row>
+
                                         <Row>
                                             <Col md={4}>
                                                 <Form.Group className="mb-3">

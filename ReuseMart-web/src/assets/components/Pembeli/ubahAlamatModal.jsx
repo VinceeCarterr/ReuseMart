@@ -39,7 +39,7 @@ const UbahAlamatModal = ({ show, onHide, alamatData, onUpdateSuccess }) => {
     const handleKecamatanChange = (e) => {
         const kecamatan = e.target.value;
         setSelectedKecamatan(kecamatan);
-        setSelectedKodePos(""); // reset kode pos jika kecamatan berubah
+        setSelectedKodePos("");
     };
 
     const handleUpdate = async () => {

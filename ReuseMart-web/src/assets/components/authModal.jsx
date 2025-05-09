@@ -70,23 +70,30 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
 
-      if (type === "pegawai") {
-        const role = pegawai?.jabatan?.toLowerCase();
-        if (role === "admin") {
-          navigate("/admin");
-        } else if (role === "cs") {
-          navigate("/CSLP");
-        } else {
-          navigate("/");
-        }
-      } else if (type === "user") {
-        if (user?.role === "Pembeli") {
-          navigate("/pembeliLP");
-        } else {
-          navigate("/");
+      // if (type === "pegawai") {
+      //   const role = pegawai?.jabatan?.toLowerCase();
+      //   if (role === "admin") {
+      //     navigate("/admin");
+      //   } else if (role === "cs") {
+      //     navigate("/CSLP");
+      //   } else {
+      //     navigate("/");
+      //   }
+      // } else if (type === "user") {
+      //   if (user?.role === "Pembeli") {
+      //     navigate("/pembeliLP");
+      //   } else {
+      //     navigate("/");
+      //   }
+      // }
+
+      if (type === "user") {
+        const role = user?.role?.toLowerCase();
+        if (role === "penitip\r\n") {
+          navigate("/profilePenitip");
         }
       }
-      
+
       setTimeout(onHide, 100);
     } catch (err) {
       const message = err.response?.data?.error || "Data Invalid!";
