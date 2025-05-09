@@ -1,0 +1,35 @@
+.navbar-CS {
+    position: relative;
+    z-index: 1045;
+    background-color: #fffcf7;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    border-bottom: 4px solid #f0f0f0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.navbar-CS:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.navbar-CS .logo-container {
+    padding-right: 2rem;
+    padding-left: 1rem;
+}
+
+.logo-container {
+    position: relative;
+    border-right: 1px solid rgba(0,0,0,0.15);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-right: 2rem;
+}
+
+.logo-container a:hover .logo-img,
+.logo-container a:hover .logo-text {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+.logo-img { height: 48px; }
+.logo-text { color: #198754; }

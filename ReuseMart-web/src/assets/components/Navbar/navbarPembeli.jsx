@@ -1,73 +1,143 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Form, Dropdown, Modal, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { FaShoppingCart, FaClock, FaUserCircle } from "react-icons/fa";
+import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
+import api from "../../../api/api.js";
+import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
 const NavbarPembeli = () => {
-  const userName = "John Doe";
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const [groupedCats, setGroupedCats] = useState([]);
+  const [activeCatIdx, setActiveCatIdx] = useState(0);
+  const [showMega, setShowMega] = useState(false);
+
+  let userName = "User";
+  try {
+    const prof = JSON.parse(localStorage.getItem("profile") || "{}");
+    const fn = prof.first_name ?? prof.firstName ?? prof.name;
+    const ln = prof.last_name ?? prof.lastName;
+    userName = fn && ln ? `${fn} ${ln}` : fn || "User";
+  } catch {}
+
+  useEffect(() => {
+    api
+      .get("kategori")
+      .then(({ data }) => {
+        setGroupedCats(data);
+      })
+      .catch(console.error);
+  }, []);
+
   const openLogoutModal = () => setShowLogoutModal(true);
   const closeLogoutModal = () => setShowLogoutModal(false);
-
   const handleConfirmLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('type');
-    localStorage.removeItem('profile');
-    navigate('/');
+    localStorage.clear();
+    navigate("/");
   };
+
+  const openProfileModal = () => setShowProfileModal(true);
+  const closeProfileModal = () => setShowProfileModal(false);
 
   return (
     <>
       <div className="py-3 navbar-pembeli">
         <div className="container-fluid">
-          <div className="row align-items-center">
-            {/* Logo */}
-            <div className="col text-center fw-bold text-success">
-              <Link to="/" className="text-decoration-none d-flex align-items-center justify-content-center">
-                <img src="/logo_ReuseMart.png" alt="ReuseMart Logo" style={{ height: "60px" }} />
-                <span className="ms-2 fs-4 fw-bold text-success logo-text">ReuseMart</span>
+          <div className="row align-items-center justify-content-between">
+            <div className="col-auto logo-container">
+              <Link
+                to="/pembeliLP"
+                className="d-flex align-items-center text-decoration-none logo-link"
+              >
+                <img
+                  src="/logo_ReuseMart.png"
+                  alt="ReuseMart"
+                  className="logo-img"
+                />
+                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
               </Link>
             </div>
 
-            {/* Search Bar */}
-            <div className="col-6">
+            <div className="col-md-6 px-2">
               <Form className="d-flex">
                 <Form.Control
                   type="search"
-                  placeholder="Mau cari apa hari ini ?"
-                  className="me-2"
+                  placeholder="Mau cari apa hari ini?"
+                  className="search-input"
                 />
               </Form>
             </div>
 
-            <div className="col d-flex align-items-center justify-content-end gap-3 pe-4">
-              <Link to="/kategori" className="text-dark text-decoration-none fs-5">
-                Kategori
+            <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
+              {/* Mega-menu */}
+              <div
+                className="mega-dropdown"
+                onMouseEnter={() => setShowMega(true)}
+                onMouseLeave={() => setShowMega(false)}
+              >
+                <button className="category-toggle">Kategori</button>
+
+                {showMega && (
+                  <div className="mega-menu">
+                    <div className="mega-menu-sidebar">
+                      {groupedCats.map((cat, idx) => (
+                        <div
+                          key={cat.nama_kategori}
+                          className={`mega-menu-item ${
+                            idx === activeCatIdx ? "active" : ""
+                          }`}
+                          onMouseEnter={() => setActiveCatIdx(idx)}
+                        >
+                          {cat.nama_kategori}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mega-menu-content">
+                      {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
+                        <Link
+                          to={`/kategori/${sub.id}`}
+                          key={sub.id}
+                          className="mega-menu-link"
+                        >
+                          {sub.nama}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Link to="/cart" className="text-dark fs-3 icon-link">
+                <FiShoppingCart />
               </Link>
 
-              <Link to="/cart" className="text-dark fs-5 icon-link">
-                <FaShoppingCart />
+              <Link to="/historyPembeli" className="text-dark fs-3 icon-link">
+                <FiClock />
               </Link>
 
-              <Link to="/historyPembeli" className="text-dark fs-5 icon-link">
-                <FaClock />
-              </Link>
-
-              <Dropdown className="me-5">
-                <Dropdown.Toggle variant="light" className="d-flex align-items-center border rounded px-2">
-                  <FaUserCircle className="me-2" />
+              <Dropdown>
+                <Dropdown.Toggle variant="light" className="profile-toggle">
+                  <FiUser className="me-2 fs-3" />
                   <span className="fw-bold">{userName}</span>
                 </Dropdown.Toggle>
-
                 <Dropdown.Menu>
-                  <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/orders">Pesanan Saya</Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/alamat">Atur Alamat</Dropdown.Item>
-                  {/* Replace direct link with modal trigger */}
-                  <Dropdown.Item onClick={openLogoutModal}>Keluar</Dropdown.Item>
+                  <Dropdown.Item onClick={openProfileModal}>
+                    Profil
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/orders">
+                    Pesanan Saya
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/alamat">
+                    Atur Alamat
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={openLogoutModal}>
+                    Keluar
+                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
@@ -75,14 +145,11 @@ const NavbarPembeli = () => {
         </div>
       </div>
 
-      {/* Logout Confirmation Modal */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Apakah Anda yakin ingin keluar?
-        </Modal.Body>
+        <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeLogoutModal}>
             Batal
@@ -92,6 +159,8 @@ const NavbarPembeli = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <ProfileModal show={showProfileModal} onHide={closeProfileModal} />
     </>
   );
 };

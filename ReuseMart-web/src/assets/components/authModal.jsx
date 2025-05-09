@@ -43,7 +43,6 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     return true;
   };
 
-  // Form validity flags (still here but not gating submit)
   const isEmailValid = email.includes("@");
   const loginFormValid =
     isLogin && email.trim() && password.trim() && isEmailValid;
@@ -72,8 +71,11 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setTimeout(() => setShowToast(false), 3000);
 
       if (type === "pegawai") {
-        if (pegawai?.jabatan?.toLowerCase() === "admin") {
+        const role = pegawai?.jabatan?.toLowerCase();
+        if (role === "admin") {
           navigate("/admin");
+        } else if (role === "cs") {
+          navigate("/CSLP");
         } else {
           navigate("/");
         }
@@ -84,7 +86,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
           navigate("/");
         }
       }
-
+      
       setTimeout(onHide, 100);
     } catch (err) {
       const message = err.response?.data?.error || "Data Invalid!";
@@ -121,7 +123,6 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
 
     if (!validateEmail()) valid = false;
 
-    // show field errors first, then bail if invalid
     if (!valid) return;
 
     try {

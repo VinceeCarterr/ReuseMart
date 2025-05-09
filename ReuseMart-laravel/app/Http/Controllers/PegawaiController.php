@@ -111,7 +111,13 @@ class PegawaiController extends Controller
             $pegawai = Pegawai::findOrFail($id);
 
             $data = $request->only([
-                'first_name', 'last_name', 'email', 'id_jabatan', 'no_telp', 'tanggal_lahir', 'komisi'
+                'first_name',
+                'last_name',
+                'email',
+                'id_jabatan',
+                'no_telp',
+                'tanggal_lahir',
+                'komisi'
             ]);
 
             if ($request->filled('password')) {
@@ -144,13 +150,33 @@ class PegawaiController extends Controller
         try {
             $query = $request->input('query');
             $pegawai = Pegawai::where('first_name', 'LIKE', "%$query%")
-                              ->orWhere('last_name', 'LIKE', "%$query%")
-                              ->get();
+                ->orWhere('last_name', 'LIKE', "%$query%")
+                ->get();
 
             return response()->json($pegawai);
         } catch (Exception $e) {
             Log::error('Error searching pegawai: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to search pegawai'], 500);
         }
+    }
+
+    public function resetPassword($id)
+    {
+        $pegawai = Pegawai::find($id);
+
+        if (!$pegawai) {
+            return response()->json(['error' => 'Pegawai tidak ditemukan'], 404);
+        }
+
+        if (!$pegawai->tanggal_lahir) {
+            return response()->json(['error' => 'Tanggal lahir tidak tersedia'], 400);
+        }
+
+        $formattedPassword = \Carbon\Carbon::parse($pegawai->tanggal_lahir)->format('dmY');
+
+        $pegawai->password = Hash::make($formattedPassword);
+        $pegawai->save();
+
+        return response()->json(['message' => 'Password berhasil direset ke tanggal lahir (ddmmyyyy)']);
     }
 }

@@ -3,8 +3,10 @@ import React, { useRef, useEffect, useState, use } from "react";
 import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import AlamatModal from "../../components/Pembeli/alamatModal";
+import UbahAlamatModal from "../../components/Pembeli/ubahAlamatModal";
+import api from "../../../api/api.js";
 
-const AlamatCard = ({ alamat, onDeleteClick, onSetDefault }) => (
+const AlamatCard = ({ alamat, onDeleteClick, onSetDefault, onEditClick }) => (
     <Col md={12} className="justify-content-center mx-auto">
         <Card className={alamat.isDefault ? "border border-2 border-success" : ""}>
             <Card.Body>
@@ -17,7 +19,8 @@ const AlamatCard = ({ alamat, onDeleteClick, onSetDefault }) => (
                     </Col>
                     <Col md={1}>{alamat.kota}</Col>
                     <Col md={1}>{alamat.kecamatan}</Col>
-                    <Col md={3}>{alamat.alamat}</Col>
+                    <Col md={1}>{alamat.kode_pos}</Col>
+                    <Col md={2}>{alamat.alamat}</Col>
                     <Col md={2}>{alamat.catatan}</Col>
                     <Col md={3} className="d-flex justify-content-end gap-2">
                         {!alamat.isDefault && (
@@ -29,7 +32,7 @@ const AlamatCard = ({ alamat, onDeleteClick, onSetDefault }) => (
                                 Jadikan Utama
                             </Button>
                         )}
-                        <Button variant="outline-primary" size="sm"><Pencil /></Button>
+                        <Button variant="outline-primary" size="sm" onClick={() => onEditClick(alamat)}><Pencil /></Button>
                         <Button
                             variant="outline-danger"
                             size="sm"
@@ -49,7 +52,11 @@ const AlamatCard = ({ alamat, onDeleteClick, onSetDefault }) => (
 const AlamatPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [alamatToDelete, setAlamatToDelete] = useState(null);
     const [alamatList, setAlamatList] = useState([]);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [alamatToEdit, setAlamatToEdit] = useState(null);
+
 
     const handleSetDefault = (selectedAlamat) => {
         const updatedList = alamatList.map((alamat) =>
@@ -60,98 +67,40 @@ const AlamatPage = () => {
         setAlamatList(updatedList);
     };
 
-
     useEffect(() => {
-        const data = [
-            {
-                label: "Rumah",
-                kota: "Yogyakarta",
-                kecamatan: "Depok",
-                alamat: "Jl Maguwoharjo No 211",
-                catatan: "Depan kampus Atma Jaya",
-                isDefault: true
-            },
-            {
-                label: "Kantor",
-                kota: "Yogyakarta",
-                kecamatan: "Umbulharjo",
-                alamat: "Jl Kusumanegara No 12",
-                catatan: "Dekat stadion Mandala Krida",
-                isDefault: false
-            },
-            {
-                label: "Kos",
-                kota: "Yogyakarta",
-                kecamatan: "Depok",
-                alamat: "Jl Kaliurang Km 5.5",
-                catatan: "Sebelah Indomaret",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
-            },
-            {
-                label: "Orang Tua",
-                kota: "Magelang",
-                kecamatan: "Mungkid",
-                alamat: "Jl Mayor Kusen No 8",
-                catatan: "Dekat alun-alun Mungkid",
-                isDefault: false
-            },
-            {
-                label: "Rumah Sakit",
-                kota: "Sleman",
-                kecamatan: "Ngaglik",
-                alamat: "Jl Palagan Tentara Pelajar No 88",
-                catatan: "Belakang pom bensin",
-                isDefault: false
+        (async () => {
+            try {
+                const { data } = await api.get("/alamat");
+                setAlamatList(data);
+            } catch (err) {
+                console.error("Error loading alamat:", err);
             }
-        ];
-        setAlamatList(data);
+        })();
     }, []);
 
+    const handleDelete = async () => {
+        if (alamatToDelete) {
+            try {
+                await api.delete(`/alamat/${alamatToDelete.id_alamat}`);
+                setAlamatList(prev => prev.filter(e => e.id_alamat !== alamatToDelete.id_alamat));
+                setShowDeleteModal(false);
+                setAlamatToDelete(null);
+            } catch (error) {
+                console.error('Failed to delete alamat:', error);
+            }
+        }
+    };
 
-    const onDeleteClick = (pegawai) => {
-        setPegawaiToDelete(pegawai);
+    const onDeleteClick = (alamat) => {
+        setAlamatToDelete(alamat);
         setShowDeleteModal(true);
     };
+
+    const handleEditClick = (alamat) => {
+        setAlamatToEdit(alamat);
+        setShowEditModal(true);
+    };
+
 
     return (
         <div>
@@ -174,19 +123,52 @@ const AlamatPage = () => {
             <br />
             <Container className="mt-3">
                 <Row>
-                    {[...alamatList]
-                        .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
-                        .map((alamat, index) => (
-                            <Col key={index} md={12} className="mb-2">
-                                <AlamatCard
-                                    alamat={alamat}
-                                    onDeleteClick={onDeleteClick}
-                                    onSetDefault={handleSetDefault}
-                                />
-                            </Col>
-                        ))}
+                    {alamatList.length === 0 ? (
+                        <Col md={12} className="text-center">
+                            <p>Belum terdapat alamat apapun</p>
+                        </Col>
+                    ) : (
+                        [...alamatList]
+                            .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+                            .map((alamat, index) => (
+                                <Col key={index} md={12} className="mb-2">
+                                    <AlamatCard
+                                        alamat={alamat}
+                                        onDeleteClick={onDeleteClick}
+                                        onSetDefault={handleSetDefault}
+                                        onEditClick={handleEditClick}
+                                    />
+                                </Col>
+                            ))
+                    )}
                 </Row>
             </Container>
+            <Modal
+                show={showDeleteModal}
+                onHide={() => setShowDeleteModal(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi Hapus</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Apakah anda yakin ingin menghapus alamat?</p>
+                    <div className="d-flex justify-content-end">
+                        <Button variant="outline-danger" onClick={handleDelete}>Hapus</Button>
+                    </div>
+                </Modal.Body>
+            </Modal>
+
+            <UbahAlamatModal
+                show={showEditModal}
+                onHide={() => setShowEditModal(false)}
+                alamatData={alamatToEdit}
+                onUpdateSuccess={async () => {
+                    const { data } = await api.get("/alamat");
+                    setAlamatList(data);
+                }}
+            />
+
         </div>
     );
 }

@@ -31,6 +31,7 @@ class AlamatController extends Controller
             return response()->json(['error' => 'Failed to create address'], 500);
         }
     }
+
     public function show($id)
     {
         try {
@@ -66,10 +67,12 @@ class AlamatController extends Controller
         }
     }
 
-    public function getAlamatByUserId($userId)
+    public function getAlamatByUserId(Request $request)
     {
+        $userId = $request->user()->id_user;
+
         try {
-            $alamat = Alamat::where('user_id', $userId)->get();
+            $alamat = Alamat::where('id_user', $userId)->get();
             return response()->json($alamat);
         } catch (Exception $e) {
             Log::error('Error fetching addresses by user ID: ' . $e->getMessage());

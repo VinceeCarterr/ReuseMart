@@ -10,15 +10,17 @@ class Alamat extends Model
     use HasFactory;
 
     protected $table = 'alamat';
-    protected $primaryKey = 'id_film';
+    protected $primaryKey = 'id_alamat';
+    public $timestamps = false;
     protected $fillable = [
         'id_user',
         'label',
         'kota',
         'kecamatan',
+        'kode_pos',
         'alamat',
         'catatan',
-        'isDefault',
+        'isdefault',
     ];
 
     public function User()
