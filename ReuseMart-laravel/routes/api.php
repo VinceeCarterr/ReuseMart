@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\BarangController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\AlamatController;
 use Illuminate\Http\Request;
@@ -11,6 +12,11 @@ use Illuminate\Http\Request;
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'unifiedLogin']);
 
+
+
+
+Route::get('/barang', [BarangController::class, 'index']);
+Route::get('/barang/{id}', [BarangController::class, 'show']);
 //pegawai
 
 
