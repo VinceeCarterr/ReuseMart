@@ -39,8 +39,19 @@ const OwnerLandingPage = () => {
     const [reqDonasiList, setReqDonasiList] = useState([]);
     const [userList, setUserList] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [donasiList, setDonasiList] = useState([]);
+
     const handleShow = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
+
+    const fetchDonasi = async () => {
+        try {
+            const response = await api.get('/donasi');
+            setDonasiList(response.data);
+        } catch (error) {
+            console.error('Failed to fetch Donasi:', error);
+        }
+    };
 
 
     const fetchReqDonasi = async () => {
@@ -69,7 +80,16 @@ const OwnerLandingPage = () => {
     useEffect(() => {
         fetchReqDonasi();  
         fetchUser();
+        fetchDonasi();
     }, []);
+
+
+    const isReqDonasiDone = (idReq) => {
+        return donasiList.some(donasi => donasi.id_reqdonasi === idReq);
+    };
+
+    const filteredReqDonasiList = reqDonasiList.filter(req => !isReqDonasiDone(req.id_reqdonasi));
+
 
     return (
 
@@ -87,7 +107,7 @@ const OwnerLandingPage = () => {
                 </Row>
                 <hr />
                 <Row className="mt-4">
-                    {reqDonasiList.map((reqDonasi) => (
+                    {filteredReqDonasiList.map((reqDonasi) => (
                         <ReqDonasiCard 
                             key={reqDonasi.id_reqdonasi} 
                             reqDonasi={reqDonasi} 

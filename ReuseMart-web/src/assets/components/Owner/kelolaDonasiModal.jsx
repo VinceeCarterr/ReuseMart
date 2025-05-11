@@ -32,7 +32,6 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                 tanggal_donasi: new Date().toISOString().slice(0, 10)
             });
 
-            await api.delete(`/deleteReqDonasi/${selectedReqId}`);
 
             await api.put(`/barang/${selectedBarangId}/updateStatus`);
 
@@ -92,7 +91,7 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                     </Row>
                     <br />
                     <Button variant="success" onClick={handleSubmit}>
-                        Daftar Transaksi
+                        Daftarkan Donasi
                     </Button>
                 </Form>
             </Modal.Body>
