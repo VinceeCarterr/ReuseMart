@@ -86,13 +86,14 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
 
       if (type === "pegawai") {
         const jabatan = pegawai.jabatan.toLowerCase();
-        if (jabatan === "admin") navigate("/admin");
-        else if (jabatan === "cs") navigate("/CSLP");
-        else if (jabatan === "gudang") navigate("/gudangLP");
-        else if (jabatan === "kurir") navigate("/kurirLP");
-        else if (jabatan === "hunter") navigate("/hunterLP");
-        else navigate("/");
-      } else if (type === "user") {
+        if (jabatan === "admin")        navigate("/admin");
+        else if (jabatan === "cs")      navigate("/CSLP");
+        else if (jabatan === "gudang")  navigate("/gudangLP");
+        else if (jabatan === "kurir")   navigate("/kurirLP");
+        else if (jabatan === "hunter")  navigate("/hunterLP");
+        else if (jabatan === "owner")   navigate("/ownerLP");;
+      }
+      else if (type === "user") {
         const role = user.role?.trim().toLowerCase();
 
         switch (role) {

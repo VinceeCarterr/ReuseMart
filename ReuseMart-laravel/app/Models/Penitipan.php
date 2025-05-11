@@ -10,6 +10,7 @@ class Penitipan extends Model
     use HasFactory;
     protected $table = 'penitipan';
     protected $primaryKey = 'id_penitipan';
+    public $timestamps = false;
     protected $fillable = [
         'id_user',
         'id_barang',

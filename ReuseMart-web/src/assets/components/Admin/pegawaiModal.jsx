@@ -12,10 +12,6 @@ const PegawaiModal = ({ show, onHide, fetchPegawai}) => {
     const [tglLahir, setTglLahir] = useState("");
     const [error, setError] = useState("");
 
-    const handleSelect = (eventKey) => {
-        setSelectedJabatan(eventKey);
-    };
-
     const handleTambah = async () => {
         setError('');
 

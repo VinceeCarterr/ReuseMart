@@ -78,4 +78,18 @@ class BarangController extends Controller
             return response()->json(['error' => 'Failed to search barang'], 500);
         }
     }
+
+    public function updateStatusBarang($id)
+    {
+        try {
+            $barang = Barang::findOrFail($id);
+            $barang->status_periode = 'Sudah didonasikan';
+            $barang->status = "Donated";
+            $barang->save();
+            return response()->json($barang);
+        } catch (Exception $e) {
+            Log::error('Error updating barang status: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update barang status'], 500);
+        }
+    }
 }
