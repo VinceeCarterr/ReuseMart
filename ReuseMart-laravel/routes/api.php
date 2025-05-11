@@ -7,6 +7,8 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\AlamatController;
+use App\Http\Controllers\Req_DonasiController;
+
 use Illuminate\Http\Request;
 
 Route::post('/register', [UserController::class, 'register']);
@@ -42,9 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/alamat/{id}', [AlamatController::class, 'update']);
     Route::delete('/alamat/{id}', [AlamatController::class, 'destroy']);
 
-    Route::get('/pegawai', [PegawaiController::class, 'index']);
-    Route::delete('/pegawai/{id}', [PegawaiController::class, 'destroy']);
-    Route::post('/pegawai/register', [PegawaiController::class, 'register']);
-    Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
-    Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword']);
+    //Req_Donasi
+    Route::get('/reqDonasi', [Req_DonasiController::class, 'userIndex']);
+    Route::post('/addReqDonasi', [Req_DonasiController::class, 'store']);
+    Route::put('/updateReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'update']);
+    Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
 });

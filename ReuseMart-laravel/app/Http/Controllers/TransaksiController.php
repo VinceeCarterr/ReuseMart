@@ -88,6 +88,7 @@ class TransaksiController extends Controller
         $transaksis = Transaksi::with([
             'pembayaran',                    
             'detilTransaksi.Barang.Penitipan.user',
+            'detilTransaksi.Barang.foto',
             'pengiriman',
             'pengambilan',
         ])

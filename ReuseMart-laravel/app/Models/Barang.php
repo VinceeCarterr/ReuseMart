@@ -57,4 +57,9 @@ class Barang extends Model
     {
         return $this->hasOne(Forum::class, 'id_barang');
     }
+
+    public function foto()
+    {
+        return $this->hasMany(Foto_Barang::class, 'id_barang', 'id_barang');
+    }
 }

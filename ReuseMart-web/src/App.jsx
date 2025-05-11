@@ -10,6 +10,8 @@ import HistoryPembeli from "./assets/pages/pembeli/historyPembeli.jsx";
 import CSLandingPage from "./assets/pages/pegawai/CSLandingPage.jsx";
 import OrganisasiPage from "./assets/pages/pegawai/organisasiPage.jsx";
 import OrganisasiLandingPage from "./assets/pages/organisasi/organisasiLandingPage.jsx";
+import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
+
 function App() {
   return (
     <Router>
@@ -25,6 +27,7 @@ function App() {
           <Route path="/CSLP" element={<CSLandingPage />} />
           <Route path="/organisasi" element={<OrganisasiPage />} />
           <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
+          <Route path="/request-donasi" element={<ReqDonasi />} />
         </Routes>
       </div>
     </Router>
