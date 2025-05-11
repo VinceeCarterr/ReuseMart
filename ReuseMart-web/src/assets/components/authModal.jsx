@@ -89,7 +89,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             navigate("/pembeliLP");
             break;
           case "penitip":
-            navigate("/pembeliLP");
+            navigate("/penitipLP");
             break;
           case "organisasi":
             navigate("/organisasiLP");

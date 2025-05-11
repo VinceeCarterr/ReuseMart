@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/organisasi', [UserController::class, 'index']);
     Route::delete('/organisasi/{id}', [UserController::class, 'deleteOrganisasi']);
     Route::put('organisasi/{id}', [UserController::class, 'updateOrganisasi']);
+    
     Route::get('penitip', [UserController::class, 'penitip']);
     Route::put('penitip/{id}', [UserController::class, 'updatePenitip']);
     Route::delete('penitip/{id}', [UserController::class, 'destroyPenitip']);

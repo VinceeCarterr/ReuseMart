@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Form, Dropdown, Modal, Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FiUser } from "react-icons/fi";
 import api from "../../../api/api.js";
 import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
 const NavbarOrganisasi = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [groupedCats, setGroupedCats] = useState([]);
@@ -25,11 +27,15 @@ const NavbarOrganisasi = () => {
   useEffect(() => {
     api
       .get("kategori")
-      .then(({ data }) => {
-        setGroupedCats(data);
-      })
+      .then(({ data }) => setGroupedCats(data))
       .catch(console.error);
   }, []);
+
+  const handleSearchChange = (e) => {
+    const q = e.target.value;
+    setSearchTerm(q);
+    navigate(`${pathname}?q=${encodeURIComponent(q)}`);
+  };
 
   const openLogoutModal = () => setShowLogoutModal(true);
   const closeLogoutModal = () => setShowLogoutModal(false);
@@ -61,15 +67,18 @@ const NavbarOrganisasi = () => {
               </Link>
             </div>
 
-            {/* Search */}
+            {/* Live Search */}
             <div className="col-md-6 px-2">
               <Form className="d-flex">
-                <Form.Control
-                  type="search"
-                  placeholder="Mau cari apa hari ini?"
-                  className="search-input"
-                />
-              </Form>
+            <Form.Control
+              type="text"
+              autoComplete="off"
+                placeholder="Mau cari apa hari ini?"
+              className="search-input"
+              value={searchTerm}
+                onChange={handleSearchChange}
+              />
+            </Form>
             </div>
 
             {/* Actions */}

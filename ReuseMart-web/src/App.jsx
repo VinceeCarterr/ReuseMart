@@ -12,6 +12,7 @@ import CSLandingPage from "./assets/pages/pegawai/CSLandingPage.jsx";
 import OrganisasiPage from "./assets/pages/organisasi/organisasiPage.jsx";
 import OrganisasiLandingPage from "./assets/pages/organisasi/organisasiLandingPage.jsx";
 import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
+import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/organisasi" element={<OrganisasiPage />} />
           <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
           <Route path="/request-donasi" element={<ReqDonasi />} />
+          <Route path="penitipLP" element={<PenitipLandingPage />} />
         </Routes>
       </div>
     </Router>

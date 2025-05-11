@@ -17,7 +17,7 @@ import {
   FiStar,
 } from "react-icons/fi";
 import api from "../../../api/api.js";
-import NavbarCS from "../../components/Navbar/navbarCS";
+import NavbarCS from "../../components/Navbar/navbarCS.jsx";
 import TambahPenitipModal from "../../components/CS/tambahPenitipModal.jsx";
 import DetailPenitipModal from "../../components/CS/detailPenitipModal.jsx";
 
