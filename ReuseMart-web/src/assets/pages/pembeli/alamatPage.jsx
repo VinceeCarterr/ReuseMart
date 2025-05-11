@@ -1,6 +1,6 @@
 import NavbarPembeli from "../../components/Navbar/navbarPembeli";
-import React, { useRef, useEffect, useState, use } from "react";
-import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
+import { useEffect, useState } from "react";
+import { Container, Row, Col, Card, Button, Modal, Form } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import AlamatModal from "../../components/Pembeli/alamatModal";
 import UbahAlamatModal from "../../components/Pembeli/ubahAlamatModal";
@@ -70,6 +70,7 @@ const AlamatPage = () => {
     const [alamatList, setAlamatList] = useState([]);
     const [showEditModal, setShowEditModal] = useState(false);
     const [alamatToEdit, setAlamatToEdit] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
 
     const handleSetDefault = (selectedAlamat) => {
@@ -115,6 +116,14 @@ const AlamatPage = () => {
         setShowEditModal(true);
     };
 
+    const filtered = alamatList.filter((a) => {
+        const label = (a.label || "").toLowerCase();
+        const alamat = (a.alamat || "").toLowerCase();
+        const term = searchTerm.toLowerCase();
+
+        return label.includes(term) || alamat.includes(term);
+    });
+
 
     return (
         <div>
@@ -124,10 +133,18 @@ const AlamatPage = () => {
                 <Row>
                     <Col md={12} className="mx-auto">
                         <Row>
-                            <Col md={6}>
+                            <Col md={4}>
                                 <h2 className="text-success fw-bold welcome-heading">Alamat</h2>
                             </Col>
-                            <Col md={6} className="d-flex justify-content-end">
+                            <Col md={4}>
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Cari Alamat…"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </Col>
+                            <Col md={4} className="d-flex justify-content-end">
                                 <Button variant="success" className="btn btn-primary" onClick={() => setShowModal(true)}>Tambah alamat</Button>
                             </Col>
                         </Row>
@@ -137,12 +154,12 @@ const AlamatPage = () => {
             <br />
             <Container className="mt-3">
                 <Row>
-                    {alamatList.length === 0 ? (
+                    {filtered.length === 0 ? (
                         <Col md={12} className="text-center">
-                            <p>Belum terdapat alamat apapun</p>
+                            <p>Belum terdapat alamat yang dicari</p>
                         </Col>
                     ) : (
-                        [...alamatList]
+                        [...filtered]
                             .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
                             .map((alamat, index) => (
                                 <Col key={index} md={12} className="mb-2">
