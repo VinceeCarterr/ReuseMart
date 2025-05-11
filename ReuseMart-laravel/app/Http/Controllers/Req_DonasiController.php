@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\Validator;
 
 class Req_DonasiController extends Controller
 {
+    public function index()
+    {
+        try {
+            $reqDonasi = Req_Donasi::with('user')->orderBy('id_reqdonasi', 'desc')->get();
+            return response()->json($reqDonasi);
+        } catch (Exception $e) {
+            Log::error('Error fetching Req_Donasi: '.$e->getMessage());
+            return response()->json(['error'=>'Failed to fetch requests'], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

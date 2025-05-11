@@ -14,18 +14,21 @@ import AuthModal from "../components/authModal.jsx";
 
 
 const ProductCard = ({ barang }) => (
-    <Card className="ProductCart mb-3">
-        <div style={{ height: '150px', backgroundColor: '#ccc' }} > 
-            <img src={barang.foto1} alt="Gambar 1" />
+    <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
+            <img src={barang.foto1} alt="Gambar 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <Card.Body>
-            <Card.Title style={{ fontWeight: '575' }}>{barang.nama_barang}</Card.Title>
-            <Card.Title style={{ fontWeight: '575' }}>Rp {barang.harga}</Card.Title>
-            <Card.Text>{barang.kategori}<br />
-                {barang.rating}</Card.Text>
+        <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+            <div style={{ flexGrow: 1 }}>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
+                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
+                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.rating}</Card.Text>
+            </div>
         </Card.Body>
     </Card>
 );
+
 
 const LandingPage = () => {
     const [barangHighlight, setBarangHighlight] = useState([]);
@@ -111,7 +114,7 @@ const LandingPage = () => {
             {/* All Products Section */}
             <Container className="mt-4">
                 <Row>
-                    {barangList.filter(barang => barang.status === 'Available')
+                    {barangList.filter(barang => (barang.status === 'Available' && barang.status_periode === "Periode 1") || (barang.status === 'Available' && barang.status_periode === "Periode 2"))
                         .map((barang, index) => (
                         <Col data-aos="fade-down" key={index} xs={6} sm={4} md={4} lg={2} className="mb-3">
                             <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>

@@ -8,20 +8,19 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Models\Penitipan;
+use App\Models\Barang;
 use Exception;
 
 class UserController extends Controller
 {
-    public function index()
+    public function publicList()
     {
-        try {
-            $users = User::with('role')->get();
-            return response()->json($users);
-        } catch (Exception $e) {
-            Log::error('Error fetching users: ' . $e->getMessage());
-            return response()->json(['error' => 'Unable to fetch users'], 500);
-        }
+        $users = User::select('id_user', 'first_name', 'last_name')->get();
+
+        return response()->json($users);
     }
+
 
     public function me(Request $request)
     {
@@ -313,6 +312,27 @@ class UserController extends Controller
         } catch (Exception $e) {
             Log::error("Gagal memperbarui organisasi $id: " . $e->getMessage());
             return response()->json(['error' => 'Gagal memperbarui organisasi'], 500);
+        }
+    }
+
+    public function tambahPoinPenitip($id_barang)
+    {
+        $barang = Barang::findOrFail($id_barang);
+        $penitip = Penitipan::where('id_barang', $id_barang)->first();
+
+        if($penitip){
+            $user = User::findOrFail($penitip->id_user);
+            $poin = floor($barang->harga/10000) ;
+            $user->poin_loyalitas += $poin;
+            $user->save();
+            return response()->json([
+                'message' => 'Poin penitip berhasil ditambahkan',
+                'poin'    => $user->poin_loyalitas,
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Barang tidak ditemukan atau tidak ada penitip',
+            ], 404);
         }
     }
 }

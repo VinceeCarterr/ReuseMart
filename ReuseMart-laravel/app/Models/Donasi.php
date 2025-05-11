@@ -10,9 +10,11 @@ class Donasi extends Model
     use HasFactory;
     protected $table = 'donasi';
     protected $primaryKey = 'id_donasi';
+    public $timestamps = false;
     protected $fillable = [
         'id_reqdonasi',
         'id_barang',
+        'tanggal_donasi',
     ];
 
     public function requestDonasi()

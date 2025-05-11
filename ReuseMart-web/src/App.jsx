@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./assets/pages/landingPage.jsx";
 import ProductPage from "./assets/pages/productPage.jsx";
 import AdminPage from "./assets/pages/pegawai/adminPage.jsx";
+import OwnerLandingPage from "./assets/pages/Owner/ownerLandingPage.jsx";  
 import ProfilePenitipPage from "./assets/pages/penitip/profilePenitipPage.jsx";
 import HistoryPenitip from "./assets/pages/penitip/historyPenitip.jsx"
 import AlamatPage from "./assets/pages/pembeli/alamatPage.jsx";
@@ -11,6 +12,7 @@ import HistoryPembeli from "./assets/pages/pembeli/historyPembeli.jsx";
 import CSLandingPage from "./assets/pages/pegawai/CSLandingPage.jsx";
 import OrganisasiPage from "./assets/pages/organisasi/organisasiPage.jsx";
 import OrganisasiLandingPage from "./assets/pages/organisasi/organisasiLandingPage.jsx";
+import HistoryDonasi from "./assets/pages/Owner/historyDonasi.jsx";
 import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
           <Route path="/organisasi" element={<OrganisasiPage />} />
           <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
           <Route path="/request-donasi" element={<ReqDonasi />} />
+          <Route path="/ownerLP" element={<OwnerLandingPage />}/>
+          <Route path="/HistoryDonasi" element={<HistoryDonasi />} />
         </Routes>
       </div>
     </Router>

@@ -1,0 +1,40 @@
+
+.navbar-owner {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-bottom: 4px solid #f0f0f0;
+    background-color: #FFFCF7;
+    transition: all 0.3s ease;
+}
+
+.navbar-owner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-owner a {
+    text-decoration: none;
+}
+
+.logo-text {
+    position: relative;
+    top: 5px;
+}
+
+button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+
+.navbar-owner .dropdown-menu {
+    background-color: #FFFCF7;
+    border: 1px solid #ddd;
+}
+
+.navbar-owner .dropdown-menu .dropdown-item {
+    color: #333;
+}
+
+.navbar-owner .dropdown-menu .dropdown-item:hover {
+    background-color: #FFFCF7;
+    color: #000;
+}

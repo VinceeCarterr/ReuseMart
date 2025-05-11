@@ -79,7 +79,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
         else if (jabatan === "gudang")  navigate("/gudangLP");
         else if (jabatan === "kurir")   navigate("/kurirLP");
         else if (jabatan === "hunter")  navigate("/hunterLP");
-        else                             navigate("/");
+        else if (jabatan === "owner")   navigate("/ownerLP");;
       }
       else if (type === "user") {
         const role = user.role?.trim().toLowerCase();
