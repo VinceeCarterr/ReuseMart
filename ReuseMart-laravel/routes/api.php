@@ -8,18 +8,19 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\Req_DonasiController;
+use App\Http\Controllers\ForumController;
 
 use Illuminate\Http\Request;
 
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'unifiedLogin']);
 
-
-
-
 Route::get('/barang', [BarangController::class, 'index']);
 Route::get('/barang/{id}', [BarangController::class, 'show']);
-//pegawai
+Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments']);
+
+Route::post('/forgot-password', [UserController::class, 'forgotPassword']);
+Route::post('/reset-password', [UserController::class, 'resetPassword']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -51,4 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/addReqDonasi', [Req_DonasiController::class, 'store']);
     Route::put('/updateReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'update']);
     Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
+
+    //Forum
+    Route::post('/barang/{id_barang}/komentar', [ForumController::class, 'addComment']);
 });

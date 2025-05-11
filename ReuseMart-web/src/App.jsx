@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./assets/pages/landingPage.jsx";
 import ProductPage from "./assets/pages/productPage.jsx";
@@ -13,6 +12,7 @@ import OrganisasiPage from "./assets/pages/organisasi/organisasiPage.jsx";
 import OrganisasiLandingPage from "./assets/pages/organisasi/organisasiLandingPage.jsx";
 import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
 import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
+import ResetPassword from "./assets/pages/resetPasswordPage.jsx";
 
 function App() {
   return (
@@ -32,6 +32,7 @@ function App() {
           <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
           <Route path="/request-donasi" element={<ReqDonasi />} />
           <Route path="penitipLP" element={<PenitipLandingPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>
     </Router>

@@ -11,7 +11,6 @@ import {
     Modal,
     Table,
     Form,
-    Pagination,
 } from "react-bootstrap";
 import { Truck, Calendar, Search } from "react-bootstrap-icons";
 import "./historyPenitip.css";
@@ -76,7 +75,7 @@ const HistoryPenitip = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        setCurrentPage(1); // Reset ke halaman 1 saat pencarian baru
+        setCurrentPage(1);
         fetchHistory();
     };
 
@@ -165,7 +164,11 @@ const HistoryPenitip = () => {
                                     <Row className="product-row align-items-center">
                                         <Col xs={4}>
                                             <Image
-                                                src={item.foto.foto1 ? `http://127.0.0.1:8000/storage/${item.foto.foto1}` : "/placeholder.jpg"}
+                                                src={
+                                                    item.foto && item.foto.length > 0
+                                                        ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
+                                                        : "/placeholder.jpg"
+                                                }
                                                 thumbnail
                                                 rounded
                                             />
@@ -176,7 +179,9 @@ const HistoryPenitip = () => {
                                                 Rp{(item.harga || 0).toLocaleString("id-ID")}
                                             </div>
                                             <div className="product-category">
-                                                {item.kategori?.nama_kategori} {item.kategori?.sub_kategori && ` - ${item.kategori.sub_kategori}`}
+                                                {item.kategori?.nama_kategori}{" "}
+                                                {item.kategori?.sub_kategori &&
+                                                    `- ${item.kategori.sub_kategori}`}
                                             </div>
                                         </Col>
                                     </Row>
@@ -184,7 +189,8 @@ const HistoryPenitip = () => {
 
                                 <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                                     <small className="tanggal-text">
-                                        Dititipkan: {new Date(item.tanggal_titip).toLocaleDateString("id-ID")}
+                                        Dititipkan:{" "}
+                                        {new Date(item.tanggal_titip).toLocaleDateString("id-ID")}
                                     </small>
                                     <div className="d-flex align-items-center">
                                         <Button
@@ -194,35 +200,22 @@ const HistoryPenitip = () => {
                                         >
                                             Lihat Detail
                                         </Button>
-                                        {item.status === "Available" && new Date(item.akhir_penitipan) > new Date() && (
-                                            <Button size="sm" variant="success" className="ms-2">
-                                                Perpanjang
-                                            </Button>
-                                        )}
+                                        {item.status === "Available" &&
+                                            new Date(item.akhir_penitipan) > new Date() && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="success"
+                                                    className="ms-2"
+                                                >
+                                                    Perpanjang
+                                                </Button>
+                                            )}
                                     </div>
                                 </Card.Footer>
                             </Card>
                         </Col>
                     ))}
                 </Row>
-
-                {total > 0 && (
-                    <Pagination className="justify-content-center">
-                        <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
-                        <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
-                        {[...Array(lastPage).keys()].map((page) => (
-                            <Pagination.Item
-                                key={page + 1}
-                                active={page + 1 === currentPage}
-                                onClick={() => handlePageChange(page + 1)}
-                            >
-                                {page + 1}
-                            </Pagination.Item>
-                        ))}
-                        <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === lastPage} />
-                        <Pagination.Last onClick={() => handlePageChange(lastPage)} disabled={currentPage === lastPage} />
-                    </Pagination>
-                )}
             </Container>
 
             <Modal show={showDetail} onHide={closeDetail} size="lg" centered>
@@ -243,7 +236,11 @@ const HistoryPenitip = () => {
                             <Row className="mb-4">
                                 <Col md={4}>
                                     <Image
-                                        src={selectedItem.foto.foto1 ? `http://127.0.0.1:8000/storage/${selectedItem.foto.foto1}` : "/placeholder.jpg"}
+                                        src={
+                                            selectedItem.foto && selectedItem.foto.length > 0
+                                                ? `http://127.0.0.1:8000/storage/${selectedItem.foto[0]}`
+                                                : "/placeholder.jpg"
+                                        }
                                         thumbnail
                                         style={{ width: "100%" }}
                                     />
@@ -252,37 +249,67 @@ const HistoryPenitip = () => {
                                     <Table borderless>
                                         <tbody>
                                             <tr>
-                                                <td><strong>Kode Barang</strong></td>
+                                                <td>
+                                                    <strong>Kode Barang</strong>
+                                                </td>
                                                 <td>{selectedItem.kode_barang}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Kategori</strong></td>
                                                 <td>
-                                                    {selectedItem.kategori?.nama_kategori} {selectedItem.kategori?.sub_kategori && ` - ${selectedItem.kategori.sub_kategori}`}
+                                                    <strong>Kategori</strong>
+                                                </td>
+                                                <td>
+                                                    {selectedItem.kategori?.nama_kategori}{" "}
+                                                    {selectedItem.kategori?.sub_kategori &&
+                                                        `- ${selectedItem.kategori.sub_kategori}`}
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Deskripsi</strong></td>
+                                                <td>
+                                                    <strong>Deskripsi</strong>
+                                                </td>
                                                 <td>{selectedItem.deskripsi || "–"}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Harga</strong></td>
-                                                <td>Rp{(selectedItem.harga || 0).toLocaleString("id-ID")}</td>
+                                                <td>
+                                                    <strong>Harga</strong>
+                                                </td>
+                                                <td>
+                                                    Rp{(selectedItem.harga || 0).toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                </td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Garansi</strong></td>
+                                                <td>
+                                                    <strong>Garansi</strong>
+                                                </td>
                                                 <td>{selectedItem.garansi || "Tidak ada"}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Tanggal Penitipan</strong></td>
-                                                <td>{new Date(selectedItem.tanggal_titip).toLocaleDateString("id-ID")}</td>
+                                                <td>
+                                                    <strong>Tanggal Penitipan</strong>
+                                                </td>
+                                                <td>
+                                                    {new Date(
+                                                        selectedItem.tanggal_titip
+                                                    ).toLocaleDateString("id-ID")}
+                                                </td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Akhir Penitipan</strong></td>
-                                                <td>{new Date(selectedItem.akhir_penitipan).toLocaleDateString("id-ID")}</td>
+                                                <td>
+                                                    <strong>Akhir Penitipan</strong>
+                                                </td>
+                                                <td>
+                                                    {new Date(
+                                                        selectedItem.akhir_penitipan
+                                                    ).toLocaleDateString("id-ID")}
+                                                </td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Status Periode</strong></td>
+                                                <td>
+                                                    <strong>Status Periode</strong>
+                                                </td>
                                                 <td>{selectedItem.status_periode || "–"}</td>
                                             </tr>
                                         </tbody>
@@ -302,52 +329,88 @@ const HistoryPenitip = () => {
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td>ID Transaksi</td>
-                                                <td>{selectedItem.transaksi.id_transaksi}</td>
-                                            </tr>
-                                            <tr>
                                                 <td>Tanggal Transaksi</td>
-                                                <td>{new Date(selectedItem.transaksi.tanggal_transaksi).toLocaleDateString("id-ID")}</td>
+                                                <td>
+                                                    {new Date(
+                                                        selectedItem.transaksi
+                                                            .tanggal_transaksi
+                                                    ).toLocaleDateString("id-ID")}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Subtotal</td>
-                                                <td>Rp{(selectedItem.transaksi.subtotal || 0).toLocaleString("id-ID")}</td>
+                                                <td>
+                                                    Rp{(selectedItem.transaksi.subtotal || 0).toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Metode Pengiriman</td>
-                                                <td>{selectedItem.transaksi.metode_pengiriman}</td>
+                                                <td>
+                                                    {selectedItem.transaksi.metode_pengiriman}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Alamat Pengiriman</td>
-                                                <td>{selectedItem.transaksi.alamat || "–"}</td>
+                                                <td>
+                                                    {selectedItem.transaksi.alamat || "–"}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Status Pembayaran</td>
-                                                <td>{selectedItem.transaksi.status_pembayaran || "–"}</td>
+                                                <td>
+                                                    {selectedItem.transaksi
+                                                        .status_pembayaran || "–"}
+                                                </td>
                                             </tr>
                                             {selectedItem.transaksi.pengiriman && (
                                                 <tr>
                                                     <td>Status Pengiriman</td>
-                                                    <td>{selectedItem.transaksi.pengiriman.status_pengiriman}</td>
+                                                    <td>
+                                                        {
+                                                            selectedItem.transaksi
+                                                                .pengiriman
+                                                                .status_pengiriman
+                                                        }
+                                                    </td>
                                                 </tr>
                                             )}
                                             {selectedItem.transaksi.pengambilan && (
                                                 <tr>
                                                     <td>Status Pengambilan</td>
-                                                    <td>{selectedItem.transaksi.pengambilan.status_pengambilan}</td>
+                                                    <td>
+                                                        {
+                                                            selectedItem.transaksi
+                                                                .pengambilan
+                                                                .status_pengambilan
+                                                        }
+                                                    </td>
                                                 </tr>
                                             )}
                                             <tr>
                                                 <td>Komisi Perusahaan</td>
-                                                <td>Rp{(selectedItem.transaksi.komisi_perusahaan || 0).toLocaleString("id-ID")}</td>
+                                                <td>
+                                                    Rp{(selectedItem.transaksi.komisi_perusahaan || 0).toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Komisi Hunter</td>
-                                                <td>Rp{(selectedItem.transaksi.komisi_hunter || 0).toLocaleString("id-ID")}</td>
+                                                <td>
+                                                    Rp{(selectedItem.transaksi.komisi_hunter || 0).toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td>Saldo Diterima</td>
-                                                <td>Rp{(selectedItem.transaksi.saldo_penitip || 0).toLocaleString("id-ID")}</td>
+                                                <td>
+                                                    Rp{(selectedItem.transaksi.saldo_penitip || 0).toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </Table>
@@ -360,12 +423,21 @@ const HistoryPenitip = () => {
                                     <Table borderless>
                                         <tbody>
                                             <tr>
-                                                <td><strong>Organisasi Penerima</strong></td>
+                                                <td>
+                                                    <strong>Organisasi Penerima</strong>
+                                                </td>
                                                 <td>{selectedItem.donasi.organisasi}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Tanggal Donasi</strong></td>
-                                                <td>{new Date(selectedItem.donasi.tanggal_donasi).toLocaleDateString("id-ID")}</td>
+                                                <td>
+                                                    <strong>Tanggal Donasi</strong>
+                                                </td>
+                                                <td>
+                                                    {new Date(
+                                                        selectedItem.donasi
+                                                            .tanggal_donasi
+                                                    ).toLocaleDateString("id-ID")}
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </Table>

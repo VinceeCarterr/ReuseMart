@@ -132,6 +132,9 @@ class TransaksiController extends Controller
                 'donasi.requestDonasi.user' => function ($q) {
                     $q->select('id_user', 'first_name', 'last_name');
                 },
+                'foto' => function ($q) {
+                    $q->select('id_foto', 'id_barang', 'path');
+                },
             ])
                 ->whereHas('penitipan', function ($q) use ($idPenitip) {
                     $q->where('id_user', $idPenitip);
@@ -143,8 +146,6 @@ class TransaksiController extends Controller
                     'id_kategori',
                     'deskripsi',
                     'harga',
-                    'foto1',
-                    'foto2',
                     'status',
                     'status_periode',
                     'tanggal_titip',
@@ -220,38 +221,40 @@ class TransaksiController extends Controller
                     ];
                 }
 
+                // Ambil foto dari tabel foto_barang dengan pengecekan
+                $fotos = $barang->foto ? $barang->foto->map(function ($foto) {
+                    return $foto->path ?? '';
+                })->toArray() : [];
+
                 return [
                     'id_barang' => $barang->id_barang,
                     'kode_barang' => $barang->kode_barang,
                     'nama_barang' => $barang->nama_barang,
                     'kategori' => $barang->kategori ? [
-                        'nama_kategori' => $barang->kategori->nama_kategori,
-                        'sub_kategori' => $barang->kategori->sub_kategori,
+                        'nama_kategori' => $barang->kategori->nama_kategori ?? '',
+                        'sub_kategori' => $barang->kategori->sub_kategori ?? '',
                     ] : null,
-                    'deskripsi' => $barang->deskripsi,
-                    'harga' => $barang->harga,
-                    'foto' => [
-                        'foto1' => $barang->foto1,
-                        'foto2' => $barang->foto2,
-                    ],
-                    'status' => $barang->status,
-                    'status_periode' => $barang->status_periode,
+                    'deskripsi' => $barang->deskripsi ?? '',
+                    'harga' => $barang->harga ?? 0,
+                    'foto' => $fotos,
+                    'status' => $barang->status ?? '',
+                    'status_periode' => $barang->status_periode ?? '',
                     'tanggal_titip' => $barang->tanggal_titip,
                     'akhir_penitipan' => $akhirPenitipan,
-                    'garansi' => $barang->garansi,
+                    'garansi' => $barang->garansi ?? '',
                     'transaksi' => $transaksi ? [
-                        'id_transaksi' => $transaksi->id_transaksi,
+                        'id_transaksi' => $transaksi->id_transaksi ?? '',
                         'tanggal_transaksi' => $transaksi->tanggal_transaksi,
-                        'subtotal' => $transaksi->subtotal,
-                        'metode_pengiriman' => $transaksi->metode_pengiriman,
-                        'alamat' => $transaksi->alamat,
+                        'subtotal' => $transaksi->subtotal ?? 0,
+                        'metode_pengiriman' => $transaksi->metode_pengiriman ?? '',
+                        'alamat' => $transaksi->alamat ?? '',
                         'status_pembayaran' => $transaksi->pembayaran ? $transaksi->pembayaran->status_pembayaran : null,
                         'pengiriman' => $transaksi->pengiriman ? [
-                            'status_pengiriman' => $transaksi->pengiriman->status_pengiriman,
+                            'status_pengiriman' => $transaksi->pengiriman->status_pengiriman ?? '',
                             'tanggal_pengiriman' => $transaksi->pengiriman->tanggal_pengiriman,
                         ] : null,
                         'pengambilan' => $transaksi->pengambilan ? [
-                            'status_pengambilan' => $transaksi->pengambilan->status_pengambilan,
+                            'status_pengambilan' => $transaksi->pengambilan->status_pengambilan ?? '',
                             'tanggal_pengambilan' => $transaksi->pengambilan->tanggal_pengambilan,
                         ] : null,
                         'komisi_perusahaan' => $komisiPerusahaan,
