@@ -1,53 +1,67 @@
 import NavbarPembeli from "../../components/Navbar/navbarPembeli";
-import React, { useRef, useEffect, useState, use } from "react";
-import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
+import { useEffect, useState } from "react";
+import { Container, Row, Col, Card, Button, Modal, Form } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import AlamatModal from "../../components/Pembeli/alamatModal";
 import UbahAlamatModal from "../../components/Pembeli/ubahAlamatModal";
 import api from "../../../api/api.js";
 
 const AlamatCard = ({ alamat, onDeleteClick, onSetDefault, onEditClick }) => (
-    <Col md={12} className="justify-content-center mx-auto">
+    <Col md={12} className="justify-content-center mx-auto mb-2">
         <Card className={alamat.isDefault ? "border border-2 border-success" : ""}>
-            <Card.Body>
-                <Row className="align-items-center">
-                    <Col md={2}>
+            <Card.Body className="p-2">
+                <Row className="align-items-center flex-wrap">
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
                         <strong>{alamat.label}</strong>
-                        {alamat.isDefault && (
-                            <div className="badge bg-success ms-2">Utama</div>
-                        )}
+                        {alamat.isDefault && <div className="badge bg-success ms-2">Utama</div>}
                     </Col>
-                    <Col md={1}>{alamat.kota}</Col>
-                    <Col md={1}>{alamat.kecamatan}</Col>
-                    <Col md={1}>{alamat.kode_pos}</Col>
-                    <Col md={2}>{alamat.alamat}</Col>
-                    <Col md={2}>{alamat.catatan}</Col>
-                    <Col md={3} className="d-flex justify-content-end gap-2">
-                        {!alamat.isDefault && (
+                    <Col md={1} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kota}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kecamatan}
+                    </Col>
+                    <Col md={1} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.kode_pos}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.alamat}
+                    </Col>
+                    <Col md={2} className="border-end d-flex align-items-center justify-content-center">
+                        {alamat.catatan}
+                    </Col>
+                    <Col md={2} className="d-flex align-items-center justify-content-center">
+                        <div className="d-flex justify-content-end gap-2">
+                            {!alamat.isDefault && (
+                                <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => onSetDefault(alamat)}
+                                >
+                                    Utama
+                                </Button>
+                            )}
                             <Button
-                                variant="outline-success"
+                                variant="outline-primary"
                                 size="sm"
-                                onClick={() => onSetDefault(alamat)}
+                                onClick={() => onEditClick(alamat)}
                             >
-                                Jadikan Utama
+                                <Pencil />
                             </Button>
-                        )}
-                        <Button variant="outline-primary" size="sm" onClick={() => onEditClick(alamat)}><Pencil /></Button>
-                        <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => onDeleteClick(alamat)}
-                        >
-                            <Trash />
-                        </Button>
+                            <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => onDeleteClick(alamat)}
+                            >
+                                <Trash />
+                            </Button>
+                        </div>
                     </Col>
                 </Row>
             </Card.Body>
         </Card>
     </Col>
 );
-
-
 
 const AlamatPage = () => {
     const [showModal, setShowModal] = useState(false);
@@ -56,6 +70,7 @@ const AlamatPage = () => {
     const [alamatList, setAlamatList] = useState([]);
     const [showEditModal, setShowEditModal] = useState(false);
     const [alamatToEdit, setAlamatToEdit] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
 
     const handleSetDefault = (selectedAlamat) => {
@@ -101,6 +116,14 @@ const AlamatPage = () => {
         setShowEditModal(true);
     };
 
+    const filtered = alamatList.filter((a) => {
+        const label = (a.label || "").toLowerCase();
+        const alamat = (a.alamat || "").toLowerCase();
+        const term = searchTerm.toLowerCase();
+
+        return label.includes(term) || alamat.includes(term);
+    });
+
 
     return (
         <div>
@@ -110,10 +133,18 @@ const AlamatPage = () => {
                 <Row>
                     <Col md={12} className="mx-auto">
                         <Row>
-                            <Col md={6}>
+                            <Col md={4}>
                                 <h2 className="text-success fw-bold welcome-heading">Alamat</h2>
                             </Col>
-                            <Col md={6} className="d-flex justify-content-end">
+                            <Col md={4}>
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Cari Alamat…"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </Col>
+                            <Col md={4} className="d-flex justify-content-end">
                                 <Button variant="success" className="btn btn-primary" onClick={() => setShowModal(true)}>Tambah alamat</Button>
                             </Col>
                         </Row>
@@ -123,12 +154,12 @@ const AlamatPage = () => {
             <br />
             <Container className="mt-3">
                 <Row>
-                    {alamatList.length === 0 ? (
+                    {filtered.length === 0 ? (
                         <Col md={12} className="text-center">
-                            <p>Belum terdapat alamat apapun</p>
+                            <p>Belum terdapat alamat yang dicari</p>
                         </Col>
                     ) : (
-                        [...alamatList]
+                        [...filtered]
                             .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
                             .map((alamat, index) => (
                                 <Col key={index} md={12} className="mb-2">

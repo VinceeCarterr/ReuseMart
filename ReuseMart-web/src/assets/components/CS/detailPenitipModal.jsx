@@ -1,4 +1,3 @@
-// src/assets/components/CS/DetailPenitipModal.jsx
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Spinner } from "react-bootstrap";
 import api from "../../../api/api.js";
@@ -14,9 +13,9 @@ export default function DetailPenitipModal({
     first_name: "",
     last_name: "",
     email: "",
-    password: "",
     no_telp: "",
     NIK: "",
+    poin_loyalitas: "",
     saldo: "",
     rating: "",
     profile_picture: "",
@@ -25,32 +24,28 @@ export default function DetailPenitipModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // per-field error state:
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
-  // delete-confirmation modal visibility
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (show && penitip) {
       setForm({
-        first_name: penitip.first_name || "",
-        last_name: penitip.last_name || "",
-        email: penitip.email || "",
-        password: "********",
-        no_telp: penitip.no_telp || "",
-        NIK: penitip.NIK || "",
-        saldo: penitip.saldo ?? "",
-        rating: penitip.rating ?? "",
-        profile_picture: penitip.profile_picture || "",
+        first_name:       penitip.first_name || "",
+        last_name:        penitip.last_name  || "",
+        email:            penitip.email      || "",
+        no_telp:          penitip.no_telp    || "",
+        NIK:              penitip.NIK        || "",
+        poin_loyalitas:   penitip.poin_loyalitas ?? "",
+        saldo:            penitip.saldo       ?? "",
+        rating:           penitip.rating      ?? "",
+        profile_picture:  penitip.profile_picture || "",
       });
       setEditing(false);
       setError("");
       setEmailError("");
       setPhoneError("");
-      setPasswordError("");
       setShowDeleteConfirm(false);
     }
   }, [show, penitip]);
@@ -73,31 +68,22 @@ export default function DetailPenitipModal({
     } else {
       setPhoneError("");
     }
-    if (
-      editing &&
-      form.password !== "********" &&
-      !/(?=.*[A-Za-z])(?=.*\d)(?=.*\W)/.test(form.password)
-    ) {
-      setPasswordError("Password harus terdiri dari huruf, angka, dan simbol");
-      valid = false;
-    } else {
-      setPasswordError("");
-    }
     return valid;
   };
 
   const handleSave = async () => {
     if (!validate()) return;
+
     setLoading(true);
     setError("");
     try {
       const payload = {
         first_name: form.first_name,
-        email: form.email,
-        no_telp: form.no_telp,
+        email:      form.email,
+        no_telp:    form.no_telp,
         ...(form.last_name.trim() ? { last_name: form.last_name } : {}),
-        ...(editing && form.password !== "********"
-          ? { password: form.password }
+        ...(form.poin_loyalitas !== "" 
+          ? { poin_loyalitas: form.poin_loyalitas } 
           : {}),
       };
       await api.put(`/penitip/${penitip.id_user}`, payload);
@@ -110,12 +96,10 @@ export default function DetailPenitipModal({
     }
   };
 
-  // opens the confirmation dialog
   const confirmDelete = () => {
     setShowDeleteConfirm(true);
   };
 
-  // actually perform deletion
   const doDelete = async () => {
     setShowDeleteConfirm(false);
     setLoading(true);
@@ -136,7 +120,7 @@ export default function DetailPenitipModal({
     "NIK",
     "saldo",
     "rating",
-    "password",
+    "poin_loyalitas",
   ]);
   const isDisabled = (field) =>
     alwaysDisabled.has(field) || editing === false;
@@ -145,7 +129,6 @@ export default function DetailPenitipModal({
 
   return (
     <>
-      {/* Main Detail Modal */}
       <Modal
         show={show}
         onHide={() => !loading && onHide()}
@@ -174,7 +157,7 @@ export default function DetailPenitipModal({
             {/* First / Last */}
             <Row className="mt-2">
               <Col>
-                <Form.Group>
+                <Form.Group className="text-start">
                   <Form.Label className="form-label">First Name</Form.Label>
                   <Form.Control
                     type="text"
@@ -185,7 +168,7 @@ export default function DetailPenitipModal({
                 </Form.Group>
               </Col>
               <Col>
-                <Form.Group>
+                <Form.Group className="text-start">
                   <Form.Label className="form-label">Last Name</Form.Label>
                   <Form.Control
                     type="text"
@@ -218,9 +201,7 @@ export default function DetailPenitipModal({
               </Col>
               <Col>
                 <Form.Group className="text-start">
-                  <Form.Label className="form-label">
-                    No. Telepon
-                  </Form.Label>
+                  <Form.Label className="form-label">No. Telepon</Form.Label>
                   <Form.Control
                     type="text"
                     value={form.no_telp}
@@ -237,27 +218,10 @@ export default function DetailPenitipModal({
               </Col>
             </Row>
 
-            {/* Password / NIK */}
+            {/* NIK / Poin Loyalitas */}
             <Row className="mt-3">
               <Col>
                 <Form.Group className="text-start">
-                  <Form.Label className="form-label">Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={form.password}
-                    onChange={handleChange("password")}
-                    disabled={isDisabled("password")}
-                    isInvalid={!!passwordError}
-                  />
-                  {passwordError && (
-                    <div className="invalid-text text-danger text-start">
-                      {passwordError}
-                    </div>
-                  )}
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
                   <Form.Label className="form-label">NIK</Form.Label>
                   <Form.Control
                     type="text"
@@ -266,12 +230,25 @@ export default function DetailPenitipModal({
                   />
                 </Form.Group>
               </Col>
+              <Col>
+                <Form.Group className="text-start">
+                  <Form.Label className="form-label">
+                    Poin Loyalitas
+                  </Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={form.poin_loyalitas}
+                    onChange={handleChange("poin_loyalitas")}
+                    disabled={isDisabled("poin_loyalitas")}
+                  />
+                </Form.Group>
+              </Col>
             </Row>
 
             {/* Saldo / Rating */}
             <Row className="mt-3">
               <Col>
-                <Form.Group>
+                <Form.Group className="text-start">
                   <Form.Label className="form-label">Saldo</Form.Label>
                   <Form.Control
                     type="number"
@@ -281,7 +258,7 @@ export default function DetailPenitipModal({
                 </Form.Group>
               </Col>
               <Col>
-                <Form.Group>
+                <Form.Group className="text-start">
                   <Form.Label className="form-label">Rating</Form.Label>
                   <Form.Control
                     type="number"

@@ -53,28 +53,35 @@ const HistoryPembeli = () => {
 
       <Container className="mt-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="fw-bold">Riwayat Pembelian</h2>
-            <div>
-                {["Delivery", "Pick Up"].map((m) => (
-                <span
-                    key={m}
-                    className={`filter-option ${filter === m ? "active" : ""}`}
-                    onClick={() => setFilter(m)}
-                >
-                    {m}
-                </span>
-                ))}
-            </div>
+          <h2 className="fw-bold">Riwayat Pembelian</h2>
+          <div>
+            {["Delivery", "Pick Up"].map((m) => (
+              <span
+                key={m}
+                className={`filter-option ${filter === m ? "active" : ""}`}
+                onClick={() => setFilter(m)}
+              >
+                {m}
+              </span>
+            ))}
+          </div>
         </div>
 
         {filtered.length === 0 && (
-          <p className="text-center text-muted">Tidak ada riwayat untuk "{filter}".</p>
+          <p className="text-center text-muted">
+            Tidak ada riwayat untuk "{filter}".
+          </p>
         )}
 
         <Row>
           {filtered.map((tx) => {
             const dt = tx.detil_transaksi?.[0] || {};
             const barang = dt.barang || {};
+            const barangFotos = barang.foto || [];
+            const previewPath = barangFotos.length
+              ? barangFotos[0].path
+              : "defaults/no-image.png";
+
             const seller = barang.penitipan?.user;
             const sellerName = seller
               ? `${seller.first_name} ${seller.last_name}`
@@ -99,7 +106,7 @@ const HistoryPembeli = () => {
                     <Row className="product-row align-items-center">
                       <Col xs={4}>
                         <Image
-                          src={`http://127.0.0.1:8000/storage/${barang.kode_barang}.jpeg`}
+                          src={`http://127.0.0.1:8000/storage/${previewPath}`}
                           thumbnail
                           rounded
                         />
@@ -115,7 +122,9 @@ const HistoryPembeli = () => {
 
                   <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                     <small className="tanggal-text">
-                      {new Date(tx.tanggal_transaksi).toLocaleDateString("id-ID")}
+                      {new Date(tx.tanggal_transaksi).toLocaleDateString(
+                        "id-ID"
+                      )}
                     </small>
                     <div className="d-flex align-items-center">
                       <Button
@@ -148,11 +157,12 @@ const HistoryPembeli = () => {
         <Modal.Body>
           {selectedTx && (
             <>
-              {/* Header */}
               <div className="d-flex justify-content-between mb-4">
                 <h5>
                   {selectedTx.detil_transaksi?.[0]?.barang?.penitipan?.user
-                    ? `${selectedTx.detil_transaksi[0].barang.penitipan.user.first_name} ${selectedTx.detil_transaksi[0].barang.penitipan.user.last_name}`
+                    ? `${selectedTx.detil_transaksi[0].barang.penitipan.user.first_name} ${
+                        selectedTx.detil_transaksi[0].barang.penitipan.user.last_name
+                      }`
                     : "—"}
                 </h5>
                 <div className="status-area text-success">
@@ -172,25 +182,31 @@ const HistoryPembeli = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedTx.detil_transaksi?.map((dt) => (
-                    <tr key={dt.id_dt}>
-                      <td>
-                        <Image
-                          src={`http://127.0.0.1:8000/storage/${dt.barang.kode_barang}.jpeg`}
-                          thumbnail
-                          style={{ width: 150 }}
-                        />
-                      </td>
-                      <td>{dt.barang.nama_barang}</td>
-                      <td className="text-end">
-                        Rp{(dt.barang.harga || 0).toLocaleString("id-ID")}
-                      </td>
-                    </tr>
-                  ))}
+                  {selectedTx.detil_transaksi?.map((dt) => {
+                    const fotos = dt.barang.foto || [];
+                    const fotoPath = fotos.length
+                      ? fotos[0].path
+                      : "defaults/no-image.png";
+
+                    return (
+                      <tr key={dt.id_dt}>
+                        <td>
+                          <Image
+                            src={`http://127.0.0.1:8000/storage/${fotoPath}`}
+                            thumbnail
+                            style={{ width: 150 }}
+                          />
+                        </td>
+                        <td>{dt.barang.nama_barang}</td>
+                        <td className="text-end">
+                          Rp{(dt.barang.harga || 0).toLocaleString("id-ID")}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </Table>
 
-              {/* SS Pembayaran & Metode Pengiriman */}
               <Row className="mb-4 align-items-center">
                 <Col md={6} className="d-flex align-items-center">
                   <strong className="me-2">SS Pembayaran:</strong>

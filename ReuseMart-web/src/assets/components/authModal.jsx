@@ -57,13 +57,15 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
   const handleLogin = async () => {
     setError("");
     if (!validateEmail()) return;
+
     try {
       const { data } = await api.post("login", { email, password });
       const { access_token, type, user, pegawai } = data;
 
+      const profile = user || pegawai;
       localStorage.setItem("token", access_token);
       localStorage.setItem("type", type);
-      localStorage.setItem("profile", JSON.stringify(user || pegawai));
+      localStorage.setItem("profile", JSON.stringify(profile));
 
       setToastVariant("success");
       setToastMsg("Login berhasil!");
@@ -71,23 +73,35 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setTimeout(() => setShowToast(false), 3000);
 
       if (type === "pegawai") {
-        const role = pegawai?.jabatan?.toLowerCase();
-        if (role === "admin") {
-          navigate("/admin");
-        } else if (role === "cs") {
-          navigate("/CSLP");
-        } else {
-          navigate("/");
-        }
-      } else if (type === "user") {
-        if (user?.role === "Pembeli") {
-          navigate("/pembeliLP");
-        } else {
-          navigate("/");
+        const jabatan = pegawai.jabatan.toLowerCase();
+        if (jabatan === "admin")        navigate("/admin");
+        else if (jabatan === "cs")      navigate("/CSLP");
+        else if (jabatan === "gudang")  navigate("/gudangLP");
+        else if (jabatan === "kurir")   navigate("/kurirLP");
+        else if (jabatan === "hunter")  navigate("/hunterLP");
+        else                             navigate("/");
+      }
+      else if (type === "user") {
+        const role = user.role?.trim().toLowerCase();
+
+        switch (role) {
+          case "pembeli":
+            navigate("/pembeliLP");
+            break;
+          case "penitip":
+            navigate("/pembeliLP");
+            break;
+          case "organisasi":
+            navigate("/organisasiLP");
+            break;
+          default:
+            navigate("/");
         }
       }
-      
+      console.log("login payload:", data);
+      console.log("type:", type, "user.role:", user?.role);
       setTimeout(onHide, 100);
+
     } catch (err) {
       const message = err.response?.data?.error || "Data Invalid!";
       setToastVariant("danger");

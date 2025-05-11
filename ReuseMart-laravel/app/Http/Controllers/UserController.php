@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class UserController extends Controller
         $user = $request->user()->load('role', 'alamat', 'transaksi');
         return response()->json($user);
     }
-    
+
     public function updateAvatar(Request $request)
     {
         $request->validate([
@@ -53,19 +54,19 @@ class UserController extends Controller
     {
         $exists = User::where('NIK', $request->input('NIK'))->exists();
         return response()->json(['unique' => !$exists]);
-    }    
+    }
 
     public function penitip()
     {
         try {
-            $penitips = User::with(['role','alamat'])
-                            ->where('id_role', 2)
-                            ->get();
+            $penitips = User::with(['role', 'alamat'])
+                ->where('id_role', 2)
+                ->get();
 
             return response()->json($penitips);
         } catch (Exception $e) {
-            Log::error('Error fetching penitips: '.$e->getMessage());
-            return response()->json(['error'=>'Unable to fetch penitips'], 500);
+            Log::error('Error fetching penitips: ' . $e->getMessage());
+            return response()->json(['error' => 'Unable to fetch penitips'], 500);
         }
     }
 
@@ -74,7 +75,7 @@ class UserController extends Controller
         $data = $r->validate([
             'first_name' => 'required|string|max:255',
             'last_name'  => 'nullable|string|max:255',
-            'email'      => 'required|email|unique:user,email,'.$id.',id_user',
+            'email'      => 'required|email|unique:user,email,' . $id . ',id_user',
             'password'   => 'nullable|string|min:6',
             'no_telp'    => 'required|string|max:15',
             'saldo'      => 'nullable|numeric',
@@ -94,21 +95,22 @@ class UserController extends Controller
             }
             $user->save();
 
-            return response()->json(['message'=>'Penitip updated','user'=>$user]);
+            return response()->json(['message' => 'Penitip updated', 'user' => $user]);
         } catch (Exception $e) {
-            Log::error("Failed updating penitip $id: ".$e->getMessage());
-            return response()->json(['error'=>'Unable to update penitip'], 500);
+            Log::error("Failed updating penitip $id: " . $e->getMessage());
+            return response()->json(['error' => 'Unable to update penitip'], 500);
         }
     }
+
 
     public function destroyPenitip($id)
     {
         try {
             User::destroy($id);
-            return response()->json(['message'=>'Penitip deleted']);
+            return response()->json(['message' => 'Penitip deleted']);
         } catch (Exception $e) {
-            Log::error("Failed deleting penitip $id: ".$e->getMessage());
-            return response()->json(['error'=>'Unable to delete penitip'], 500);
+            Log::error("Failed deleting penitip $id: " . $e->getMessage());
+            return response()->json(['error' => 'Unable to delete penitip'], 500);
         }
     }
 
@@ -126,16 +128,16 @@ class UserController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'nullable|string|max:255',
-            'email'      => 'required|email|unique:user,email',
-            'password'   => 'required|string|min:6',
-            'id_role'    => 'required|exists:role,id_role',
-            'no_telp'    => 'required|string|max:15',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'nullable|string|max:255',
+            'email'           => 'required|email|unique:user,email',
+            'password'        => 'required|string|min:6',
+            'id_role'         => 'required|exists:role,id_role',
+            'no_telp'         => 'required|string|max:15',
             'profile_picture' => 'nullable|image|max:2048',
-            'NIK' => 'nullable|string|max:16',
-            'rating' => 'nullable|numeric',
-            'saldo' => 'nullable|numeric',
+            'NIK'             => 'nullable|string|max:16|unique:user,NIK',
+            'rating'          => 'nullable|numeric',
+            'saldo'           => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -143,33 +145,42 @@ class UserController extends Controller
         }
 
         try {
+            // Handle the uploaded profile picture, if any
+            $picturePath = null;
+            if ($request->hasFile('profile_picture')) {
+                $picturePath = $request
+                    ->file('profile_picture')
+                    ->store('profile_pictures', 'public');
+            }
+
             $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name'  => $request->last_name ?? "",
-                'email'      => $request->email,
-                'password'   => Hash::make($request->password),
-                'id_role'    => $request->id_role,
-                'no_telp'    => $request->no_telp,
-                'profile_picture' => $request->profile_picture ?? null,
-                'poin_loyalitas' => 0,
-                'NIK' => $request->NIK ?? null,
-                'rating' => $request->rating ?? null,
-                'saldo' => $request->saldo ?? null,
+                'first_name'      => $request->first_name,
+                'last_name'       => $request->last_name ?? '',
+                'email'           => $request->email,
+                'password'        => Hash::make($request->password),
+                'id_role'         => $request->id_role,
+                'no_telp'         => $request->no_telp,
+                'profile_picture' => $picturePath,            // store the relative path
+                'poin_loyalitas'  => 0,
+                'NIK'             => $request->NIK ?? null,
+                'rating'          => $request->rating ?? null,
+                'saldo'           => $request->saldo ?? null,
             ]);
 
             return response()->json([
-                'message' => 'User registered successfully',
-                'user' => $user,
+                'message'         => 'User registered successfully',
+                'user'            => $user,
+                'profile_picture' => $picturePath ? '/storage/'.$picturePath : null,
             ], 201);
         } catch (Exception $e) {
             Log::error('Register error: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Failed to register user',
-                'exception' => $e->getMessage()
+                'error'     => 'Failed to register user',
+                'exception' => $e->getMessage(),
             ], 500);
         }
     }
-
+    
     public function login(Request $request)
     {
         $request->validate([
@@ -202,8 +213,8 @@ class UserController extends Controller
         try {
             $query = $request->input('query');
             $users = User::where('first_name', 'LIKE', "%$query%")
-                         ->orWhere('last_name', 'LIKE', "%$query%")
-                         ->get();
+                ->orWhere('last_name', 'LIKE', "%$query%")
+                ->get();
 
             return response()->json($users);
         } catch (Exception $e) {
@@ -229,7 +240,7 @@ class UserController extends Controller
         // Coba login sebagai User dulu
         $user = \App\Models\User::with('role')->where('email', $request->email)->first();
 
-        if ($user && \Hash::check($request->password, $user->password)) {
+        if ($user && Hash::check($request->password, $user->password)) {
             $token = $user->createToken('user_token')->plainTextToken;
 
             return response()->json([
@@ -248,7 +259,7 @@ class UserController extends Controller
         // bistu baru pegawai
         $pegawai = \App\Models\Pegawai::with('jabatan')->where('email', $request->email)->first();
 
-        if ($pegawai && \Hash::check($request->password, $pegawai->password)) {
+        if ($pegawai && Hash::check($request->password, $pegawai->password)) {
             $token = $pegawai->createToken('pegawai_token')->plainTextToken;
 
             return response()->json([
@@ -265,5 +276,43 @@ class UserController extends Controller
         }
 
         return response()->json(['error' => 'Invalid credentials'], 401);
+    }
+
+    public function deleteOrganisasi($id)
+    {
+        try {
+            User::destroy($id);
+            return response()->json(['message' => 'Organisasi deleted']);
+        } catch (Exception $e) {
+            Log::error("Failed deleting organisasi $id: " . $e->getMessage());
+            return response()->json(['error' => 'Unable to delete penitip'], 500);
+        }
+    }
+
+    public function updateOrganisasi(Request $r, $id)
+    {
+        $data = $r->validate([
+            'first_name' => 'required|string|max:255',
+            'email'      => 'required|email|unique:user,email,' . $id . ',id_user',
+            'password'   => 'nullable|string|min:6',
+        ]);
+
+        try {
+            $user = User::findOrFail($id);
+
+            $user->first_name = $data['first_name'];
+            $user->email      = $data['email'];
+
+            if (!empty($data['password'])) {
+                $user->password = Hash::make($data['password']);
+            }
+
+            $user->save();
+
+            return response()->json(['message' => 'Organisasi berhasil diperbarui', 'user' => $user]);
+        } catch (Exception $e) {
+            Log::error("Gagal memperbarui organisasi $id: " . $e->getMessage());
+            return response()->json(['error' => 'Gagal memperbarui organisasi'], 500);
+        }
     }
 }

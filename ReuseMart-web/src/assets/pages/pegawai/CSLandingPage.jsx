@@ -8,6 +8,14 @@ import {
   Spinner,
   Form,
 } from "react-bootstrap";
+import {
+  FiUser,
+  FiHash,
+  FiMail,
+  FiPhone,
+  FiGift,
+  FiStar,
+} from "react-icons/fi";
 import api from "../../../api/api.js";
 import NavbarCS from "../../components/Navbar/navbarCS";
 import TambahPenitipModal from "../../components/CS/tambahPenitipModal.jsx";
@@ -19,37 +27,55 @@ const PenitipCard = ({ penitip, onDetailClick }) => (
       <Card.Body className="p-2">
         <Row className="align-items-center">
           <Col
-            md={3}
+            md={2}
             className="border-end d-flex align-items-center justify-content-center"
           >
+            <FiUser className="me-1" />
             <strong>
               {penitip.first_name} {penitip.last_name}
             </strong>
           </Col>
+
+          <Col
+            md={2}
+            className="border-end d-flex align-items-center justify-content-center"
+          >
+            <FiHash className="me-1" />
+            {penitip.NIK}
+          </Col>
+
           <Col
             md={3}
             className="border-end d-flex align-items-center justify-content-center"
           >
+            <FiMail className="me-1" />
             {penitip.email}
           </Col>
+
           <Col
             md={2}
             className="border-end d-flex align-items-center justify-content-center"
           >
+            <FiPhone className="me-1" />
             {penitip.no_telp}
           </Col>
-          <Col
-            md={2}
-            className="border-end d-flex align-items-center justify-content-center"
-          >
-            {penitip.rating ?? "–"}
-          </Col>
+
           <Col
             md={1}
             className="border-end d-flex align-items-center justify-content-center"
           >
+            <FiGift className="me-1" />
             {penitip.poin_loyalitas ?? 0}
           </Col>
+
+          <Col
+            md={1}
+            className="border-end d-flex align-items-center justify-content-center"
+          >
+            {penitip.rating ?? 0}
+            <FiStar className="ms-1" />
+          </Col>
+
           <Col
             md={1}
             className="d-flex align-items-center justify-content-center"
@@ -101,11 +127,14 @@ export default function CSLandingPage() {
   };
 
   const filtered = penitipList.filter((p) => {
-    const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+    const fullName = [p.first_name, p.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
     const term = searchTerm.toLowerCase();
     return (
       fullName.includes(term) ||
-      (p.email || "").toLowerCase().includes(term)
+      (p.NIK || "").toLowerCase().includes(term)
     );
   });
 
@@ -113,14 +142,12 @@ export default function CSLandingPage() {
     <div>
       <NavbarCS />
 
-      {/* Tambah Penitip Modal */}
       <TambahPenitipModal
         show={showAdd}
         onHide={() => setShowAdd(false)}
         fetchPenitip={fetchPenitip}
       />
 
-      {/* Detail/Edit/Delete Penitip Modal */}
       <DetailPenitipModal
         show={showDetail}
         onHide={() => setShowDetail(false)}
@@ -136,7 +163,7 @@ export default function CSLandingPage() {
           <Col md={4}>
             <Form.Control
               type="search"
-              placeholder="Cari Penitip . . ."
+              placeholder="Cari Penitip…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -149,7 +176,7 @@ export default function CSLandingPage() {
         </Row>
 
         <hr />
-        
+
         {loading ? (
           <div className="text-center py-5">
             <Spinner animation="border" />
