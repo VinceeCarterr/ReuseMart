@@ -40,12 +40,12 @@ class Barang extends Model
 
     public function DetilTransaksi()
     {
-        return $this->hasOne(DetilTransaksi::class, 'id_barang');
+        return $this->hasMany(DetilTransaksi::class, 'id_barang');
     }
 
     public function Donasi()
     {
-        return $this->hasOne(Donasi::class, 'id_barang');  
+        return $this->hasOne(Donasi::class, 'id_barang');
     }
 
     public function Penitipan()

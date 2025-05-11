@@ -1,6 +1,6 @@
 import NavbarAdmin from "../../components/Navbar/navbarAdmin.jsx";
 import { useEffect, useState } from "react";
-import { Modal, Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
+import { Modal, Container, Row, Col, Card, Button, Spinner, Form } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import UbahOrganisasiModal from "../../components/Organisasi/ubahOrganisasiModal.jsx";
@@ -61,6 +61,7 @@ const OrganisasiPage = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [organisasiToDelete, setOrganisasiToDelete] = useState(null);
     const [organisasiToEdit, setOrganisasiToEdit] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         (async () => {
@@ -100,6 +101,15 @@ const OrganisasiPage = () => {
         setShowEditModal(true);
     };
 
+    const filtered = userList.filter((u) => {
+        const name = (u.first_name || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        const term = searchTerm.toLowerCase();
+
+        return name.includes(term) || email.includes(term);
+    });
+
+
     return (
         <div>
             <NavbarAdmin />
@@ -107,6 +117,14 @@ const OrganisasiPage = () => {
                 <Row className="align-items-center mb-2">
                     <Col md={4}>
                         <h2 className="text-success fw-bold">Daftar Organisasi</h2>
+                    </Col>
+                    <Col md={4}>
+                        <Form.Control
+                            type="search"
+                            placeholder="Cari Organisasi…"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </Col>
                 </Row>
 
@@ -120,14 +138,20 @@ const OrganisasiPage = () => {
                     <div className="alert alert-danger">{error}</div>
                 ) : (
                     <Row>
-                        {userList.map((org) => (
-                            <OrganisasiCard
-                                key={org.id_user}
-                                organisasi={org}
-                                onDeleteClick={onDeleteClick}
-                                onEditClick={onEditClick}
-                            />
-                        ))}
+                        {filtered.length > 0 ? (
+                            filtered.map((org) => (
+                                <OrganisasiCard
+                                    key={org.id_user}
+                                    organisasi={org}
+                                    onDeleteClick={onDeleteClick}
+                                    onEditClick={onEditClick}
+                                />
+                            ))
+                        ) : (
+                            <Col>
+                                <p className="text-center">Tidak ada organisasi yang cocok.</p>
+                            </Col>
+                        )}
                     </Row>
                 )}
             </Container>

@@ -1,0 +1,83 @@
+.history-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.history-card:hover {
+    transform: translateY(-2px);
+}
+
+.store-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.status-area {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.status-text {
+    font-weight: 500;
+}
+
+.product-row {
+    margin-bottom: 1rem;
+}
+
+.product-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.product-price {
+    font-size: 0.9rem;
+    color: #28a745;
+    font-weight: 600;
+}
+
+.product-category {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.tanggal-text {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.filter-option {
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.filter-option:hover {
+    color: #28a745;
+}
+
+.filter-option.active {
+    color: #28a745;
+    border-bottom: 2px solid #28a745;
+    font-weight: 600;
+}
+
+.summary-table tr td {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.total-row td {
+    font-weight: 600;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1rem;
+}

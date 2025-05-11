@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/check-nik', [UserController::class, 'checkNIK']);
 
     Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
+    Route::get('transaksi/historyPenitip', [TransaksiController::class, 'historyPenitip']);
     Route::get('kategori', [KategoriController::class, 'index']);
 
     //alamat
