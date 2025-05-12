@@ -4,15 +4,38 @@ import { Container, Row, Col, Button, Card, Form, ListGroup, Alert, Spinner } fr
 import { Link } from "react-router-dom";
 import api from "../../api/api.js"; // Pastikan path-nya benar
 import NavbarLandingPage from "../components/Navbar/navbar.jsx";
+import "./productPage.css"; // Pastikan path-nya benar
 
 const ProductPage = () => {
     const { id } = useParams();
     const [barang, setBarang] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+    const [fotos, setFotos] = useState([]);
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+
+    useEffect(() => {
+        const fetchPhotos = async () => {
+            try {
+                const response = await api.get(`/foto-barang/${id}`);
+                setFotos(response.data);
+                setFotos(response.data);
+                if (response.data.length > 0) {
+                    setSelectedPhoto(response.data[0].path); // Ganti 'url' dengan 'path'
+                }
+            } catch (error) {
+                console.error("Gagal mengambil foto barang:", error);
+            }
+        };
+
+        fetchPhotos();
+    }, [id]);
+
+    
 
     // Fetch product details
     useEffect(() => {
@@ -24,7 +47,6 @@ const ProductPage = () => {
                 console.error("Gagal mengambil data produk:", error);
             }
         };
-
         fetchBarang();
     }, [id]);
 
@@ -118,15 +140,40 @@ const ProductPage = () => {
     return (
         <div>
             <NavbarLandingPage />
-            <Container className="my-5">
+            <Container className="mt-1">
                 <Row>
-                    <Col md={6} className="text-center my-5">
-                        <img
-                            src={barang.foto1 || "image.png"}
-                            alt={barang.nama_barang}
-                            style={{ width: '100%', maxWidth: '450px', borderRadius: '10px', objectFit: 'cover' }}
-                        />
+                    <Col md={6} className="my-5 d-flex flex-column align-items-center">
+                        {/* Foto Utama */}
+                        <div className="main-image-container mb-3">
+                            <img
+                                src={selectedPhoto ? `http://localhost:8000/storage/${selectedPhoto}` : "image.png"}
+                                alt={barang.nama_barang}
+                                className="main-image"
+                            />
+                        </div>
+
+                        {/* Thumbnail */}
+                        {fotos.length > 1 && (
+                            <div className="thumbnail-scroll-container">
+                                <div className="thumbnail-list d-flex gap-2">
+                                    {fotos.map((foto, index) => (
+                                        <div
+                                            key={index}
+                                            className={`thumbnail-box ${selectedPhoto === foto.path ? 'selected' : ''}`}
+                                            onClick={() => setSelectedPhoto(foto.path)}
+                                        >
+                                            <img
+                                                src={`http://localhost:8000/storage/${foto.path}`}
+                                                alt={`Foto ${index + 1}`}
+                                                className="thumbnail-image"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </Col>
+
                     <Col md={6} className="ProductDesc my-5" style={{ borderRadius: 10, padding: 20, backgroundColor: '#f8f9fa' }}>
                         <h2 className="text-success fw-bold">{barang.nama_barang}</h2>
                         <h4 className="text-success fw-bold">Rp {barang.harga}</h4>

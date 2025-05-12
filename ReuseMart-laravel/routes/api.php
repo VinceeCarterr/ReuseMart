@@ -10,6 +10,7 @@ use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\Req_DonasiController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\DonasiController;
+use App\Http\Controllers\Foto_BarangController;
 use App\Http\Controllers\PenitipanController;
 
 use Illuminate\Http\Request;
@@ -24,6 +25,10 @@ Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments
 Route::post('/forgot-password', [UserController::class, 'forgotPassword']);
 Route::post('/reset-password', [UserController::class, 'resetPassword']);
 Route::get('/user/public', [UserController::class, 'publicList']);
+    
+//fotobarang
+Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBarangId']);
+
 
 
 Route::get('/barang', [BarangController::class, 'index']);
@@ -67,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Forum
     Route::post('/barang/{id_barang}/komentar', [ForumController::class, 'addComment']);
     Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
+    
 
     //donasi
     Route::get('/donasi', [DonasiController::class, 'index']);

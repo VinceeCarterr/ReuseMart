@@ -3,3 +3,56 @@
     border-bottom: 4px solid #f0f0f0;
     background-color: white;
 }
+
+.main-image-container {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #ccc;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.thumbnail-list {
+    display: flex;
+    justify-content: center;;
+    flex-direction: row;
+    padding: 5px 0;
+}
+
+.thumbnail-box {
+    flex: 0 0 auto;
+    width: 70px;
+    height: 70px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    position: relative;
+    background-color: #f0f0f0;
+}
+
+.thumbnail-box.selected {
+    border: 2px solid #198754;
+}
+
+.thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

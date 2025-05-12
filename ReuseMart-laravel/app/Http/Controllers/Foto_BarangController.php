@@ -66,4 +66,16 @@ class Foto_BarangController extends Controller
             return response()->json(['error' => 'Failed to delete photo'], 500);
         }
     }
+
+    public function getByBarangId($id_barang)
+    {
+        try {
+            $fotos = Foto_Barang::where('id_barang', $id_barang)->get();
+            return response()->json($fotos);
+        } catch (Exception $e) {
+            Log::error('Error fetching foto barang by id_barang: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch photos'], 500);
+        }
+    }
+
 }
