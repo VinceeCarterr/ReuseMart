@@ -22,6 +22,9 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
   const [toastMsg, setToastMsg] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showToast, setShowToast] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotEmailError, setForgotEmailError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,12 +37,21 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
     }
   }, [show]);
 
-  const validateEmail = () => {
-    if (!email.includes('@')) {
+  const validateEmail = (emailToValidate) => {
+    if (!emailToValidate.includes('@')) {
       setEmailError("Format email tidak valid");
       return false;
     }
     setEmailError("");
+    return true;
+  };
+
+  const validateForgotEmail = () => {
+    if (!forgotEmail.includes('@')) {
+      setForgotEmailError("Format email tidak valid");
+      return false;
+    }
+    setForgotEmailError("");
     return true;
   };
 
@@ -56,7 +68,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
 
   const handleLogin = async () => {
     setError("");
-    if (!validateEmail()) return;
+    if (!validateEmail(email)) return;
 
     try {
       const { data } = await api.post("login", { email, password });
@@ -89,7 +101,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             navigate("/pembeliLP");
             break;
           case "penitip":
-            navigate("/pembeliLP");
+            navigate("/penitipLP");
             break;
           case "organisasi":
             navigate("/organisasiLP");
@@ -98,10 +110,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
             navigate("/");
         }
       }
-      console.log("login payload:", data);
-      console.log("type:", type, "user.role:", user?.role);
       setTimeout(onHide, 100);
-
     } catch (err) {
       const message = err.response?.data?.error || "Data Invalid!";
       setToastVariant("danger");
@@ -135,7 +144,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       valid = false;
     }
 
-    if (!validateEmail()) valid = false;
+    if (!validateEmail(email)) valid = false;
 
     if (!valid) return;
 
@@ -163,13 +172,35 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       }, 2000);
     } catch (err) {
       const errors = err.response?.data?.errors;
-      console.error("Validation errors:", errors);
       setToastVariant("danger");
       setToastMsg(
         errors
           ? Object.values(errors).flat().join(" | ")
           : "Data Invalid!"
       );
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotEmailError("");
+
+    if (!validateForgotEmail()) return;
+
+    try {
+      const { data } = await api.post("/forgot-password", { email: forgotEmail });
+      setToastVariant("success");
+      setToastMsg(data.message || "Link reset password telah dikirim ke email Anda!");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setShowForgotPasswordModal(false);
+      setForgotEmail("");
+    } catch (err) {
+      const message = err.response?.data?.error || "Gagal mengirim link reset password";
+      setToastVariant("danger");
+      setToastMsg(message);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -189,6 +220,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
         </Toast>
       </div>
 
+      {/* Modal Utama untuk Login/Register */}
       <Modal
         show={show}
         onHide={onHide}
@@ -236,9 +268,8 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
           )}
 
           <Form
-            onSubmit={e => {
+            onSubmit={(e) => {
               e.preventDefault();
-              // always run validation and display errors
               isLogin ? handleLogin() : handleRegister();
             }}
           >
@@ -253,7 +284,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                       placeholder="Nama Organisasi"
                       value={firstName}
                       isInvalid={!!firstNameError}
-                      onChange={e => setFirstName(e.target.value)}
+                      onChange={(e) => setFirstName(e.target.value)}
                     />
                   </div>
                   {firstNameError && (
@@ -272,7 +303,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                         type="text"
                         value={firstName}
                         isInvalid={!!firstNameError}
-                        onChange={e => setFirstName(e.target.value)}
+                        onChange={(e) => setFirstName(e.target.value)}
                       />
                     </div>
                     {firstNameError && (
@@ -287,7 +318,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                       <Form.Control
                         type="text"
                         value={lastName}
-                        onChange={e => setLastName(e.target.value)}
+                        onChange={(e) => setLastName(e.target.value)}
                       />
                     </div>
                   </Col>
@@ -304,7 +335,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                   placeholder="ReUseMart@example.com"
                   value={email}
                   isInvalid={!!emailError}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               {emailError && (
@@ -322,7 +353,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                   <Form.Control
                     value={phone}
                     isInvalid={!!phoneError}
-                    onChange={e => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
                 {phoneError && (
@@ -344,7 +375,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                     autoComplete="current-password"
                     value={password}
                     isInvalid={!!passwordError}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="ps-2 pe-5"
                   />
                   <i
@@ -360,7 +391,13 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
               )}
               {isLogin && (
                 <div className="text-end">
-                  <span className="text-primary small">Lupa password?</span>
+                  <span
+                    className="text-primary small"
+                    role="button"
+                    onClick={() => setShowForgotPasswordModal(true)}
+                  >
+                    Lupa password?
+                  </span>
                 </div>
               )}
             </Form.Group>
@@ -371,7 +408,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                   type="checkbox"
                   label="Daftar sebagai organisasi"
                   checked={isOrg}
-                  onChange={e => setIsOrg(e.target.checked)}
+                  onChange={(e) => setIsOrg(e.target.checked)}
                 />
               </Form.Group>
             )}
@@ -386,6 +423,48 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
               className="w-100"
             >
               {isLogin ? "Masuk" : "Daftar"}
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={showForgotPasswordModal}
+        onHide={() => setShowForgotPasswordModal(false)}
+        centered
+        backdrop
+        size="md"
+      >
+        <Modal.Body className="p-4 text-center">
+          <h2 className="fw-bold text-success mb-3">Lupa Password</h2>
+          <p className="text-muted mb-4">
+            Masukkan email Anda untuk menerima link reset password.
+          </p>
+          <Form onSubmit={handleForgotPassword}>
+            <Form.Group className="mb-3 text-start">
+              <Form.Label className="fw-bold">Email</Form.Label>
+              <div className="input-icon email-field">
+                <i className="bi bi-envelope-fill"></i>
+                <Form.Control
+                  type="email"
+                  placeholder="ReUseMart@example.com"
+                  value={forgotEmail}
+                  isInvalid={!!forgotEmailError}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                />
+              </div>
+              {forgotEmailError && (
+                <div className="invalid-text text-danger text-start">
+                  {forgotEmailError}
+                </div>
+              )}
+            </Form.Group>
+            <Button
+              type="submit"
+              variant="success"
+              className="w-100"
+            >
+              Kirim Link Reset
             </Button>
           </Form>
         </Modal.Body>

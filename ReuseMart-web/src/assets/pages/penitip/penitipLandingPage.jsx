@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-bootstrap";
 import api from "../../../api/api.js";
-import NavbarPembeli from "../../components/Navbar/navbarPembeli.jsx";
+import NavbarPenitip from "../../components/Navbar/navbarPenitip.jsx";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "../landingPage.css";
@@ -46,27 +46,28 @@ const ProductCard = ({ barang }) => (
   </Card>
 );
 
-const PembeliLandingPage = () => {
+const PenitipLandingPage = () => {
   const [barangList, setBarangList] = useState([]);
   const [highlightProducts, setHighlightProducts] = useState([]);
   const scrollRef = useRef(null);
 
-  const fetchBarang = async () => {
-    try {
-      const { data } = await api.get("/barang");
-      const available = data.filter((b) => b.status === "Available");
-      setBarangList(available);
-      setHighlightProducts(available.slice(0, 6));
-    } catch (err) {
-      console.error("Failed to fetch barang:", err);
-    }
-  };
-
   useEffect(() => {
+    // fetch all barang
+    const fetchBarang = async () => {
+      try {
+        const { data } = await api.get("/barang");
+        const available = data.filter((b) => b.status === "Available");
+        setBarangList(available);
+        setHighlightProducts(available.slice(0, 6));
+      } catch (err) {
+        console.error("Failed to fetch barang:", err);
+      }
+    };
     fetchBarang();
     AOS.init({ duration: 800 });
   }, []);
 
+  // horizontal scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -83,8 +84,8 @@ const PembeliLandingPage = () => {
   }, []);
 
   return (
-    <div>
-      <NavbarPembeli />
+    <>
+      <NavbarPenitip />
 
       {/* Hero */}
       <Container className="my-5">
@@ -92,7 +93,7 @@ const PembeliLandingPage = () => {
           Selamat Datang di ReuseMart!
         </h2>
         <p className="lead">
-          Platform berbelanja barang bekas dengan kualitas terbaik. Pasti Murah!
+          Platform menitipkan barang bekas dengan kepercayaan penuh.
         </p>
       </Container>
 
@@ -127,9 +128,9 @@ const PembeliLandingPage = () => {
             </div>
           </Row>
         </Container>
-      )} */}
+      )}
 
-      {/* <hr /> */}
+      <hr /> */}
 
       {/* All Products */}
       <Container className="mt-4">
@@ -159,8 +160,8 @@ const PembeliLandingPage = () => {
           )}
         </Row>
       </Container>
-    </div>
+    </>
   );
 };
 
-export default PembeliLandingPage;
+export default PenitipLandingPage;

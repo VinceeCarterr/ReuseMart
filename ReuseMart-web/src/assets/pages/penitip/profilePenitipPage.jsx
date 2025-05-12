@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
-import NavbarPenitip from "../../components/Navbar/navbarPenitip";
+import NavbarPenitip from "../../components/Navbar/navbarPenitip.jsx";
 import api from "../../../api/api.js";
 
 const ProfilePenitipPage = () => {

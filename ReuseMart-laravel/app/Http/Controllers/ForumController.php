@@ -2,68 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Forum;
+use App\Models\Komentar;
+use App\Models\Barang;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 
 class ForumController extends Controller
 {
-    public function index()
+    public function getComments($id_barang)
     {
         try {
-            $forums = Forum::all();
-            return response()->json($forums);
-        } catch (Exception $e) {
-            Log::error('Error fetching forums: ' . $e->getMessage());
-            return response()->json(['error' => 'Unable to fetch forums'], 500);
+            $forum = Forum::where('id_barang', $id_barang)->first();
+
+            if (!$forum) {
+                return response()->json([
+                    'message' => 'Forum untuk barang ini tidak ditemukan.',
+                ], 404);
+            }
+
+            $komentar = Komentar::where('id_forum', $forum->id_forum)
+                ->with(['user' => function ($query) {
+                    $query->select('id_user', 'first_name', 'last_name');
+                }, 'pegawai' => function ($query) {
+                    $query->select('id_pegawai', 'first_name', 'last_name')->with(['jabatan' => function ($q) {
+                        $q->select('id_jabatan', 'nama_jabatan');
+                    }]);
+                }])
+                ->orderBy('waktu_komentar', 'asc')
+                ->get();
+
+            return response()->json([
+                'message' => 'Daftar komentar berhasil diambil.',
+                'data' => $komentar,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error fetching comments: ' . $e->getMessage());
+            return response()->json(['error' => 'Unable to fetch comments'], 500);
         }
     }
 
-    public function show($id)
+    // Menambahkan komentar baru
+    public function addComment(Request $request, $id_barang)
     {
-        try {
-            $forum = Forum::findOrFail($id);
-            return response()->json($forum);
-        } catch (Exception $e) {
-            Log::error('Error fetching forum: ' . $e->getMessage());
-            return response()->json(['error' => 'Forum not found'], 404);
-        }
-    }
+        $validator = Validator::make($request->all(), [
+            'komentar' => 'required|string|max:255',
+        ]);
 
-    public function store(Request $request)
-    {
-        try {
-            $forum = Forum::create($request->all());
-            return response()->json($forum, 201);
-        } catch (Exception $e) {
-            Log::error('Error creating forum: ' . $e->getMessage());
-            return response()->json(['error' => 'Unable to create forum'], 500);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
-    }
 
-    public function update(Request $request, $id)
-    {
         try {
-            $forum = Forum::findOrFail($id);
-            $forum->update($request->all());
-            return response()->json($forum);
-        } catch (Exception $e) {
-            Log::error('Error updating forum: ' . $e->getMessage());
-            return response()->json(['error' => 'Unable to update forum'], 500);
-        }
-    }
+            $barang = Barang::find($id_barang);
+            if (!$barang) {
+                return response()->json([
+                    'message' => 'Barang tidak ditemukan.',
+                ], 404);
+            }
 
-    public function destroy($id)
-    {
-        try {
-            $forum = Forum::findOrFail($id);
-            $forum->delete();
-            return response()->json(['message' => 'Forum deleted successfully']);
-        } catch (Exception $e) {
-            Log::error('Error deleting forum: ' . $e->getMessage());
-            return response()->json(['error' => 'Unable to delete forum'], 500);
+            $forum = Forum::where('id_barang', $id_barang)->first();
+
+            if (!$forum) {
+                $forum = Forum::create([
+                    'id_barang' => $id_barang,
+                ]);
+            }
+
+            $komentarData = [
+                'id_forum' => $forum->id_forum,
+                'komentar' => $request->komentar,
+                'waktu_komentar' => now(),
+            ];
+
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Anda harus login untuk mengomentari forum.',
+                ], 401);
+            }
+
+            if ($user instanceof \App\Models\User) {
+                $komentarData['id_user'] = $user->id_user;
+                $komentarData['id_pegawai'] = null;
+            } elseif ($user instanceof \App\Models\Pegawai) {
+                if ($user->id_jabatan != 2) {
+                    return response()->json([
+                        'message' => 'Hanya CS yang dapat mengomentari forum.',
+                    ], 403);
+                }
+                $komentarData['id_pegawai'] = $user->id_pegawai;
+                $komentarData['id_user'] = null;
+            } else {
+                return response()->json([
+                    'message' => 'Tipe pengguna tidak valid.',
+                ], 403);
+            }
+
+            $komentar = Komentar::create($komentarData);
+
+            return response()->json([
+                'message' => 'Komentar berhasil ditambahkan.',
+                'data' => $komentar->load(['user', 'pegawai.jabatan']),
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error adding comment: ' . $e->getMessage());
+            return response()->json(['error' => 'Unable to add comment'], 500);
         }
     }
 }

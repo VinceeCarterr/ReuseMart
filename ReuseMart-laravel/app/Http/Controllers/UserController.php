@@ -7,7 +7,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Mail\PasswordResetMail;
+use Carbon\Carbon;
 use App\Models\Penitipan;
 use App\Models\Barang;
 use Exception;
@@ -169,7 +174,7 @@ class UserController extends Controller
             return response()->json([
                 'message'         => 'User registered successfully',
                 'user'            => $user,
-                'profile_picture' => $picturePath ? '/storage/'.$picturePath : null,
+                'profile_picture' => $picturePath ? '/storage/' . $picturePath : null,
             ], 201);
         } catch (Exception $e) {
             Log::error('Register error: ' . $e->getMessage());
@@ -179,7 +184,7 @@ class UserController extends Controller
             ], 500);
         }
     }
-    
+
     public function login(Request $request)
     {
         $request->validate([
@@ -312,6 +317,105 @@ class UserController extends Controller
         } catch (Exception $e) {
             Log::error("Gagal memperbarui organisasi $id: " . $e->getMessage());
             return response()->json(['error' => 'Gagal memperbarui organisasi'], 500);
+        }
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        try {
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Email tidak terdaftar'
+                ], 404);
+            }
+
+            $token = Str::random(60);
+
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                [
+                    'token' => Hash::make($token),
+                    'created_at' => Carbon::now()
+                ]
+            );
+
+            $resetUrl = config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+
+            Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+
+            return response()->json([
+                'message' => 'Link reset password telah dikirim ke email Anda'
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Forgot password error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Gagal mengirim link reset password'
+            ], 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:user,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        try {
+            $passwordReset = DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->first();
+
+            if (!$passwordReset) {
+                return response()->json([
+                    'error' => 'Token reset tidak valid'
+                ], 400);
+            }
+
+            if (!Hash::check($request->token, $passwordReset->token)) {
+                return response()->json([
+                    'error' => 'Token reset tidak valid'
+                ], 400);
+            }
+
+            $createdAt = Carbon::parse($passwordReset->created_at);
+            if ($createdAt->diffInHours(Carbon::now()) > 1) {
+                return response()->json([
+                    'error' => 'Token reset telah kadaluarsa'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+            $user = User::where('email', $request->email)->first();
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->delete();
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Password berhasil direset'
+            ], 200);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            Log::error('Database error in resetPassword: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Gagal mereset password karena masalah database'
+            ], 500);
+        } catch (Exception $e) {
+            Log::error('Reset password error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Gagal mereset password'
+            ], 500);
         }
     }
 

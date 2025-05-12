@@ -8,6 +8,7 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\Req_DonasiController;
+use App\Http\Controllers\ForumController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PenitipanController;
 
@@ -16,6 +17,12 @@ use Illuminate\Http\Request;
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'unifiedLogin']);
 
+Route::get('/barang', [BarangController::class, 'index']);
+Route::get('/barang/{id}', [BarangController::class, 'show']);
+Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments']);
+
+Route::post('/forgot-password', [UserController::class, 'forgotPassword']);
+Route::post('/reset-password', [UserController::class, 'resetPassword']);
 Route::get('/user/public', [UserController::class, 'publicList']);
 
 
@@ -31,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/organisasi', [UserController::class, 'index']);
     Route::delete('/organisasi/{id}', [UserController::class, 'deleteOrganisasi']);
     Route::put('organisasi/{id}', [UserController::class, 'updateOrganisasi']);
+    
     Route::get('penitip', [UserController::class, 'penitip']);
     Route::put('penitip/{id}', [UserController::class, 'updatePenitip']);
     Route::delete('penitip/{id}', [UserController::class, 'destroyPenitip']);
@@ -56,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/updateReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'update']);
     Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
 
+    //Forum
+    Route::post('/barang/{id_barang}/komentar', [ForumController::class, 'addComment']);
     Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
 
     //donasi
