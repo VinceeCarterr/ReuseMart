@@ -107,6 +107,20 @@ class PegawaiController extends Controller
 
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'id_jabatan' => 'required|exists:jabatan,id_jabatan',
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'email'      => 'required|email|unique:pegawai,email',
+            'no_telp'    => 'required|string|max:15',
+            'tanggal_lahir' => 'required|date',
+            'komisi'     => 'nullable|numeric|max:19',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
         try {
             $pegawai = Pegawai::findOrFail($id);
 

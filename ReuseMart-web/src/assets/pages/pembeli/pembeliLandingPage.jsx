@@ -1,12 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Image,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import api from "../../../api/api.js";
 import NavbarPembeli from "../../components/Navbar/navbarPembeli.jsx";
 import AOS from "aos";
@@ -14,36 +8,19 @@ import "aos/dist/aos.css";
 import "../landingPage.css";
 
 const ProductCard = ({ barang }) => (
-  <Card className="ProductCart mb-3">
-    <div
-      style={{
-        height: "150px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f5f5f5",
-      }}
-    >
-      <Image
-        src={barang.foto1}
-        alt={barang.nama_barang}
-        style={{ maxHeight: "100%", maxWidth: "100%" }}
-      />
-    </div>
-    <Card.Body>
-      <Card.Title style={{ fontWeight: 575 }}>
-        {barang.nama_barang}
-      </Card.Title>
-      <Card.Title style={{ fontWeight: 575 }}>
-        Rp {barang.harga.toLocaleString("id-ID")}
-      </Card.Title>
-      <Card.Text>
-        {barang.kategori}
-        <br />
-        Rating Penjual: {barang.rating ?? "–"}
-      </Card.Text>
-    </Card.Body>
-  </Card>
+    <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
+            <img src={barang.foto1} alt="Gambar 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+        <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+            <div style={{ flexGrow: 1 }}>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
+                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
+                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.rating}</Card.Text>
+            </div>
+        </Card.Body>
+    </Card>
 );
 
 const PembeliLandingPage = () => {
@@ -134,29 +111,14 @@ const PembeliLandingPage = () => {
       {/* All Products */}
       <Container className="mt-4">
         <Row>
-          {barangList.map((barang) => (
-            <Col
-              data-aos="fade-down"
-              key={barang.id_barang}
-              xs={6}
-              sm={4}
-              md={3}
-              lg={2}
-              className="mb-3"
-            >
-              <Link
-                to={`/produk/${barang.id_barang}`}
-                style={{ textDecoration: "none" }}
-              >
+          {barangList.filter(barang => (barang.status === 'Available' && barang.status_periode === "Periode 1") || (barang.status === 'Available' && barang.status_periode === "Periode 2"))
+          .map((barang, index) => (
+            <Col data-aos="fade-down" key={index} xs={6} sm={4} md={4} lg={2} className="mb-3">
+              <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
                 <ProductCard barang={barang} />
               </Link>
-            </Col>
+            </Col>                    
           ))}
-          {barangList.length === 0 && (
-            <p className="text-center text-muted w-100">
-              Belum ada produk tersedia.
-            </p>
-          )}
         </Row>
       </Container>
     </div>
