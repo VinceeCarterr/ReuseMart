@@ -54,10 +54,8 @@ const UbahAlamatModal = ({ show, onHide, alamatData, onUpdateSuccess }) => {
             });
             onUpdateSuccess();
             onHide();
-            alert("Alamat berhasil diubah!");
         } catch (err) {
             console.error("Gagal mengubah alamat:", err);
-            alert("Terjadi kesalahan saat mengubah alamat.");
         }
     };
 

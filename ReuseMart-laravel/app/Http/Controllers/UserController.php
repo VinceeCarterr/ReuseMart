@@ -19,6 +19,25 @@ use Exception;
 
 class UserController extends Controller
 {
+
+    public function index()
+    {
+        try {
+            $organisasi = User::with('role')
+                ->whereHas('role', function ($query) {
+                    $query->where('nama_role', 'Organisasi');
+                })
+                ->get();
+
+            return response()->json($organisasi, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch organizations',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function publicList()
     {
         $users = User::select('id_user', 'first_name', 'last_name')->get();
@@ -424,9 +443,9 @@ class UserController extends Controller
         $barang = Barang::findOrFail($id_barang);
         $penitip = Penitipan::where('id_barang', $id_barang)->first();
 
-        if($penitip){
+        if ($penitip) {
             $user = User::findOrFail($penitip->id_user);
-            $poin = floor($barang->harga/10000) ;
+            $poin = floor($barang->harga / 10000);
             $user->poin_loyalitas += $poin;
             $user->save();
             return response()->json([

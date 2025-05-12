@@ -43,7 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/organisasi', [UserController::class, 'index']);
     Route::delete('/organisasi/{id}', [UserController::class, 'deleteOrganisasi']);
     Route::put('organisasi/{id}', [UserController::class, 'updateOrganisasi']);
-    
+
     Route::get('penitip', [UserController::class, 'penitip']);
     Route::put('penitip/{id}', [UserController::class, 'updatePenitip']);
     Route::delete('penitip/{id}', [UserController::class, 'destroyPenitip']);
@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //alamat
     Route::get('/alamat', [AlamatController::class, 'getAlamatByUserId']);
+    Route::put('/alamat/{id}/set-default', [AlamatController::class, 'setDefault']);
     Route::post('/alamat/create', [AlamatController::class, 'store']);
     Route::put('/alamat/{id}', [AlamatController::class, 'update']);
     Route::delete('/alamat/{id}', [AlamatController::class, 'destroy']);
@@ -77,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //donasi
     Route::get('/donasi', [DonasiController::class, 'index']);
     Route::post('/donasi/tambah', [DonasiController::class, 'store']);
-    
+
 
     //penitipan
     Route::get('/penitipan', [PenitipanController::class, 'index']);

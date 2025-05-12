@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alamat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 use Illuminate\Support\Facades\Log;
@@ -77,6 +78,35 @@ class AlamatController extends Controller
         } catch (Exception $e) {
             Log::error('Error fetching addresses by user ID: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch addresses'], 500);
+        }
+    }
+
+    public function setDefault(Request $request, $id_alamat)
+    {
+        try {
+            $userId = $request->user()->id_user;
+
+            DB::beginTransaction();
+
+            Alamat::where('id_user', $userId)->update(['isdefault' => 0]);
+
+            $alamat = Alamat::where('id_alamat', $id_alamat)
+                ->where('id_user', $userId)
+                ->firstOrFail();
+            $alamat->isDefault = 1;
+            $alamat->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Default address set successfully',
+                'data' => $alamat
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error setting default address: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to set default address'], 500);
         }
     }
 }
