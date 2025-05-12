@@ -63,6 +63,7 @@ const AlamatPage = () => {
   const [alamatToEdit, setAlamatToEdit] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [alamatToDelete, setAlamatToDelete] = useState(null);
+  const [isSettingDefault, setIsSettingDefault] = useState(false);
 
   useEffect(() => {
     api
@@ -72,11 +73,20 @@ const AlamatPage = () => {
   }, []);
 
   useEffect(() => {
-    api
-      .get("/alamat")
-      .then(({ data }) => setAlamatList(data))
+    api.get("/alamat")
+      .then(({ data }) => {
+        const normalized = data.map((item) => ({
+          ...item,
+          isdefault: Number(item.isdefault) === 1,
+        }));
+        setAlamatList(normalized);
+      })
       .catch(console.error);
   }, []);
+
+
+
+
 
   const openLogoutModal = () => setShowLogoutModal(true);
   const closeLogoutModal = () => setShowLogoutModal(false);
@@ -92,19 +102,34 @@ const AlamatPage = () => {
   );
 
   const handleSetDefault = async (sel) => {
+    if (isSettingDefault) return;
+    setIsSettingDefault(true);
+
     try {
       await api.put(`/alamat/${sel.id_alamat}/set-default`);
-      setAlamatList((prev) =>
-        prev.map((a) =>
-          a.id_alamat === sel.id_alamat
-            ? { ...a, isDefault: true }
-            : { ...a, isDefault: false }
-        )
-      );
+
+      const { data } = await api.get("/alamat");
+
+      const updatedAlamatList = data.map((item) => ({
+        ...item,
+        isdefault: item.id_alamat === sel.id_alamat ? true : false,
+      }));
+
+      setAlamatList(updatedAlamatList);
+
+      setToastVariant("success");
+      setToastMessage("Alamat berhasil dijadikan utama");
+      setShowToast(true);
     } catch (e) {
+      setToastVariant("danger");
+      setToastMessage("Gagal menjadikan alamat utama");
+      setShowToast(true);
       console.error("Error setting default address:", e);
+    } finally {
+      setIsSettingDefault(false);
     }
   };
+
 
   const onDeleteClick = (a) => {
     setAlamatToDelete(a);
@@ -152,7 +177,11 @@ const AlamatPage = () => {
   const handleUpdateSuccess = async () => {
     try {
       const { data } = await api.get("/alamat");
-      setAlamatList(data);
+      const updatedAlamatList = data.map((item) => ({
+        ...item,
+        isdefault: Number(item.isdefault) === 1,
+      }));
+      setAlamatList(updatedAlamatList);
       setToastVariant("success");
       setToastMessage("Alamat berhasil diperbarui");
       setShowToast(true);
@@ -183,9 +212,6 @@ const AlamatPage = () => {
           <Toast.Body className="text-white">{toastMessage}</Toast.Body>
         </Toast>
       </ToastContainer>
-
-
-
 
       <div className="py-3 navbar-pembeli">
         <div className="container-fluid">
@@ -352,15 +378,10 @@ const AlamatPage = () => {
               <p>Belum terdapat alamat yang dicari</p>
             </Col>
           ) : (
-            filtered
-              .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+            filtered.sort((a, b) => (b.isdefault ? 1 : 0) - (a.isdefault ? 1 : 0))
               .map((alamat) => (
                 <Col md={12} className="mb-2" key={alamat.id_alamat}>
-                  <Card
-                    className={
-                      alamat.isDefault ? "border border-2 border-success" : ""
-                    }
-                  >
+                  <Card className={alamat.isdefault ? "border border-2 border-success" : ""}>
                     <Card.Body className="p-2">
                       <Row className="align-items-center flex-wrap">
                         <Col
@@ -368,7 +389,7 @@ const AlamatPage = () => {
                           className="border-end d-flex align-items-center justify-content-center"
                         >
                           <strong>{alamat.label}</strong>
-                          {alamat.isDefault && (
+                          {alamat.isdefault === true && (
                             <div className="badge bg-success ms-2">Utama</div>
                           )}
                         </Col>
@@ -407,7 +428,7 @@ const AlamatPage = () => {
                           className="d-flex align-items-center justify-content-center"
                         >
                           <div className="d-flex gap-2 justify-content-end">
-                            {!alamat.isDefault && (
+                            {!alamat.isdefault && (
                               <Button
                                 variant="outline-success"
                                 size="sm"

@@ -1,6 +1,6 @@
 import NavbarAdmin from "../../components/Navbar/navbarAdmin.jsx";
 import { useEffect, useState } from "react";
-import { Modal, Container, Row, Col, Card, Button, Spinner, Form } from 'react-bootstrap';
+import { Modal, Container, Row, Col, Card, Button, Spinner, Form, Toast, ToastContainer } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import UbahOrganisasiModal from "../../components/Organisasi/ubahOrganisasiModal.jsx";
@@ -62,6 +62,9 @@ const OrganisasiPage = () => {
     const [organisasiToDelete, setOrganisasiToDelete] = useState(null);
     const [organisasiToEdit, setOrganisasiToEdit] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [toastShow, setToastShow] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastVariant, setToastVariant] = useState("success");
 
     useEffect(() => {
         (async () => {
@@ -83,9 +86,12 @@ const OrganisasiPage = () => {
             try {
                 await api.delete(`/organisasi/${organisasiToDelete.id_user}`);
                 setUserList(prev => prev.filter(e => e.id_user !== organisasiToDelete.id_user));
+                showToast("Data organisasi berhasil dihapus", "success");
                 setShowDeleteModal(false);
                 setOrganisasiToDelete(null);
             } catch (error) {
+                showToast("Terjadi kesalahan saat mengubah organisasi.", "danger");
+                setShowDeleteModal(false);
                 console.error('Failed to delete organisasi:', error);
             }
         }
@@ -108,6 +114,12 @@ const OrganisasiPage = () => {
 
         return name.includes(term) || email.includes(term);
     });
+
+    const showToast = (message, variant) => {
+        setToastMessage(message);
+        setToastVariant(variant);
+        setToastShow(true);
+    };
 
 
     return (
@@ -182,6 +194,25 @@ const OrganisasiPage = () => {
                     setUserList(organisasiOnly);
                 }}
             />
+
+            <ToastContainer
+                className="position-fixed top-50 start-50 translate-middle z-3"
+                style={{ minWidth: "300px" }}>
+                <Toast
+                    show={toastShow}
+                    onClose={() => setToastShow(false)}
+                    delay={3000}
+                    autohide
+                    bg={toastVariant}
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">{toastVariant === "success" ? "Sukses" : "Error"}</strong>
+                    </Toast.Header>
+                    <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
+                        {toastMessage}
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
         </div>
     );
 };
