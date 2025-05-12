@@ -12,7 +12,8 @@ import {
     Table,
     Form,
 } from "react-bootstrap";
-import { Truck, Calendar, Search } from "react-bootstrap-icons";
+import { Truck, Search } from "react-bootstrap-icons";
+import { FiCalendar } from "react-icons/fi";
 import "./historyPenitip.css";
 
 const HistoryPenitip = () => {
@@ -21,24 +22,20 @@ const HistoryPenitip = () => {
     const [search, setSearch] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [showDateModal, setShowDateModal] = useState(false);
     const [showDetail, setShowDetail] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [lastPage, setLastPage] = useState(1);
-    const [perPage, setPerPage] = useState(10);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchHistory();
-    }, [currentPage, filterStatus, search, startDate, endDate]);
+    }, [filterStatus, search, startDate, endDate]);
 
     const fetchHistory = async () => {
         setLoading(true);
         try {
             const params = {
-                page: currentPage,
-                per_page: perPage,
                 status: filterStatus === "All" ? "" : filterStatus,
                 search: search || "",
                 start_date: startDate || "",
@@ -46,9 +43,6 @@ const HistoryPenitip = () => {
             };
             const { data } = await api.get("transaksi/historyPenitip", { params });
             setItems(data.data);
-            setCurrentPage(data.current_page);
-            setLastPage(data.last_page);
-            setPerPage(data.per_page);
             setTotal(data.total);
         } catch (err) {
             console.error("Error loading penitip history:", err);
@@ -67,16 +61,15 @@ const HistoryPenitip = () => {
         setSelectedItem(null);
     };
 
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= lastPage) {
-            setCurrentPage(page);
-        }
-    };
-
     const handleSearch = (e) => {
         e.preventDefault();
-        setCurrentPage(1);
         fetchHistory();
+    };
+
+    const handleResetDates = () => {
+        setStartDate("");
+        setEndDate("");
+        setShowDateModal(false);
     };
 
     return (
@@ -99,6 +92,11 @@ const HistoryPenitip = () => {
                                 />
                             </Form.Group>
                         </Form>
+                        <FiCalendar
+                            className="me-3 fs-4 text-secondary"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setShowDateModal(true)}
+                        />
                         <div>
                             {["All", "Available", "Sold", "Donated", "On Hold"].map((status) => (
                                 <span
@@ -106,7 +104,6 @@ const HistoryPenitip = () => {
                                     className={`filter-option ${filterStatus === status ? "active" : ""}`}
                                     onClick={() => {
                                         setFilterStatus(status);
-                                        setCurrentPage(1);
                                     }}
                                 >
                                     {status}
@@ -116,35 +113,13 @@ const HistoryPenitip = () => {
                     </div>
                 </div>
 
-                <Row className="mb-4">
-                    <Col md={6}>
-                        <Form.Group className="d-flex align-items-center">
-                            <Calendar className="me-2" />
-                            <Form.Control
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => {
-                                    setStartDate(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="me-2"
-                            />
-                            <Form.Control
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => {
-                                    setEndDate(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                            />
-                        </Form.Group>
-                    </Col>
-                </Row>
-
                 {loading && <p className="text-center">Memuat...</p>}
                 {!loading && items.length === 0 && (
                     <p className="text-center text-muted">
-                        Tidak ada riwayat untuk status "{filterStatus}".
+                        Tidak ada riwayat untuk status "{filterStatus}"
+                        {startDate && endDate
+                            ? ` dari ${startDate} sampai ${endDate}`
+                            : ""}.
                     </p>
                 )}
 
@@ -216,237 +191,238 @@ const HistoryPenitip = () => {
                         </Col>
                     ))}
                 </Row>
-            </Container>
 
-            <Modal show={showDetail} onHide={closeDetail} size="lg" centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Detail Penitipan</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedItem && (
-                        <>
-                            <div className="d-flex justify-content-between mb-4">
-                                <h5>{selectedItem.nama_barang}</h5>
-                                <div className="status-area text-success">
-                                    <Truck className="me-1" />
-                                    {selectedItem.status}
+                {/* Date Range Modal */}
+                <Modal show={showDateModal} onHide={() => setShowDateModal(false)} centered>
+                    <Modal.Body>
+                        <Form.Group className="mb-3">
+                            <Form.Label className="fw-bold">Dari</Form.Label>
+                            <Form.Control
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </Form.Group>
+                        <Form.Group>
+                            <Form.Label className="fw-bold">Sampai</Form.Label>
+                            <Form.Control
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="primary" onClick={handleResetDates}>
+                            Reset
+                        </Button>
+                        <Button variant="danger" onClick={() => setShowDateModal(false)}>
+                            Batal
+                        </Button>
+                        <Button variant="success" onClick={() => setShowDateModal(false)}>
+                            Terapkan
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Detail Modal */}
+                <Modal show={showDetail} onHide={closeDetail} size="lg" centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Detail Penitipan</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {selectedItem && (
+                            <>
+                                <div className="d-flex justify-content-between mb-4">
+                                    <h5>{selectedItem.nama_barang}</h5>
+                                    <div className="status-area text-success">
+                                        <Truck className="me-1" />
+                                        {selectedItem.status}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <Row className="mb-4">
-                                <Col md={4}>
-                                    <Image
-                                        src={
-                                            selectedItem.foto && selectedItem.foto.length > 0
-                                                ? `http://127.0.0.1:8000/storage/${selectedItem.foto[0]}`
-                                                : "/placeholder.jpg"
-                                        }
-                                        thumbnail
-                                        style={{ width: "100%" }}
-                                    />
-                                </Col>
-                                <Col md={8}>
-                                    <Table borderless>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <strong>Kode Barang</strong>
-                                                </td>
-                                                <td>{selectedItem.kode_barang}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Kategori</strong>
-                                                </td>
-                                                <td>
-                                                    {selectedItem.kategori?.nama_kategori}{" "}
-                                                    {selectedItem.kategori?.sub_kategori &&
-                                                        `- ${selectedItem.kategori.sub_kategori}`}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Deskripsi</strong>
-                                                </td>
-                                                <td>{selectedItem.deskripsi || "–"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Harga</strong>
-                                                </td>
-                                                <td>
-                                                    Rp{(selectedItem.harga || 0).toLocaleString(
-                                                        "id-ID"
-                                                    )}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Garansi</strong>
-                                                </td>
-                                                <td>{selectedItem.garansi || "Tidak ada"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Tanggal Penitipan</strong>
-                                                </td>
-                                                <td>
-                                                    {new Date(
-                                                        selectedItem.tanggal_titip
-                                                    ).toLocaleDateString("id-ID")}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Akhir Penitipan</strong>
-                                                </td>
-                                                <td>
-                                                    {new Date(
-                                                        selectedItem.akhir_penitipan
-                                                    ).toLocaleDateString("id-ID")}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Status Periode</strong>
-                                                </td>
-                                                <td>{selectedItem.status_periode || "–"}</td>
-                                            </tr>
-                                        </tbody>
-                                    </Table>
-                                </Col>
-                            </Row>
-
-                            {selectedItem.transaksi && (
-                                <>
-                                    <h5 className="mt-4">Detail Transaksi</h5>
-                                    <Table borderless responsive className="mb-4">
-                                        <thead>
-                                            <tr>
-                                                <th>Detail</th>
-                                                <th>Informasi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Tanggal Transaksi</td>
-                                                <td>
-                                                    {new Date(
-                                                        selectedItem.transaksi
-                                                            .tanggal_transaksi
-                                                    ).toLocaleDateString("id-ID")}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Subtotal</td>
-                                                <td>
-                                                    Rp{(selectedItem.transaksi.subtotal || 0).toLocaleString(
-                                                        "id-ID"
-                                                    )}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Metode Pengiriman</td>
-                                                <td>
-                                                    {selectedItem.transaksi.metode_pengiriman}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Alamat Pengiriman</td>
-                                                <td>
-                                                    {selectedItem.transaksi.alamat || "–"}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Status Pembayaran</td>
-                                                <td>
-                                                    {selectedItem.transaksi
-                                                        .status_pembayaran || "–"}
-                                                </td>
-                                            </tr>
-                                            {selectedItem.transaksi.pengiriman && (
+                                <Row className="mb-4">
+                                    <Col md={4}>
+                                        <Image
+                                            src={
+                                                selectedItem.foto && selectedItem.foto.length > 0
+                                                    ? `http://127.0.0.1:8000/storage/${selectedItem.foto[0]}`
+                                                    : "/placeholder.jpg"
+                                            }
+                                            thumbnail
+                                            style={{ width: "100%" }}
+                                        />
+                                    </Col>
+                                    <Col md={8}>
+                                        <Table borderless>
+                                            <tbody>
                                                 <tr>
-                                                    <td>Status Pengiriman</td>
                                                     <td>
-                                                        {
-                                                            selectedItem.transaksi
-                                                                .pengiriman
-                                                                .status_pengiriman
-                                                        }
+                                                        <strong>Kode Barang</strong>
+                                                    </td>
+                                                    <td>{selectedItem.kode_barang}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Kategori</strong>
+                                                    </td>
+                                                    <td>
+                                                        {selectedItem.kategori?.nama_kategori}{" "}
+                                                        {selectedItem.kategori?.sub_kategori &&
+                                                            `- ${selectedItem.kategori.sub_kategori}`}
                                                     </td>
                                                 </tr>
-                                            )}
-                                            {selectedItem.transaksi.pengambilan && (
                                                 <tr>
-                                                    <td>Status Pengambilan</td>
                                                     <td>
-                                                        {
-                                                            selectedItem.transaksi
-                                                                .pengambilan
-                                                                .status_pengambilan
-                                                        }
+                                                        <strong>Deskripsi</strong>
+                                                    </td>
+                                                    <td>{selectedItem.deskripsi || "–"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Harga</strong>
+                                                    </td>
+                                                    <td>
+                                                        Rp{(selectedItem.harga || 0).toLocaleString("id-ID")}
                                                     </td>
                                                 </tr>
-                                            )}
-                                            <tr>
-                                                <td>Komisi Perusahaan</td>
-                                                <td>
-                                                    Rp{(selectedItem.transaksi.komisi_perusahaan || 0).toLocaleString(
-                                                        "id-ID"
-                                                    )}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Komisi Hunter</td>
-                                                <td>
-                                                    Rp{(selectedItem.transaksi.komisi_hunter || 0).toLocaleString(
-                                                        "id-ID"
-                                                    )}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Saldo Diterima</td>
-                                                <td>
-                                                    Rp{(selectedItem.transaksi.saldo_penitip || 0).toLocaleString(
-                                                        "id-ID"
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </Table>
-                                </>
-                            )}
+                                                <tr>
+                                                    <td>
+                                                        <strong>Garansi</strong>
+                                                    </td>
+                                                    <td>{selectedItem.garansi || "Tidak ada"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Tanggal Penitipan</strong>
+                                                    </td>
+                                                    <td>
+                                                        {new Date(selectedItem.tanggal_titip).toLocaleDateString("id-ID")}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Akhir Penitipan</strong>
+                                                    </td>
+                                                    <td>
+                                                        {new Date(selectedItem.akhir_penitipan).toLocaleDateString("id-ID")}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Status Periode</strong>
+                                                    </td>
+                                                    <td>{selectedItem.status_periode || "–"}</td>
+                                                </tr>
+                                            </tbody>
+                                        </Table>
+                                    </Col>
+                                </Row>
 
-                            {selectedItem.donasi && (
-                                <>
-                                    <h5 className="mt-4">Detail Donasi</h5>
-                                    <Table borderless>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <strong>Organisasi Penerima</strong>
-                                                </td>
-                                                <td>{selectedItem.donasi.organisasi}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <strong>Tanggal Donasi</strong>
-                                                </td>
-                                                <td>
-                                                    {new Date(
-                                                        selectedItem.donasi
-                                                            .tanggal_donasi
-                                                    ).toLocaleDateString("id-ID")}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </Table>
-                                </>
-                            )}
-                        </>
-                    )}
-                </Modal.Body>
-            </Modal>
+                                {selectedItem.transaksi && (
+                                    <>
+                                        <h5 className="mt-4">Detail Transaksi</h5>
+                                        <Table borderless responsive className="mb-4">
+                                            <thead>
+                                                <tr>
+                                                    <th>Detail</th>
+                                                    <th>Informasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Tanggal Transaksi</td>
+                                                    <td>
+                                                        {new Date(selectedItem.transaksi.tanggal_transaksi).toLocaleDateString(
+                                                            "id-ID"
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Subtotal</td>
+                                                    <td>
+                                                        Rp{(selectedItem.transaksi.subtotal || 0).toLocaleString("id-ID")}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Metode Pengiriman</td>
+                                                    <td>{selectedItem.transaksi.metode_pengiriman}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Alamat Pengiriman</td>
+                                                    <td>{selectedItem.transaksi.alamat || "–"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Status Pembayaran</td>
+                                                    <td>{selectedItem.transaksi.status_pembayaran || "–"}</td>
+                                                </tr>
+                                                {selectedItem.transaksi.pengiriman && (
+                                                    <tr>
+                                                        <td>Status Pengiriman</td>
+                                                        <td>{selectedItem.transaksi.pengiriman.status_pengiriman}</td>
+                                                    </tr>
+                                                )}
+                                                {selectedItem.transaksi.pengambilan && (
+                                                    <tr>
+                                                        <td>Status Pengambilan</td>
+                                                        <td>{selectedItem.transaksi.pengambilan.status_pengambilan}</td>
+                                                    </tr>
+                                                )}
+                                                <tr>
+                                                    <td>Komisi Perusahaan</td>
+                                                    <td>
+                                                        Rp{(selectedItem.transaksi.komisi_perusahaan || 0).toLocaleString(
+                                                            "id-ID"
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Komisi Hunter</td>
+                                                    <td>
+                                                        Rp{(selectedItem.transaksi.komisi_hunter || 0).toLocaleString("id-ID")}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Saldo Diterima</td>
+                                                    <td>
+                                                        Rp{(selectedItem.transaksi.saldo_penitip || 0).toLocaleString("id-ID")}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </Table>
+                                    </>
+                                )}
+
+                                {selectedItem.donasi && (
+                                    <>
+                                        <h5 className="mt-4">Detail Donasi</h5>
+                                        <Table borderless>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Organisasi Penerima</strong>
+                                                    </td>
+                                                    <td>{selectedItem.donasi.organisasi}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <strong>Tanggal Donasi</strong>
+                                                    </td>
+                                                    <td>
+                                                        {new Date(selectedItem.donasi.tanggal_donasi).toLocaleDateString(
+                                                            "id-ID"
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </Table>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </Modal.Body>
+                </Modal>
+            </Container>
         </>
     );
 };

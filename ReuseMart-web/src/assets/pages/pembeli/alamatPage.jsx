@@ -9,6 +9,8 @@ import {
   Modal,
   Form,
   Dropdown,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
 import { Pencil, Trash } from "lucide-react";
@@ -27,27 +29,40 @@ const AlamatPage = () => {
   let profile = {};
   try {
     profile = JSON.parse(localStorage.getItem("profile") || "{}");
-  } catch {}
-  const role = profile.role.trim().toLowerCase() || "";
+  } catch { }
+  const role = profile.role?.trim().toLowerCase() || "";
   const first = profile.first_name ?? profile.firstName ?? profile.name;
-  const last  = profile.last_name  ?? profile.lastName;
+  const last = profile.last_name ?? profile.lastName;
   const userName =
     first && last
       ? `${first} ${last}`
       : first
-      ? first
-      : role === "pembeli"
-      ? "User"
-      : "Organisasi";
+        ? first
+        : role === "pembeli"
+          ? "User"
+          : "Organisasi";
 
   // ————— NAVBAR STATE —————
-  const [groupedCats, setGroupedCats]     = useState([]);
-  const [activeCatIdx, setActiveCatIdx]   = useState(0);
-  const [showMega, setShowMega]           = useState(false);
-  const [showLogoutModal, setShowLogoutModal]   = useState(false);
+  const [groupedCats, setGroupedCats] = useState([]);
+  const [activeCatIdx, setActiveCatIdx] = useState(0);
+  const [showMega, setShowMega] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ————— TOAST STATE —————
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
+
+
+  // ————— ALAMAT PAGE STATE —————
+  const [alamatList, setAlamatList] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [alamatToEdit, setAlamatToEdit] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [alamatToDelete, setAlamatToDelete] = useState(null);
 
   useEffect(() => {
     api
@@ -56,23 +71,6 @@ const AlamatPage = () => {
       .catch(console.error);
   }, []);
 
-  const openLogoutModal     = () => setShowLogoutModal(true);
-  const closeLogoutModal    = () => setShowLogoutModal(false);
-  const handleConfirmLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
-  const openProfileModal  = () => setShowProfileModal(true);
-  const closeProfileModal = () => setShowProfileModal(false);
-
-  // ————— ALAMAT PAGE STATE —————
-  const [alamatList, setAlamatList]         = useState([]);
-  const [showAddModal, setShowAddModal]     = useState(false);
-  const [showEditModal, setShowEditModal]   = useState(false);
-  const [alamatToEdit, setAlamatToEdit]     = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [alamatToDelete, setAlamatToDelete]   = useState(null);
-
   useEffect(() => {
     api
       .get("/alamat")
@@ -80,25 +78,39 @@ const AlamatPage = () => {
       .catch(console.error);
   }, []);
 
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const handleConfirmLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+  const openProfileModal = () => setShowProfileModal(true);
+  const closeProfileModal = () => setShowProfileModal(false);
+
   const filtered = alamatList.filter((a) =>
-    (a.label + a.alamat)
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+    (a.label + a.alamat).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSetDefault = (sel) =>
-    setAlamatList((prev) =>
-      prev.map((a) =>
-        a.id_alamat === sel.id_alamat
-          ? { ...a, isDefault: true }
-          : { ...a, isDefault: false }
-      )
-    );
+  const handleSetDefault = async (sel) => {
+    try {
+      await api.put(`/alamat/${sel.id_alamat}/set-default`);
+      setAlamatList((prev) =>
+        prev.map((a) =>
+          a.id_alamat === sel.id_alamat
+            ? { ...a, isDefault: true }
+            : { ...a, isDefault: false }
+        )
+      );
+    } catch (e) {
+      console.error("Error setting default address:", e);
+    }
+  };
 
   const onDeleteClick = (a) => {
     setAlamatToDelete(a);
     setShowDeleteModal(true);
   };
+
   const handleDelete = async () => {
     if (!alamatToDelete) return;
     try {
@@ -106,8 +118,13 @@ const AlamatPage = () => {
       setAlamatList((prev) =>
         prev.filter((x) => x.id_alamat !== alamatToDelete.id_alamat)
       );
+      setToastVariant("success");
+      setToastMessage("Alamat berhasil dihapus");
+      setShowToast(true);
     } catch (e) {
-      console.error(e);
+      setToastVariant("danger");
+      setToastMessage("Gagal menghapus alamat");
+      console.error("Error deleting address:", e);
     } finally {
       setShowDeleteModal(false);
       setAlamatToDelete(null);
@@ -119,15 +136,60 @@ const AlamatPage = () => {
     setShowEditModal(true);
   };
 
-  // ————— RENDER —————
+  const handleAddSuccess = async () => {
+    try {
+      const { data } = await api.get("/alamat");
+      setAlamatList(data);
+      setToastVariant("success");
+      setToastMessage("Alamat berhasil ditambahkan");
+      setShowToast(true);
+      setShowAddModal(false);
+    } catch (e) {
+      console.error("Error fetching updated address list:", e);
+    }
+  };
+
+  const handleUpdateSuccess = async () => {
+    try {
+      const { data } = await api.get("/alamat");
+      setAlamatList(data);
+      setToastVariant("success");
+      setToastMessage("Alamat berhasil diperbarui");
+      setShowToast(true);
+      setShowEditModal(false);
+    } catch (e) {
+      console.error("Error fetching updated address list:", e);
+    }
+  };
+
   return (
     <>
-      {/* ========== NAVBAR ========== */}
+      <ToastContainer
+        className="position-fixed top-50 start-50 translate-middle z-3"
+        style={{ minWidth: "300px" }}
+      >
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          bg={toastVariant}
+          delay={2000}
+          autohide
+        >
+          <Toast.Header closeButton>
+            <strong className="me-auto">{
+              toastVariant === "success" ? "Sukses" : "Gagal"
+            }</strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+
+
+
       <div className="py-3 navbar-pembeli">
         <div className="container-fluid">
           <div className="row align-items-center justify-content-between">
-
-            {/* Logo */}
             <div className="col-auto logo-container">
               <Link
                 to={role === "pembeli" ? "/pembeliLP" : "/organisasiLP"}
@@ -138,13 +200,10 @@ const AlamatPage = () => {
                   alt="ReuseMart"
                   className="logo-img"
                 />
-                <span className="ms-2 fs-4 fw-bold logo-text">
-                  ReuseMart
-                </span>
+                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
               </Link>
             </div>
 
-            {/* Search (moved into navbar) */}
             <div className="col-md-6 px-2">
               <Form.Control
                 type="search"
@@ -155,7 +214,6 @@ const AlamatPage = () => {
               />
             </div>
 
-            {/* Mega‐menu + Profile */}
             <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
               <div
                 className="mega-dropdown"
@@ -169,9 +227,8 @@ const AlamatPage = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
+                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
+                            }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -193,7 +250,6 @@ const AlamatPage = () => {
                 )}
               </div>
 
-              {/* pembeli-only icons */}
               {role === "pembeli" && (
                 <>
                   <Link to="/cart" className="text-dark fs-3 icon-link">
@@ -212,7 +268,7 @@ const AlamatPage = () => {
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
-                  {role === "pembeli" || "penitip" ? (
+                  {role === "pembeli" || role === "penitip" ? (
                     <>
                       <Dropdown.Item onClick={openProfileModal}>
                         Profil
@@ -235,9 +291,7 @@ const AlamatPage = () => {
                     </>
                   )}
                   <Dropdown.Divider />
-                  <Dropdown.Item onClick={openLogoutModal}>
-                    Keluar
-                  </Dropdown.Item>
+                  <Dropdown.Item onClick={openLogoutModal}>Keluar</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
@@ -265,15 +319,16 @@ const AlamatPage = () => {
       <ProfileModal show={showProfileModal} onHide={closeProfileModal} />
 
       {/* Add / Edit Address Modals */}
-      <AlamatModal show={showAddModal} onHide={() => setShowAddModal(false)} />
+      <AlamatModal
+        show={showAddModal}
+        onHide={() => setShowAddModal(false)}
+        onSuccess={handleAddSuccess}
+      />
       <UbahAlamatModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
         alamatData={alamatToEdit}
-        onUpdateSuccess={async () => {
-          const { data } = await api.get("/alamat");
-          setAlamatList(data);
-        }}
+        onUpdateSuccess={handleUpdateSuccess}
       />
 
       {/* ========== PAGE BODY ========== */}
@@ -303,9 +358,7 @@ const AlamatPage = () => {
                 <Col md={12} className="mb-2" key={alamat.id_alamat}>
                   <Card
                     className={
-                      alamat.isDefault
-                        ? "border border-2 border-success"
-                        : ""
+                      alamat.isDefault ? "border border-2 border-success" : ""
                     }
                   >
                     <Card.Body className="p-2">
@@ -316,9 +369,7 @@ const AlamatPage = () => {
                         >
                           <strong>{alamat.label}</strong>
                           {alamat.isDefault && (
-                            <div className="badge bg-success ms-2">
-                              Utama
-                            </div>
+                            <div className="badge bg-success ms-2">Utama</div>
                           )}
                         </Col>
                         <Col
@@ -349,7 +400,7 @@ const AlamatPage = () => {
                           md={2}
                           className="border-end d-flex align-items-center justify-content-center"
                         >
-                          <strong>{alamat.catatan}</strong>
+                          <strong>{alamat.catatan || "–"}</strong>
                         </Col>
                         <Col
                           md={2}
@@ -402,6 +453,13 @@ const AlamatPage = () => {
         <Modal.Body>
           <p>Apakah anda yakin ingin menghapus alamat?</p>
           <div className="text-end">
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowDeleteModal(false)}
+              className="me-2"
+            >
+              Batal
+            </Button>
             <Button variant="outline-danger" onClick={handleDelete}>
               Hapus
             </Button>
