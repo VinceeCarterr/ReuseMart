@@ -32,7 +32,6 @@ Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
-    Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
     Route::get('kategori', [KategoriController::class, 'index']);
     Route::get('/penitipan', [PenitipanController::class, 'index']);
 
@@ -100,8 +99,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
-
+        Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
+        Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
     });    
 
 

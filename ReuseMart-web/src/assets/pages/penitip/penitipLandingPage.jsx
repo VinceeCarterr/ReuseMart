@@ -10,7 +10,11 @@ import "../landingPage.css";
 const ProductCard = ({ barang }) => (
     <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
-            <img src={barang.foto1} alt="Gambar 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img 
+                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+                alt="Gambar 1" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
         </div>
         <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
             <div style={{ flexGrow: 1 }}>
@@ -94,7 +98,7 @@ const PenitipLandingPage = () => {
             </Container>
 
             {/* Highlight (Uncomment when needed) */}
-            {/* {highlightProducts.length > 0 && (
+            {highlightProducts.length > 0 && (
                 <Container
                     className="mb-4"
                     style={{ backgroundColor: "white", borderRadius: 10, padding: 20 }}
@@ -107,9 +111,12 @@ const PenitipLandingPage = () => {
                             ref={scrollRef}
                             className="horizontal-scroll d-flex flex-row overflow-auto mb-2"
                         >
-                            {highlightProducts.map((barang) => (
+                            {barangList
+                                .filter(barang => 
+                                    barang.status === 'Available' && barang.status_periode === "Periode 2")
+                                .map((barang, index) => (
                                 <div
-                                    key={barang.id_barang}
+                                    key={index}
                                     className="highlight-card me-3 flex-shrink-0"
                                     style={{ width: 200 }}
                                 >
@@ -124,7 +131,7 @@ const PenitipLandingPage = () => {
                         </div>
                     </Row>
                 </Container>
-            )} */}
+            )}
 
             <hr />
 

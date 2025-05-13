@@ -12,7 +12,11 @@ import api from "../../../api/api.js";
 const ProductCard = ({ barang }) => (
   <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
     <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
-      <img src={barang.foto1} alt="Gambar 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <img 
+        src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+        alt="Gambar 1" 
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+      />
     </div>
     <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
       <div style={{ flexGrow: 1 }}>
@@ -104,6 +108,41 @@ const OrganisasiLandingPage = () => {
           Platform berbelanja barang bekas dengan kualitas terbaik. Pasti Murah!
         </p>
       </Container>
+      {/* Highlight (Uncomment when needed) */}
+      {highlightProducts.length > 0 && (
+        <Container
+          className="mb-4"
+          style={{ backgroundColor: "white", borderRadius: 10, padding: 20 }}
+        >
+          <h4 className="text-success fw-bold border-start border-5 border-success ps-3 mb-3">
+            Kesempatan Terakhir!
+          </h4>
+          <Row>
+            <div
+              ref={scrollRef}
+              className="horizontal-scroll d-flex flex-row overflow-auto mb-2"
+            >
+              {barangList
+                .filter(barang => 
+                barang.status === 'Available' && barang.status_periode === "Periode 2")
+                .map((barang, index) => (
+                  <div
+                    key={index}
+                    className="highlight-card me-3 flex-shrink-0"
+                    style={{ width: 200 }}
+                  >
+                    <Link
+                      to={`/produk/${barang.id_barang}`}
+                          style={{ textDecoration: "none" }}
+                      >
+                        <ProductCard barang={barang} />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </Row>
+          </Container>
+        )}
 
       <hr />
 

@@ -474,4 +474,25 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function tambahPoinPenitip($id_barang)
+    {
+        $barang = Barang::findOrFail($id_barang);
+        $penitip = Penitipan::where('id_barang', $id_barang)->first();
+
+        if ($penitip) {
+            $user = User::findOrFail($penitip->id_user);
+            $poin = floor($barang->harga / 10000);
+            $user->poin_loyalitas += $poin;
+            $user->save();
+            return response()->json([
+                'message' => 'Poin penitip berhasil ditambahkan',
+                'poin'    => $user->poin_loyalitas,
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Barang tidak ditemukan atau tidak ada penitip',
+            ], 404);
+        }
+    }
 }

@@ -20,7 +20,9 @@ const ProductCard = ({ barang }) => (
         <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
             <div style={{ flexGrow: 1 }}>
                 <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
-                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>
+                    {barang.harga?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
+                </Card.Title>
                 <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
                 <Card.Text style={{ fontSize: '0.9rem' }}>
                     Rating: {barang.rating ? barang.rating : 'N/A'}
@@ -104,12 +106,15 @@ const LandingPage = () => {
             </Container>
 
             {/* Highlight Section (Commented Out) */}
-            {/* <Container className="mb-4" style={{ backgroundColor: 'white', borderRadius: '10px', padding: '20px' }}>
+            <Container className="mb-4" style={{ backgroundColor: 'white', borderRadius: '10px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
                 <h4 className="text-success fw-bold border-start border-5 border-success ps-3 mb-3">Kesempatan Terakhir!</h4>
                 <Row>
                     <Container fluid>
                         <div ref={scrollRef} className="horizontal-scroll d-flex flex-row overflow-auto mb-2">
-                            {barangHighlight.map((barang, index) => (
+                            {barangList
+                                .filter(barang => 
+                                    barang.status === 'Available' && barang.status_periode === "Periode 2")
+                                .map((barang, index) => (
                                 <div key={index} className="highlight-card me-3 flex-shrink-0">
                                     <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
                                         <ProductCard barang={barang} />
@@ -119,7 +124,7 @@ const LandingPage = () => {
                         </div>
                     </Container>
                 </Row>
-            </Container> */}
+            </Container>
 
             <hr />
 

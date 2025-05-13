@@ -20,6 +20,8 @@ const ProductPage = () => {
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    // New state to store user rating
+    const [userRating, setUserRating] = useState(null);
     
     let profile = {};
     try{
@@ -69,6 +71,22 @@ const ProductPage = () => {
             }
         };
         fetchBarang();
+    }, [id]);
+
+    // New useEffect to fetch user rating for the product
+    useEffect(() => {
+        const fetchUserRating = async () => {
+            try {
+                const response = await api.get('/user-ratings');
+                const ratingData = response.data.find(r => r.id_barang === parseInt(id));
+                setUserRating(ratingData ? ratingData.rating : null);
+            } catch (error) {
+                console.error("Gagal mengambil rating pengguna:", error);
+                setUserRating(null);
+            }
+        };
+
+        fetchUserRating();
     }, [id]);
 
     // Fetch comments
@@ -207,7 +225,8 @@ const ProductPage = () => {
                                 <p>
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
-                                    Rating Penjual: {barang.rating}
+                                    {/* Updated to show user rating instead of barang.rating */}
+                                    Rating: {userRating !== null ? userRating : 'N/A'}
                                 </p>
                             </Col>
                             <Col md={6} style={{ textAlign: 'right' }}>
