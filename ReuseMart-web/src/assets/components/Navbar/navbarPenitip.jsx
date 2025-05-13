@@ -3,20 +3,19 @@ import { Form, Dropdown, Modal, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
 import api from "../../../api/api.js";
-import ProfileModal from "../Pembeli/profileModal.jsx"; // reuse existing ProfileModal
+import ProfilePenitipModal from "../Penitip/profilePenitipModal.jsx";
 import "./navbarPenitip.css";
 
 const NavbarPenitip = () => {
   const navigate = useNavigate();
 
-  // profile & name
   let userName = "Penitip";
   try {
     const prof = JSON.parse(localStorage.getItem("profile") || "{}");
     const fn = prof.first_name ?? prof.firstName ?? prof.name;
     const ln = prof.last_name ?? prof.lastName;
     userName = fn && ln ? `${fn} ${ln}` : fn || "Penitip";
-  } catch {}
+  } catch { }
 
   // categories for mega menu
   const [groupedCats, setGroupedCats] = useState([]);
@@ -90,9 +89,8 @@ const NavbarPenitip = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={cat.nama_kategori}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
+                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
+                            }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -165,7 +163,7 @@ const NavbarPenitip = () => {
       </Modal>
 
       {/* Profile Modal */}
-      <ProfileModal show={showProfileModal} onHide={closeProfileModal} />
+      <ProfilePenitipModal show={showProfileModal} onHide={closeProfileModal} />
     </>
   );
 };

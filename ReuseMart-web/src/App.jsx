@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ProtectedRoute from './ProtectedRoute.jsx';
 import LandingPage from "./assets/pages/landingPage.jsx";
 import ProductPage from "./assets/pages/productPage.jsx";
 import AdminPage from "./assets/pages/pegawai/adminPage.jsx";
 import OwnerLandingPage from "./assets/pages/Owner/ownerLandingPage.jsx";  
-import ProfilePenitipPage from "./assets/pages/penitip/profilePenitipPage.jsx";
 import HistoryPenitip from "./assets/pages/penitip/historyPenitip.jsx"
 import AlamatPage from "./assets/pages/pembeli/alamatPage.jsx";
 import PembeliLandingPage from "./assets/pages/pembeli/pembeliLandingPage.jsx";
@@ -15,28 +15,31 @@ import HistoryDonasi from "./assets/pages/Owner/historyDonasi.jsx";
 import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
 import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
 import ResetPassword from "./assets/pages/resetPasswordPage.jsx";
+import Unauthorized from "./assets/pages/unauthorize.jsx";
 
 function App() {
   return (
     <Router>
       <div style={{ backgroundColor: "#FFFCF7", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
         <Routes>
+          {/* public route */}
+          <Route path="/unauthorize" element={<Unauthorized/>}/>
           <Route path="/" element={<LandingPage />} />
           <Route path="/produk/:id" element={<ProductPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/profilePenitip" element={<ProfilePenitipPage />} />
-          <Route path="/historyPenitip" element={<HistoryPenitip />} />
-          <Route path="/alamat" element={<AlamatPage />} />
-          <Route path="/pembeliLP" element={<PembeliLandingPage />} />
-          <Route path="/historyPembeli" element={<HistoryPembeli />} />
-          <Route path="/CSLP" element={<CSLandingPage />} />
-          <Route path="/organisasi" element={<OrganisasiPage />} />
-          <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
-          <Route path="/request-donasi" element={<ReqDonasi />} />
-          <Route path="/penitipLP" element={<PenitipLandingPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/ownerLP" element={<OwnerLandingPage />}/>
-          <Route path="/HistoryDonasi" element={<HistoryDonasi />} />
+
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}> <AdminPage /> </ProtectedRoute>} />
+          <Route path="/historyPenitip" element={ <ProtectedRoute allowedRoles={['penitip']}> <HistoryPenitip /></ProtectedRoute>}/>
+          <Route path="/alamat" element={<ProtectedRoute allowedRoles={['pembeli','organisasi']}> <AlamatPage /> </ProtectedRoute>}/>
+          <Route path="/pembeliLP" element={<ProtectedRoute allowedRoles={['pembeli']}> <PembeliLandingPage /> </ProtectedRoute>} />
+          <Route path="/historyPembeli" element={<ProtectedRoute allowedRoles={['pembeli']}> <HistoryPembeli /> </ProtectedRoute>} />
+          <Route path="/CSLP" element={<ProtectedRoute allowedRoles={['cs']}> <CSLandingPage /> </ProtectedRoute>} />
+          <Route path="/organisasi" element={<ProtectedRoute allowedRoles={['admin']}> <OrganisasiPage /> </ProtectedRoute>} />
+          <Route path="/organisasiLP" element={<ProtectedRoute allowedRoles={['organisasi']}> <OrganisasiLandingPage /> </ProtectedRoute>} />
+          <Route path="/request-donasi" element={<ProtectedRoute allowedRoles={['organisasi']}> <ReqDonasi /> </ProtectedRoute>} />
+          <Route path="penitipLP" element={<ProtectedRoute allowedRoles={['penitip']}> <PenitipLandingPage /> </ProtectedRoute>} />
+          <Route path="/ownerLP" element={<ProtectedRoute allowedRoles={['owner']}> <OwnerLandingPage /> </ProtectedRoute>}/>
+          <Route path="/HistoryDonasi" element={<ProtectedRoute allowedRoles={['owner']}> <HistoryDonasi /> </ProtectedRoute>} />
         </Routes>
       </div>
     </Router>
