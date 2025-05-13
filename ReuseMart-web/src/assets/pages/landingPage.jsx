@@ -12,7 +12,7 @@ const ProductCard = ({ barang }) => (
     <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
             <img 
-                src={barang.foto1 ? `http://localhost:8000${barang.foto1}` : '/placeholder.jpg'} 
+                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
                 alt="Gambar 1" 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
@@ -39,48 +39,25 @@ const LandingPage = () => {
 
     const fetchBarang = async () => {
         try {
-            // Fetch barang
-            const barangResponse = await api.get('/barang');
-            const barangData = barangResponse.data;
+            const [ { data: barangData }, { data: ratingsData } ] = await Promise.all([
+            api.get('/barang'),
+            api.get('/user-ratings'),
+            ]);
 
-            // Fetch user ratings
-            const ratingsResponse = await api.get('/user-ratings');
-            const ratingsData = ratingsResponse.data;
+            const combined = barangData.map(item => {
+            const userRating = ratingsData.find(r => r.id_barang === item.id_barang)?.rating ?? null;
 
-            // Fetch photos for each barang
-            const combinedData = await Promise.all(
-                barangData.map(async (barang) => {
-                    try {
-                        const fotoResponse = await api.get(`/foto-barang/${barang.id_barang}`);
-                        const fotos = fotoResponse.data;
-                        // Use the first photo or null if none exist
-                        const foto1 = fotos.length > 0 ? fotos[0].path : null;
-                        const ratingObj = ratingsData.find(r => r.id_barang === barang.id_barang);
-                        return {
-                            ...barang,
-                            rating: ratingObj ? ratingObj.rating : null,
-                            foto1: foto1
-                        };
-                    } catch (fotoError) {
-                        console.error(`Failed to fetch photos for barang ${barang.id_barang}:`, fotoError);
-                        // Fallback if photo fetch fails
-                        const ratingObj = ratingsData.find(r => r.id_barang === barang.id_barang);
-                        return {
-                            ...barang,
-                            rating: ratingObj ? ratingObj.rating : null,
-                            foto1: null
-                        };
-                    }
-                })
-            );
-
-            setBarangList(combinedData);
-        } catch (error) {
-            console.error('Failed to fetch barang, ratings, or photos:', error);
-            setBarangList([]);
-        }
+            return {
+                ...item,
+                rating: userRating,
+            };
+        });
+        setBarangList(combined);
+    } catch (err) {
+        console.error('Failed to fetch barang or ratings:', err);
+        setBarangList([]);
+    }
     };
-
     useEffect(() => {
         fetchBarang();
     }, []);

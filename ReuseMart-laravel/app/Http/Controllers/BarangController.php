@@ -12,13 +12,8 @@ class BarangController extends Controller
 {
     public function index()
     {
-       try {
-            $barang = Barang::all();
-            return response()->json($barang);
-        } catch (Exception $e) {
-            Log::error('Error fetching barang: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to fetch barang'], 500);
-        }
+        $barangs = Barang::with('foto')->get();
+        return response()->json($barangs);
     }
 
     public function store(Request $request)

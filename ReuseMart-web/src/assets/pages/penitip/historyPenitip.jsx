@@ -44,6 +44,7 @@ const HistoryPenitip = () => {
             const { data } = await api.get("transaksi/historyPenitip", { params });
             setItems(data.data);
             setTotal(data.total);
+            console.log("historyPenitip JSON:", data); 
         } catch (err) {
             console.error("Error loading penitip history:", err);
         } finally {
@@ -140,10 +141,10 @@ const HistoryPenitip = () => {
                                         <Col xs={4}>
                                             <Image
                                                 src={
-                                                    item.foto && item.foto.length > 0
-                                                        ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
-                                                        : "/placeholder.jpg"
-                                                }
+                                                    item.foto?.length > 0
+                                                    ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
+                                                    : "/placeholder.jpg"
+                                                    }
                                                 thumbnail
                                                 rounded
                                             />
