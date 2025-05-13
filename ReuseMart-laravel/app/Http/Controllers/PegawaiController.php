@@ -111,7 +111,6 @@ class PegawaiController extends Controller
             'id_jabatan' => 'required|exists:jabatan,id_jabatan',
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
-            'email'      => 'required|email|unique:pegawai,email',
             'no_telp'    => 'required|string|max:15',
             'tanggal_lahir' => 'required|date',
             'komisi'     => 'nullable|numeric|max:19',
@@ -127,7 +126,6 @@ class PegawaiController extends Controller
             $data = $request->only([
                 'first_name',
                 'last_name',
-                'email',
                 'id_jabatan',
                 'no_telp',
                 'tanggal_lahir',

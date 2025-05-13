@@ -190,6 +190,8 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
         }
     };
 
+    const today = new Date().toISOString().split('T')[0];
+
     return (
         <div>
             <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
@@ -201,7 +203,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Row>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Nama Depan</Form.Label>
+                                    <Form.Label><strong>Nama Depan</strong></Form.Label>
                                     <Form.Control
                                         value={formData.firstName}
                                         onChange={handleInputChange('firstName')}
@@ -216,7 +218,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Nama Belakang</Form.Label>
+                                    <Form.Label><strong>Nama Belakang</strong></Form.Label>
                                     <Form.Control
                                         value={formData.lastName}
                                         onChange={handleInputChange('lastName')}
@@ -233,7 +235,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Row className="mt-3">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Jabatan</Form.Label>
+                                    <Form.Label><strong>Jabatan</strong></Form.Label>
                                     <Form.Select
                                         value={formData.selectedJabatan}
                                         onChange={handleInputChange('selectedJabatan')}
@@ -253,7 +255,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Nomor Telepon</Form.Label>
+                                    <Form.Label><strong>Nomor Telepon</strong></Form.Label>
                                     <Form.Control
                                         value={formData.noTelp}
                                         onChange={handleInputChange('noTelp')}
@@ -270,12 +272,13 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         <Row className="mt-3">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Tanggal Lahir</Form.Label>
+                                    <Form.Label><strong>Tanggal Lahir</strong></Form.Label>
                                     <Form.Control
                                         type="date"
                                         value={formData.tglLahir}
                                         onChange={handleInputChange('tglLahir')}
                                         isInvalid={!!formErrors.tglLahir}
+                                        max={new Date().toISOString().split('T')[0]}
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {formErrors.tglLahir}

@@ -61,7 +61,6 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
         return Object.keys(errors).length === 0;
     };
 
-
     const handleTambah = async () => {
         if (!validateForm()) return;
 
@@ -134,6 +133,9 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
         setToastShow(true);
     };
 
+    // Set max date to today
+    const today = new Date().toISOString().split('T')[0];
+
     return (
         <div>
             <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
@@ -145,7 +147,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                         <Row className="mt-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>First Name</Form.Label>
+                                    <Form.Label><strong>First Name</strong></Form.Label>
                                     <Form.Control
                                         value={firstName}
                                         onChange={e => setFirstName(e.target.value)}
@@ -160,7 +162,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Last Name</Form.Label>
+                                    <Form.Label><strong>Last Name</strong></Form.Label>
                                     <Form.Control
                                         value={lastName}
                                         onChange={e => setLastName(e.target.value)}
@@ -178,7 +180,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                         <Row className="mt-3">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Email</Form.Label>
+                                    <Form.Label><strong>Email</strong></Form.Label>
                                     <Form.Control
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
@@ -193,7 +195,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Nomor Telepon</Form.Label>
+                                    <Form.Label><strong>Nomor Telepon</strong></Form.Label>
                                     <Form.Control
                                         value={noTelp}
                                         onChange={e => setNoTelp(e.target.value)}
@@ -211,7 +213,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                         <Row className="mt-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Password</Form.Label>
+                                    <Form.Label><strong>Password</strong></Form.Label>
                                     <Form.Control
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
@@ -226,7 +228,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Jabatan</Form.Label>
+                                    <Form.Label><strong>Jabatan</strong></Form.Label>
                                     <Form.Select
                                         value={selectedJabatan}
                                         onChange={(e) => setSelectedJabatan(e.target.value)}
@@ -248,12 +250,13 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
 
                         <Col md={6}>
                             <Form.Group className="mt-3">
-                                <Form.Label>Tanggal Lahir</Form.Label>
+                                <Form.Label><strong>Tanggal Lahir</strong></Form.Label>
                                 <Form.Control
                                     type='date'
                                     value={tglLahir}
                                     onChange={e => setTglLahir(e.target.value)}
                                     isInvalid={!!formErrors.tglLahir}
+                                    max={today}
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {formErrors.tglLahir}

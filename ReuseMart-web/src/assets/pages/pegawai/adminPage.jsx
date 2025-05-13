@@ -221,7 +221,7 @@ const AdminPage = () => {
                     <Toast.Header>
                         <strong className="me-auto">{toastVariant === "danger" ? "Alert" : "Error"}</strong>
                     </Toast.Header>
-                    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+                    <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
                         {toastMessage}
                     </Toast.Body>
                 </Toast>
