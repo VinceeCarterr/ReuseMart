@@ -3,7 +3,7 @@ import { Form, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "./navbar.css";
 
-const NavbarLandingPage = ({ onLoginClick, onRegisterClick }) => {
+const NavbarLandingPage = ({ onLoginClick, onRegisterClick, searchQuery, onSearchChange }) => {
   return (
     <div className="py-3 navbar-landingPage">
       <div className="container-fluid">
@@ -21,6 +21,8 @@ const NavbarLandingPage = ({ onLoginClick, onRegisterClick }) => {
                 type="search"
                 placeholder="Mau cari apa hari ini?"
                 className="me-2"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
               />
             </Form>
           </div>
