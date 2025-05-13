@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'unifiedLogin']);
 Route::post('/forgot-password', [UserController::class, 'forgotPassword']);
+Route::post('/reset-password', [UserController::class, 'resetPassword']);
 Route::get('/user/public', [UserController::class, 'publicList']);
 
 //barang for landingpage
@@ -38,7 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //authentifikasi | mengelola data pegawai
     Route::middleware('role:admin')->group(function () {
         //admin reset pw pegawai
-        Route::post('/reset-password', [UserController::class, 'resetPassword']);
+        Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword']);
 
         //kelola data pegawai
         Route::get('/pegawai', [PegawaiController::class, 'index']);
@@ -88,7 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/penitip/{id}', [UserController::class, 'destroyPenitip']);
         Route::post('/user/check-nik', [UserController::class, 'checkNIK']);
     });
-    
+
     Route::middleware('role:pembeli,cs')->group(function () {
         Route::post('/barang/{id_barang}/komentar', [ForumController::class, 'addComment']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
