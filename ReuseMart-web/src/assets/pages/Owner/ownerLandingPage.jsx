@@ -1,6 +1,6 @@
 import api from "../../../api/api.js";
 import { useEffect, useState } from "react";
-import { Card, Col, Container, Row, Button } from "react-bootstrap";
+import { Card, Col, Container, Row, Button, Image } from "react-bootstrap";
 import NavbarOwner from "../../components/Navbar/navbarOwner.jsx";
 import "../../components/Navbar/navbarOwner.css";
 import "aos/dist/aos.css";
@@ -9,25 +9,31 @@ import KelolaDonasiModal from "../../components/Owner/kelolaDonasiModal.jsx";
 
 const ReqDonasiCard = ({ reqDonasi, getUserNameById }) => (
     <Col md={6} className="mx-auto mb-4">
-        <Card>
-            <Card.Body className="p-3">
+        <Card className="req-card h-100">
+            <Card.Body>
                 <Row>
-                    {/* Image Column */}
-                    <Col md={4} className="d-flex align-items-center justify-content-center">
-                        <img 
-                            src={`http://localhost:8000/storage/${reqDonasi.contoh_foto}`} 
-                            alt="Contoh Foto" 
-                            className="img-fluid rounded" 
-                            style={{ maxHeight: '150px', objectFit: 'cover' }}
+                    <Col xs={4}>
+                        <Image
+                            src={`http://localhost:8000/storage/${reqDonasi.contoh_foto}`}
+                            thumbnail
                         />
                     </Col>
-
-                    {/* Text Content Column */}
-                    <Col md={8}>
-                        <h5 className="mb-2">{reqDonasi.nama_barangreq}</h5>
-                        <p className="mb-1"><strong>Nama Organisasi:</strong> {getUserNameById(reqDonasi.id_user)}</p>
-                        <p className="mb-1"><strong>Kategori:</strong> {reqDonasi.kategori_barangreq}</p>
-                        <p className="mb-0"><strong>Deskripsi:</strong> {reqDonasi.deskripsi}</p>
+                    <Col xs={8}>
+                        <div>
+                            <h5 className="mb-2">{reqDonasi.nama_barangreq}</h5>
+                        </div>
+                        <div>
+                            <strong>Nama Request:</strong> {reqDonasi?.nama_barangreq || "Tidak Diketahui"}
+                        </div>
+                        <div>
+                            <strong>Nama Organisasi:</strong> {getUserNameById(reqDonasi.id_user)}
+                        </div>
+                        <div>
+                            <strong>Kategori:</strong> {reqDonasi.kategori_barangreq}
+                        </div>
+                        <div>
+                            <strong>Deskripsi</strong> {reqDonasi.deskripsi}
+                        </div>
                     </Col>
                 </Row>
             </Card.Body>

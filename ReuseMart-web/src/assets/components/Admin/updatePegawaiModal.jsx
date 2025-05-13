@@ -4,28 +4,25 @@ import api from "../../../api/api.js";
 import { Modal, Button, Form, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
 
 const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
-    const [selectedJabatan, setSelectedJabatan] = useState("Pilih Jabatan");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [email, setEmail] = useState("");
-    const [noTelp, setNoTelp] = useState("");
-    const [password, setPassword] = useState("");
-    const [tglLahir, setTglLahir] = useState("");
-    const [error, setError] = useState("");
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        noTelp: "",
+        password: "",
+        tglLahir: "",
+        selectedJabatan: "Pilih Jabatan"
+    });
     const [formErrors, setFormErrors] = useState({});
-
-    const [toastShow, setToastShow] = useState(false);
-    const [toastMessage, setToastMessage] = useState("");
-    const [toastVariant, setToastVariant] = useState("success");
+    const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        variant: "success"
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (pegawai) {
-            setFirstName(pegawai.first_name || "");
-            setLastName(pegawai.last_name || "");
-            setPassword(pegawai.password || "")
-            setEmail(pegawai.email || "");
-            setNoTelp(pegawai.no_telp || "");
-            setTglLahir(pegawai.tanggal_lahir || "");
             const jabatanLabel = {
                 2: 'Customer Service',
                 3: 'Pegawai Gudang',
@@ -34,198 +31,275 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                 6: 'Admin',
             }[pegawai.id_jabatan] || "Pilih Jabatan";
 
-            setSelectedJabatan(jabatanLabel);
+            setFormData({
+                firstName: pegawai.first_name || "",
+                lastName: pegawai.last_name || "",
+                email: pegawai.email || "",
+                noTelp: pegawai.no_telp || "",
+                password: "",
+                tglLahir: pegawai.tanggal_lahir || "",
+                selectedJabatan: jabatanLabel
+            });
+            setFormErrors({});
         }
     }, [pegawai]);
 
     const validateForm = () => {
         const errors = {};
         const nameRegex = /^[A-Za-z\s]+$/;
+        const phoneRegex = /^\d+$/;
 
-        if (!firstName.trim()) {
+        if (!formData.firstName.trim()) {
             errors.firstName = "Nama depan wajib diisi";
-        } else if (!nameRegex.test(firstName)) {
+        } else if (!nameRegex.test(formData.firstName)) {
             errors.firstName = "Nama depan hanya boleh berisi huruf";
         }
 
-        if (!lastName.trim()) {
+        if (!formData.lastName.trim()) {
             errors.lastName = "Nama belakang wajib diisi";
-        } else if (!nameRegex.test(lastName)) {
+        } else if (!nameRegex.test(formData.lastName)) {
             errors.lastName = "Nama belakang hanya boleh berisi huruf";
         }
 
-        if (!email.trim()) {
-            errors.email = "Email wajib diisi";
-        } else if (!email.includes('@')) {
-            errors.email = "Email tidak valid (harus mengandung @)";
-        }
-
-        if (!noTelp.trim()) {
+        if (!formData.noTelp.trim()) {
             errors.noTelp = "Nomor telepon wajib diisi";
+        } else if (!phoneRegex.test(formData.noTelp)) {
+            errors.noTelp = "Nomor telepon hanya boleh berisi angka";
+        } else if (formData.noTelp.length < 11 || formData.noTelp.length > 13) {
+            errors.noTelp = "Nomor telepon harus memiliki panjang 11-13 digit";
         }
 
-        if (!selectedJabatan.trim()) {
+        if (formData.selectedJabatan === "Pilih Jabatan") {
             errors.selectedJabatan = "Jabatan wajib dipilih";
         }
 
-        if (!tglLahir) {
+        if (!formData.tglLahir) {
             errors.tglLahir = "Tanggal lahir wajib diisi";
+        } else {
+            const birthDate = new Date(formData.tglLahir);
+            const today = new Date();
+            if (birthDate > today) {
+                errors.tglLahir = "Tanggal lahir tidak boleh di masa depan";
+            }
         }
 
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
+        if (formData.password && formData.password.length < 8) {
+            errors.password = "Password harus minimal 8 karakter";
+        }
+
+        return errors;
     };
 
-    const handleSelect = (eventKey) => {
-        setSelectedJabatan(eventKey);
+    const handleInputChange = (field) => (e) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: e.target.value
+        }));
+        // Clear error for this field when user starts typing
+        setFormErrors(prev => ({
+            ...prev,
+            [field]: undefined
+        }));
+    };
+
+    const showToast = (message, variant) => {
+        setToast({
+            show: true,
+            message,
+            variant
+        });
     };
 
     const handleUpdate = async () => {
-        setError('');
-        setFormErrors({});
-
-        if (!validateForm()) {
-            return;
-        }
-
-        let id_jabatan = null;
-
-        if (selectedJabatan === 'Admin') {
-            id_jabatan = 6;
-        } else if (selectedJabatan === 'Customer Service') {
-            id_jabatan = 2;
-        } else if (selectedJabatan === 'Pegawai Gudang') {
-            id_jabatan = 3;
-        } else if (selectedJabatan === 'Kurir') {
-            id_jabatan = 4;
-        } else if (selectedJabatan === 'Hunter') {
-            id_jabatan = 5;
-        } else {
-            setFormErrors({ selectedJabatan: 'Jabatan tidak valid' });
-            showToast('Jabatan tidak valid', 'danger');
-            return;
-        }
-
-        let komisi = 0;
-
         try {
-            const response = await api.put(`/pegawai/${pegawai.id_pegawai}`, {
-                id_jabatan,
-                first_name: firstName,
-                last_name: lastName,
-                email,
-                password: password || undefined, // Only send password if provided
-                no_telp: noTelp,
-                tanggal_lahir: tglLahir,
-                komisi,
-            });
+            setIsSubmitting(true);
+            const errors = validateForm();
+            
+            if (Object.keys(errors).length > 0) {
+                setFormErrors(errors);
+                showToast("Harap perbaiki kesalahan pada formulir", "danger");
+                return;
+            }
 
-            console.log('Update success:', response.data);
+            const jabatanMap = {
+                'Admin': 6,
+                'Customer Service': 2,
+                'Pegawai Gudang': 3,
+                'Kurir': 4,
+                'Hunter': 5
+            };
+
+            const id_jabatan = jabatanMap[formData.selectedJabatan];
+            
+            if (!id_jabatan) {
+                setFormErrors({ selectedJabatan: 'Jabatan tidak valid' });
+                showToast('Jabatan tidak valid', 'danger');
+                return;
+            }
+
+            const payload = {
+                id_jabatan,
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                email: formData.email,
+                no_telp: formData.noTelp,
+                tanggal_lahir: formData.tglLahir,
+                komisi: 0,
+                ...(formData.password && { password: formData.password })
+            };
+
+            const response = await api.put(`/pegawai/${pegawai.id_pegawai}`, payload);
+            
             onHide();
             showToast('Berhasil mengupdate pegawai', 'success');
             fetchPegawai();
         } catch (err) {
-            console.error('Update error:', err.response?.data); // Log error for debugging
-            if (err.response?.status === 422 && err.response?.data?.errors) {
-                const validationErrors = err.response.data.errors;
-                setFormErrors(validationErrors);
-
-                // Display specific validation errors in toast
-                const errorMessages = Object.values(validationErrors).flat();
-                showToast(errorMessages.join(', '), 'danger');
-            } else {
-                const message = err.response?.data?.error || 'Gagal mengupdate pegawai';
-                showToast(message, 'danger');
+            console.error('Update error:', err);
+            
+            let errorMessage = 'Gagal mengupdate pegawai';
+            
+            if (err.response) {
+                if (err.response.status === 422 && err.response.data?.errors) {
+                    const validationErrors = err.response.data.errors;
+                    setFormErrors(validationErrors);
+                    errorMessage = Object.values(validationErrors).flat().join(', ');
+                } else if (err.response.data?.error) {
+                    errorMessage = err.response.data.error;
+                }
+            } else if (err.request) {
+                errorMessage = 'Tidak dapat terhubung ke server';
             }
+
+            showToast(errorMessage, 'danger');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleResetPassword = async () => {
-        setError('');
         try {
-            const response = await api.put(`/pegawai/${pegawai.id_pegawai}/reset-password`);
-            alert('Password berhasil direset ke tanggal lahir.');
+            setIsSubmitting(true);
+            await api.put(`/pegawai/${pegawai.id_pegawai}/reset-password`);
+            showToast('Password berhasil direset ke tanggal lahir', 'success');
         } catch (err) {
-            const message = err.response?.data?.error || 'Gagal reset password';
-            setError(message);
+            console.error('Reset password error:', err);
+            const errorMessage = err.response?.data?.error || 'Gagal reset password';
+            showToast(errorMessage, 'danger');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const showToast = (message, variant) => {
-        setToastMessage(message);
-        setToastVariant(variant);
-        setToastShow(true);
-    }
-
     return (
         <div>
-                <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
+            <Modal show={show} onHide={onHide} centered backdrop={true} className="pegawai-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>Edit Pegawai</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
-                        <Row >
+                    <Form noValidate>
+                        <Row>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>First Name</Form.Label>
-                                    <Form.Control value={firstName} onChange={e => setFirstName(e.target.value)} type="text" placeholder="Masukkan nama depan" />
+                                    <Form.Label>Nama Depan</Form.Label>
+                                    <Form.Control
+                                        value={formData.firstName}
+                                        onChange={handleInputChange('firstName')}
+                                        type="text"
+                                        placeholder="Masukkan nama depan"
+                                        isInvalid={!!formErrors.firstName}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {formErrors.firstName}
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Last Name</Form.Label>
-                                    <Form.Control value={lastName} onChange={e => setLastName(e.target.value)} type="text" placeholder="Masukkan nama belakang" />
+                                    <Form.Label>Nama Belakang</Form.Label>
+                                    <Form.Control
+                                        value={formData.lastName}
+                                        onChange={handleInputChange('lastName')}
+                                        type="text"
+                                        placeholder="Masukkan nama belakang"
+                                        isInvalid={!!formErrors.lastName}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {formErrors.lastName}
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
                         </Row>
                         <Row className="mt-3">
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Email</Form.Label>
-                                    <Form.Control value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Masukkan Email" />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Nomor Telepon</Form.Label>
-                                    <Form.Control value={noTelp} onChange={e => setNoTelp(e.target.value)} type="text" placeholder="Masukkan Nomor Telepon" />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Row className="mt-3">
-                            <Col md={6}>
-                                <Form.Group >
-                                    <Form.Label>Tanggal Lahir </Form.Label>
-                                    <Form.Control type='date' value={tglLahir} onChange={e => setTglLahir(e.target.value)} ></Form.Control>
-                                </Form.Group>
-                            </Col>
                             <Col md={6}>
                                 <Form.Group>
                                     <Form.Label>Jabatan</Form.Label>
                                     <Form.Select
-                                        value={selectedJabatan}
-                                        onChange={(e) => setSelectedJabatan(e.target.value)}
+                                        value={formData.selectedJabatan}
+                                        onChange={handleInputChange('selectedJabatan')}
+                                        isInvalid={!!formErrors.selectedJabatan}
                                     >
-                                        <option value="">Pilih Jabatan</option>
+                                        <option value="Pilih Jabatan">Pilih Jabatan</option>
                                         <option value="Admin">Admin</option>
                                         <option value="Customer Service">Customer Service</option>
                                         <option value="Pegawai Gudang">Pegawai Gudang</option>
                                         <option value="Kurir">Kurir</option>
                                         <option value="Hunter">Hunter</option>
                                     </Form.Select>
+                                    <Form.Control.Feedback type="invalid">
+                                        {formErrors.selectedJabatan}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Nomor Telepon</Form.Label>
+                                    <Form.Control
+                                        value={formData.noTelp}
+                                        onChange={handleInputChange('noTelp')}
+                                        type="text"
+                                        placeholder="Masukkan Nomor Telepon"
+                                        isInvalid={!!formErrors.noTelp}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {formErrors.noTelp}
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
                         </Row>
-                        <Row className='mt-4 mb-3'>
+                        <Row className="mt-3">
                             <Col md={6}>
-                                <Button variant='outline-danger' onClick={handleResetPassword}>
+                                <Form.Group>
+                                    <Form.Label>Tanggal Lahir</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        value={formData.tglLahir}
+                                        onChange={handleInputChange('tglLahir')}
+                                        isInvalid={!!formErrors.tglLahir}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {formErrors.tglLahir}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <Row className="mt-4 mb-3">
+                            <Col md={6}>
+                                <Button 
+                                    variant="outline-danger" 
+                                    onClick={handleResetPassword}
+                                    disabled={isSubmitting}
+                                >
                                     Reset Password
                                 </Button>
                             </Col>
-                            <Col md={6} >
-                                <Button variant="success" onClick={handleUpdate}>
-                                    Simpan Perubahan
+                            <Col md={6}>
+                                <Button 
+                                    variant="success" 
+                                    onClick={handleUpdate}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                                 </Button>
                             </Col>
                         </Row>
@@ -234,17 +308,17 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             </Modal>
             <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
                 <Toast
-                        show={toastShow}
-                        onClose={() => setToastShow(false)}
-                        delay={3000}
-                        autohide
-                        bg={toastVariant}
+                    show={toast.show}
+                    onClose={() => setToast(prev => ({ ...prev, show: false }))}
+                    delay={5000}
+                    autohide
+                    bg={toast.variant}
                 >
                     <Toast.Header>
-                        <strong className="me-auto">{toastVariant === "success" ? "Sukses" : "Error"}</strong>
+                        <strong className="me-auto">{toast.variant === "success" ? "Sukses" : "Error"}</strong>
                     </Toast.Header>
-                    <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
-                        {toastMessage}
+                    <Toast.Body className={toast.variant === "success" ? "text-white" : ""}>
+                        {toast.message}
                     </Toast.Body>
                 </Toast>
             </ToastContainer>
