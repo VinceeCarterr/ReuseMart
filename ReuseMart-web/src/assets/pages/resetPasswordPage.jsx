@@ -16,33 +16,66 @@ const ResetPassword = () => {
     const token = query.get("token");
     const email = query.get("email");
 
+    // Validasi sebelum mengirim
+    const validateForm = () => {
+        if (!email || !token) {
+            setToastMsg("Email atau token tidak valid. Silakan coba lagi dari email reset password.");
+            setToastVariant("danger");
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+            return false;
+        }
+        if (password.length < 6) {
+            setToastMsg("Password harus minimal 6 karakter.");
+            setToastVariant("danger");
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+            return false;
+        }
+        if (password !== passwordConfirmation) {
+            setToastMsg("Password dan konfirmasi tidak cocok.");
+            setToastVariant("danger");
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+            return false;
+        }
+        return true;
+    };
+
     const handleResetPassword = async (e) => {
         e.preventDefault();
 
-        if (password !== passwordConfirmation) {
-            setToastVariant("danger");
-            setToastMsg("Password dan konfirmasi tidak cocok");
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-            return;
-        }
+        if (!validateForm()) return;
+
+        const data = {
+            email: email.toLowerCase(),
+            token,
+            password,
+            password_confirmation: passwordConfirmation,
+        };
+
+        console.log("Data dikirim ke backend:", data); // Logging untuk debugging
 
         try {
-            const { data } = await api.post("/reset-password", {
-                email,
-                token,
-                password,
-                password_confirmation: passwordConfirmation,
+            const response = await api.post("/reset-password", data, {
+                headers: { "Content-Type": "application/json" },
             });
             setToastVariant("success");
-            setToastMsg(data.message || "Password berhasil direset!");
+            setToastMsg(response.data.message || "Password berhasil direset!");
             setShowToast(true);
             setTimeout(() => {
                 setShowToast(false);
                 navigate("/");
             }, 3000);
         } catch (err) {
-            const message = err.response?.data?.error || "Gagal mereset password";
+            console.error("Error dari backend:", err.response?.data); // Logging error
+            let message = "Gagal mereset password.";
+            if (err.response?.data?.error) {
+                message = err.response.data.error;
+                if (err.response.data.details) {
+                    message += ": " + Object.values(err.response.data.details).flat().join(", ");
+                }
+            }
             setToastVariant("danger");
             setToastMsg(message);
             setShowToast(true);
@@ -69,7 +102,7 @@ const ResetPassword = () => {
                         <Form.Label className="fw-bold">Email</Form.Label>
                         <Form.Control
                             type="email"
-                            value={email}
+                            value={email || ""}
                             disabled
                             className="border-success"
                         />
@@ -80,6 +113,7 @@ const ResetPassword = () => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Minimal 6 karakter"
                             required
                             className="border-success"
                         />
@@ -90,6 +124,7 @@ const ResetPassword = () => {
                             type="password"
                             value={passwordConfirmation}
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
+                            placeholder="Ulangi password"
                             required
                             className="border-success"
                         />
@@ -98,6 +133,7 @@ const ResetPassword = () => {
                         type="submit"
                         variant="success"
                         className="w-100 fw-bold"
+                        disabled={!email || !token}
                     >
                         Reset Password
                     </Button>

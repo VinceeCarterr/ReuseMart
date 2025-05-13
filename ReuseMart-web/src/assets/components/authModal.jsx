@@ -86,14 +86,13 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
 
       if (type === "pegawai") {
         const jabatan = pegawai.jabatan.toLowerCase();
-        if (jabatan === "admin")        navigate("/admin");
-        else if (jabatan === "cs")      navigate("/CSLP");
-        else if (jabatan === "gudang")  navigate("/gudangLP");
-        else if (jabatan === "kurir")   navigate("/kurirLP");
-        else if (jabatan === "hunter")  navigate("/hunterLP");
-        else if (jabatan === "owner")   navigate("/ownerLP");;
-      }
-      else if (type === "user") {
+        if (jabatan === "admin") navigate("/admin");
+        else if (jabatan === "cs") navigate("/CSLP");
+        else if (jabatan === "gudang") navigate("/gudangLP");
+        else if (jabatan === "kurir") navigate("/kurirLP");
+        else if (jabatan === "hunter") navigate("/hunterLP");
+        else if (jabatan === "owner") navigate("/ownerLP");
+      } else if (type === "user") {
         const role = user.role?.trim().toLowerCase();
 
         switch (role) {
@@ -160,8 +159,8 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setToastVariant("success");
       setToastMsg("Registrasi berhasil! Silakan login.");
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
       setTimeout(() => {
+        setShowToast(false);
         onSwitch("login");
         setIsOrg(false);
         setEmail("");
@@ -204,6 +203,16 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
+  };
+
+  const handleOpenForgotPassword = () => {
+    // Tutup modal login
+    onHide();
+    // Buka modal lupa password setelah jeda kecil
+    setTimeout(() => {
+      setShowForgotPasswordModal(true);
+      setForgotEmail(email); // Isi email dari form login
+    }, 300);
   };
 
   return (
@@ -394,7 +403,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
                   <span
                     className="text-primary small"
                     role="button"
-                    onClick={() => setShowForgotPasswordModal(true)}
+                    onClick={handleOpenForgotPassword}
                   >
                     Lupa password?
                   </span>
@@ -428,6 +437,7 @@ const AuthModal = ({ show, onHide, mode, onSwitch }) => {
         </Modal.Body>
       </Modal>
 
+      {/* Modal Lupa Password */}
       <Modal
         show={showForgotPasswordModal}
         onHide={() => setShowForgotPasswordModal(false)}
