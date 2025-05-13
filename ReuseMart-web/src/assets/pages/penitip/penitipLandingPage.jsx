@@ -101,7 +101,7 @@ const PenitipLandingPage = () => {
             {highlightProducts.length > 0 && (
                 <Container
                     className="mb-4"
-                    style={{ backgroundColor: "white", borderRadius: 10, padding: 20 }}
+                    style={{ backgroundColor: "white", borderRadius: 10, padding: 20, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'}}
                 >
                     <h4 className="text-success fw-bold border-start border-5 border-success ps-3 mb-3">
                         Kesempatan Terakhir!
