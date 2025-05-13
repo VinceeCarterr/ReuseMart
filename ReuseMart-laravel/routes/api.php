@@ -41,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('user/avatar', [UserController::class, 'updateAvatar']);
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('/user', [UserController::class, 'me']);
-    Route::get('/organisasi', [UserController::class, 'index']);
+    Route::get('/organisasi', [UserController::class, 'index'])->middleware('isPembeli:organisasi');
     Route::delete('/organisasi/{id}', [UserController::class, 'deleteOrganisasi']);
     Route::put('organisasi/{id}', [UserController::class, 'updateOrganisasi']);
 
