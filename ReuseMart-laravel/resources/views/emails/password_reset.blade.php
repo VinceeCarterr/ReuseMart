@@ -2,26 +2,17 @@
 <html>
 
 <head>
-    <title>Reset Your Password</title>
+    <title>Reset Password</title>
 </head>
 
 <body>
-    <h1>Reset Your Password</h1>
-    <p>Hello {{ $user->first_name ?? $user->email }},</p>
-
-    <p>We received a request to reset your password. Click the button below to reset your password:</p>
-
-    <a href="{{ $resetUrl }}"
-        style="display: inline-block; padding: 10px 20px; background-color: #3490dc; color: white; text-decoration: none; border-radius: 5px;">
-        Reset Password
-    </a>
-
-    <p>If you didn't request a password reset, please ignore this email.</p>
-
-    <p>This link will expire in 1 hour.</p>
-
-    <p>Thank you,<br>
-        Reuse Mart Team</p>
+    <h1>Reset Password</h1>
+    <p>Halo {{ $user->first_name }},</p>
+    <p>Klik tautan berikut untuk mereset password Anda:</p>
+    <a href="{{ $resetUrl }}">Reset Password</a>
+    <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+    <p>Terima kasih,</p>
+    <p>Tim ReuseMart</p>
 </body>
 
 </html>

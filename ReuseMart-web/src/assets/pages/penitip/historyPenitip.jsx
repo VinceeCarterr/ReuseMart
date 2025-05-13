@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import api from "../../../api/api.js";
-import NavbarPenitip from "../../components/Navbar/navbarPenitip.jsx";
+import { useState, useEffect } from "react";
 import {
     Container,
     Row,
@@ -11,12 +9,36 @@ import {
     Modal,
     Table,
     Form,
+    Dropdown,
 } from "react-bootstrap";
-import { Truck, Search } from "react-bootstrap-icons";
-import { FiCalendar } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
+import { FiCalendar, FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
+import { Truck } from "react-bootstrap-icons";
+import api from "../../../api/api.js";
+import ProfilePenitipModal from "../../components/Penitip/profilePenitipModal.jsx";
 import "./historyPenitip.css";
 
 const HistoryPenitip = () => {
+    const navigate = useNavigate();
+
+    let userName = "Penitip";
+    try {
+        const prof = JSON.parse(localStorage.getItem("profile") || "{}");
+        const fn = prof.first_name ?? prof.firstName ?? prof.name;
+        const ln = prof.last_name ?? prof.lastName;
+        userName = fn && ln ? `${fn} ${ln}` : fn || "Penitip";
+    } catch { }
+
+    // Categories for mega menu
+    const [groupedCats, setGroupedCats] = useState([]);
+    const [activeCatIdx, setActiveCatIdx] = useState(0);
+    const [showMega, setShowMega] = useState(false);
+
+    // Modals for navbar
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+
+    // History states
     const [items, setItems] = useState([]);
     const [filterStatus, setFilterStatus] = useState("All");
     const [search, setSearch] = useState("");
@@ -28,6 +50,15 @@ const HistoryPenitip = () => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
 
+    // Fetch categories for mega menu
+    useEffect(() => {
+        api
+            .get("/kategori")
+            .then(({ data }) => setGroupedCats(data))
+            .catch(console.error);
+    }, []);
+
+    // Fetch history
     useEffect(() => {
         fetchHistory();
     }, [filterStatus, search, startDate, endDate]);
@@ -52,6 +83,16 @@ const HistoryPenitip = () => {
         }
     };
 
+    const openLogoutModal = () => setShowLogoutModal(true);
+    const closeLogoutModal = () => setShowLogoutModal(false);
+    const handleConfirmLogout = () => {
+        localStorage.clear();
+        navigate("/");
+    };
+
+    const openProfileModal = () => setShowProfileModal(true);
+    const closeProfileModal = () => setShowProfileModal(false);
+
     const openDetail = (item) => {
         setSelectedItem(item);
         setShowDetail(true);
@@ -75,24 +116,112 @@ const HistoryPenitip = () => {
 
     return (
         <>
-            <NavbarPenitip />
+            {/* Navbar */}
+            <div className="py-3 navbar-penitip">
+                <div className="container-fluid">
+                    <div className="row align-items-center justify-content-between">
+                        {/* Logo */}
+                        <div className="col-auto logo-container">
+                            <Link to="/penitipLP" className="d-flex align-items-center text-decoration-none logo-link">
+                                <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+                                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+                            </Link>
+                        </div>
 
+                        {/* Search */}
+                        <div className="col-md-6 px-2">
+                            <Form onSubmit={handleSearch}>
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Cari nama/kode barang..."
+                                    className="search-input"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                            </Form>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
+                            {/* Mega-menu */}
+                            <div
+                                className="mega-dropdown"
+                                onMouseEnter={() => setShowMega(true)}
+                                onMouseLeave={() => setShowMega(false)}
+                            >
+                                <button className="category-toggle">Kategori</button>
+                                {showMega && (
+                                    <div className="mega-menu">
+                                        <div className="mega-menu-sidebar">
+                                            {groupedCats.map((cat, idx) => (
+                                                <div
+                                                    key={cat.nama_kategori}
+                                                    className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""}`}
+                                                    onMouseEnter={() => setActiveCatIdx(idx)}
+                                                >
+                                                    {cat.nama_kategori}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mega-menu-content">
+                                            {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
+                                                <Link key={sub.id} to={`/kategori/${sub.id}`} className="mega-menu-link">
+                                                    {sub.nama}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Cart */}
+                            <Link to="/cart" className="text-dark fs-3 icon-link">
+                                <FiShoppingCart />
+                            </Link>
+
+                            {/* HistoryPenitip */}
+                            <Link to="/historyPenitip" className="text-dark fs-3 icon-link">
+                                <FiClock />
+                            </Link>
+
+                            {/* Profile */}
+                            <Dropdown>
+                                <Dropdown.Toggle variant="light" className="profile-toggle">
+                                    <FiUser className="me-2 fs-3" />
+                                    <span className="fw-bold">{userName}</span>
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={openProfileModal}>Profil</Dropdown.Item>
+                                    <Dropdown.Item as={Link} to="/orders">Pesanan Saya</Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={openLogoutModal}>Keluar</Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Logout Confirmation */}
+            <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi Logout</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeLogoutModal}>Batal</Button>
+                    <Button variant="danger" onClick={handleConfirmLogout}>Keluar</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Profile Modal */}
+            <ProfilePenitipModal show={showProfileModal} onHide={closeProfileModal} />
+
+            {/* History Content */}
             <Container className="mt-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h2 className="fw-bold">Riwayat Penitipan</h2>
                     <div className="d-flex align-items-center">
-                        <Form className="me-3" onSubmit={handleSearch}>
-                            <Form.Group className="d-flex align-items-center">
-                                <Search className="me-2" />
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Cari nama/kode barang..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    style={{ width: "200px" }}
-                                />
-                            </Form.Group>
-                        </Form>
                         <FiCalendar
                             className="me-3 fs-4 text-secondary"
                             style={{ cursor: "pointer" }}
@@ -103,9 +232,7 @@ const HistoryPenitip = () => {
                                 <span
                                     key={status}
                                     className={`filter-option ${filterStatus === status ? "active" : ""}`}
-                                    onClick={() => {
-                                        setFilterStatus(status);
-                                    }}
+                                    onClick={() => setFilterStatus(status)}
                                 >
                                     {status}
                                 </span>
@@ -118,9 +245,7 @@ const HistoryPenitip = () => {
                 {!loading && items.length === 0 && (
                     <p className="text-center text-muted">
                         Tidak ada riwayat untuk status "{filterStatus}"
-                        {startDate && endDate
-                            ? ` dari ${startDate} sampai ${endDate}`
-                            : ""}.
+                        {startDate && endDate ? ` dari ${startDate} sampai ${endDate}` : ""}.
                     </p>
                 )}
 
@@ -151,13 +276,10 @@ const HistoryPenitip = () => {
                                         </Col>
                                         <Col xs={8}>
                                             <div className="product-name">{item.nama_barang}</div>
-                                            <div className="product-price">
-                                                Rp{(item.harga || 0).toLocaleString("id-ID")}
-                                            </div>
+                                            <div className="product-price">Rp{(item.harga || 0).toLocaleString("id-ID")}</div>
                                             <div className="product-category">
                                                 {item.kategori?.nama_kategori}{" "}
-                                                {item.kategori?.sub_kategori &&
-                                                    `- ${item.kategori.sub_kategori}`}
+                                                {item.kategori?.sub_kategori && `- ${item.kategori.sub_kategori}`}
                                             </div>
                                         </Col>
                                     </Row>
@@ -165,27 +287,17 @@ const HistoryPenitip = () => {
 
                                 <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                                     <small className="tanggal-text">
-                                        Dititipkan:{" "}
-                                        {new Date(item.tanggal_titip).toLocaleDateString("id-ID")}
+                                        Dititipkan: {new Date(item.tanggal_titip).toLocaleDateString("id-ID")}
                                     </small>
                                     <div className="d-flex align-items-center">
-                                        <Button
-                                            size="sm"
-                                            variant="outline-success"
-                                            onClick={() => openDetail(item)}
-                                        >
+                                        <Button size="sm" variant="outline-success" onClick={() => openDetail(item)}>
                                             Lihat Detail
                                         </Button>
-                                        {item.status === "Available" &&
-                                            new Date(item.akhir_penitipan) > new Date() && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="success"
-                                                    className="ms-2"
-                                                >
-                                                    Perpanjang
-                                                </Button>
-                                            )}
+                                        {item.status === "Available" && new Date(item.akhir_penitipan) > new Date() && (
+                                            <Button size="sm" variant="success" className="ms-2">
+                                                Perpanjang
+                                            </Button>
+                                        )}
                                     </div>
                                 </Card.Footer>
                             </Card>
@@ -283,9 +395,7 @@ const HistoryPenitip = () => {
                                                     <td>
                                                         <strong>Harga</strong>
                                                     </td>
-                                                    <td>
-                                                        Rp{(selectedItem.harga || 0).toLocaleString("id-ID")}
-                                                    </td>
+                                                    <td>Rp{(selectedItem.harga || 0).toLocaleString("id-ID")}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>

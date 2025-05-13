@@ -342,120 +342,136 @@ class UserController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email|exists:user,email', // Ubah ke 'user'
         ]);
 
         try {
-            $user = User::where('email', $request->email)->first();
+            $user = User::where('email', strtolower($request->email))->first();
 
             if (!$user) {
                 return response()->json([
-                    'error' => 'Email tidak terdaftar'
+                    'error' => 'Email tidak terdaftar',
                 ], 404);
             }
 
             $token = Str::random(60);
 
+            // Simpan token
             DB::table('password_reset_tokens')->updateOrInsert(
                 ['email' => $user->email],
                 [
                     'token' => Hash::make($token),
-                    'created_at' => Carbon::now()
+                    'created_at' => Carbon::now(),
                 ]
             );
 
+            // Buat URL reset
             $resetUrl = config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
+            // Kirim email
             Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
 
+            Log::info('Reset password link sent to: ' . $user->email);
             return response()->json([
-                'message' => 'Link reset password telah dikirim ke email Anda'
+                'message' => 'Link reset password telah dikirim ke email Anda',
             ], 200);
         } catch (Exception $e) {
             Log::error('Forgot password error: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Gagal mengirim link reset password'
+                'error' => 'Gagal mengirim link reset password',
             ], 500);
         }
     }
 
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:user,email',
-            'token' => 'required|string',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        // Validasi input
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:user,email', // Ubah ke 'user'
+                'token' => 'required|string',
+                'password' => 'required|string|min:6|confirmed',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed in resetPassword: ' . json_encode($e->errors()));
+            return response()->json([
+                'error' => 'Validasi gagal',
+                'details' => $e->errors(),
+            ], 400);
+        }
 
         try {
+            // Normalisasi email
+            $email = strtolower($request->email);
+
+            // Cari token reset
             $passwordReset = DB::table('password_reset_tokens')
-                ->where('email', $request->email)
+                ->where('email', $email)
                 ->first();
 
             if (!$passwordReset) {
+                Log::error('Token not found for email: ' . $email);
                 return response()->json([
-                    'error' => 'Token reset tidak valid'
+                    'error' => 'Token reset tidak valid atau email tidak ditemukan',
                 ], 400);
             }
 
+            // Periksa token
             if (!Hash::check($request->token, $passwordReset->token)) {
+                Log::error('Token mismatch for email: ' . $email);
                 return response()->json([
-                    'error' => 'Token reset tidak valid'
+                    'error' => 'Token reset tidak valid',
                 ], 400);
             }
 
+            // Periksa kadaluarsa (1 jam)
             $createdAt = Carbon::parse($passwordReset->created_at);
             if ($createdAt->diffInHours(Carbon::now()) > 1) {
+                Log::error('Token expired for email: ' . $email);
                 return response()->json([
-                    'error' => 'Token reset telah kadaluarsa'
+                    'error' => 'Token reset telah kadaluarsa',
                 ], 400);
             }
 
+            // Mulai transaksi
             DB::beginTransaction();
-            $user = User::where('email', $request->email)->first();
+
+            // Update password
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                DB::rollBack();
+                Log::error('User not found for email: ' . $email);
+                return response()->json([
+                    'error' => 'Pengguna tidak ditemukan',
+                ], 400);
+            }
+
             $user->password = Hash::make($request->password);
             $user->save();
 
+            // Hapus token
             DB::table('password_reset_tokens')
-                ->where('email', $request->email)
+                ->where('email', $email)
                 ->delete();
+
             DB::commit();
 
+            Log::info('Password reset successfully for email: ' . $email);
             return response()->json([
-                'message' => 'Password berhasil direset'
+                'message' => 'Password berhasil direset',
             ], 200);
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
             Log::error('Database error in resetPassword: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Gagal mereset password karena masalah database'
+                'error' => 'Gagal mereset password karena masalah database',
             ], 500);
         } catch (Exception $e) {
+            DB::rollBack();
             Log::error('Reset password error: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Gagal mereset password'
+                'error' => 'Gagal mereset password',
             ], 500);
-        }
-    }
-
-    public function tambahPoinPenitip($id_barang)
-    {
-        $barang = Barang::findOrFail($id_barang);
-        $penitip = Penitipan::where('id_barang', $id_barang)->first();
-
-        if ($penitip) {
-            $user = User::findOrFail($penitip->id_user);
-            $poin = floor($barang->harga / 10000);
-            $user->poin_loyalitas += $poin;
-            $user->save();
-            return response()->json([
-                'message' => 'Poin penitip berhasil ditambahkan',
-                'poin'    => $user->poin_loyalitas,
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'Barang tidak ditemukan atau tidak ada penitip',
-            ], 404);
         }
     }
 }

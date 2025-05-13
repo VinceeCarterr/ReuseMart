@@ -54,34 +54,9 @@ const ProfilePenitipPage = () => {
             <NavbarPenitip />
             <Container fluid className="d-flex justify-content-center pt-5">
                 <Row className="w-100">
-                    <Col md={{ span: 8, offset: 2 }}>
+                    <Col md={{ span: 8, offset: 3 }}>
                         <Row>
-                            <Col md={4}>
-                                <Card className="text-center p-3 shadow-sm">
-                                    <h6 className="fw-bold">Gambar Profil</h6>
-                                    <div className="mb-3">
-                                        {profile?.profile_picture ? (
-                                            <img
-                                                src={profile.profile_picture}
-                                                alt="Profile"
-                                                className="img-fluid rounded-circle"
-                                                style={{
-                                                    width: "120px",
-                                                    height: "120px",
-                                                    objectFit: "cover",
-                                                }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="bg-secondary rounded-circle mx-auto"
-                                                style={{ width: "120px", height: "120px" }}
-                                            />
-                                        )}
-                                    </div>
-                                </Card>
-                            </Col>
-
-                            <Col md={8}>
+                            <Col md={10}>
                                 <Card className="p-4 shadow-sm">
                                     <h5 className="fw-bold mb-3">Informasi Akun</h5>
                                     <Form onSubmit={handleSubmit}>
