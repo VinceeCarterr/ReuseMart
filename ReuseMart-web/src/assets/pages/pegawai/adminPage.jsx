@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, use } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Toast, ToastContainer } from 'react-bootstrap';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import NavbarAdmin from "../../components/Navbar/navbarAdmin.jsx";
@@ -58,6 +58,9 @@ const AdminPage = () => {
     const [showUpdateModal, setShowUpdateModal] = useState(null);
     const [pencarian, setPencarian] = useState("");
 
+    const [toastShow, setToastShow] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastVariant, setToastVariant] = useState("success");
 
     const fetchPegawai = async () => {
         try {
@@ -79,6 +82,7 @@ const AdminPage = () => {
                 setPegawaiList(prev => prev.filter(p => p.id_pegawai !== pegawaiToDelete.id_pegawai));
                 setShowDeleteModal(false);
                 setPegawaiToDelete(null);
+                showToast("Berhasil Menghapus Pegawai", "danger");
             } catch (error) {
                 console.error('Failed to delete pegawai:', error);
             }
@@ -109,8 +113,12 @@ const AdminPage = () => {
         );
     });
     
+    const showToast = (message, variant) => {
+        setToastMessage(message);
+        setToastVariant(variant);
+        setToastShow(true);
+    }
     
-
     return (
         <div>
             <NavbarAdmin />
@@ -202,6 +210,22 @@ const AdminPage = () => {
                     <Button variant="outline-danger" onClick={handleDelete}>Hapus</Button>
                 </Modal.Body>
             </Modal>
+            <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
+                <Toast
+                        show={toastShow}
+                        onClose={() => setToastShow(false)}
+                        delay={3000}
+                        autohide
+                        bg={toastVariant}
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">{toastVariant === "danger" ? "Alert" : "Error"}</strong>
+                    </Toast.Header>
+                    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+                        {toastMessage}
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
         </div>
     );
 }

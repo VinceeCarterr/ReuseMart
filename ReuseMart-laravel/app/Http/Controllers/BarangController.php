@@ -92,4 +92,27 @@ class BarangController extends Controller
             return response()->json(['error' => 'Failed to update barang status'], 500);
         }
     }
+
+    public function getUserRatings()
+    {
+        try {
+            $ratings = Barang::with(['penitipan.user' => function ($query) {
+                $query->select('id_user', 'rating');
+            }])
+            ->whereIn('status', ['Available'])
+            ->whereIn('status_periode', ['Periode 1', 'Periode 2'])
+            ->get()
+            ->map(function ($barang) {
+                return [
+                    'id_barang' => $barang->id_barang,
+                    'rating' => $barang->penitipan && $barang->penitipan->user ? $barang->penitipan->user->rating : null
+                ];
+            });
+
+            return response()->json($ratings);
+        } catch (Exception $e) {
+            Log::error('Error fetching user ratings: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch user ratings'], 500);
+        }
+    }
 }

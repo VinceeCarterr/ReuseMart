@@ -1,73 +1,81 @@
-import React, { useState } from "react";
-import { Dropdown, Modal, Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-import { FaClock, FaUserCircle } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { Button, Modal } from "react-bootstrap";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./navbarOwner.css";
 
-const NavbarOwner = () => {
-    const userName = "John Doe";
+export default function NavbarOwner() {
     const navigate = useNavigate();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [userName, setUserName] = useState("User");
+    const [jabatan, setJabatan] = useState("");
+
+    useEffect(() => {
+        try {
+            const prof = JSON.parse(localStorage.getItem("profile") || "{}");
+            const fn = prof.first_name ?? prof.firstName ?? prof.name;
+            const ln = prof.last_name ?? prof.lastName;
+            setUserName(fn && ln ? `${fn} ${ln}` : fn || "User");
+            setJabatan(prof.jabatan || "");
+        } catch {
+            setUserName("User");
+            setJabatan("");
+        }
+    }, []);
 
     const openLogoutModal = () => setShowLogoutModal(true);
     const closeLogoutModal = () => setShowLogoutModal(false);
-
     const handleConfirmLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('type');
-        localStorage.removeItem('profile');
-        navigate('/');
+        localStorage.clear();
+        navigate("/");
     };
 
     return (
         <>
-            <div className="py-3 navbar-ddmin">
+            <div className="py-3 navbar-Owner">
                 <div className="container-fluid">
                     <div className="row align-items-center">
-                        {/* Logo */}
-                        <div className="col text-center fw-bold text-success">
-                            <Link to="/" className="text-decoration-none d-flex align-items-center justify-content-center">
-                                <img src="/logo_ReuseMart.png" alt="ReuseMart Logo" style={{ height: "60px" }} />
-                                <span className="ms-2 fs-4 fw-bold text-success logo-text">ReuseMart</span>
-                            </Link>
+                        <div className="col-auto mx-3 logo-container">
+                            <NavLink to="/" className="d-flex align-items-center text-decoration-none logo-link">
+                                <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+                                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+                            </NavLink>
                         </div>
 
-                        <div className="col d-flex align-items-center justify-content-end gap-3 pe-4">
-                            <Link to="/Owner" className="text-dark text-decoration-none fs-5">
-                                Pegawai
-                            </Link>
+                        <div className="col text-center">
+                            <span className="fw-bold fs-4">{userName}</span>
+                            {jabatan && <span className="ms-2 fs-5 text-success">: {jabatan}</span>}
+                        </div>
 
-                            {/* <Link to="/HistoryDonasi" className="text-dark text-decoration-none fs-5">
-                                History
-                            </Link> */}
-
-                            <Dropdown className="me-5">
-                                <Dropdown.Toggle variant="light" className="d-flex align-items-center border rounded px-2">
-                                    <FaUserCircle className="me-2" />
-                                    <span className="fw-bold">{userName}</span>
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
-                                    <Dropdown.Item as={Link} to="/orders">Pesanan Saya</Dropdown.Item>
-                                    <Dropdown.Item as={Link} to="/alamat">Atur Alamat</Dropdown.Item>
-                                    {/* Replace direct link with modal trigger */}
-                                    <Dropdown.Item onClick={openLogoutModal}>Keluar</Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
+                        <div className="col-auto mx-3 d-flex align-items-center">
+                            <NavLink
+                                to="/ownerLP"
+                                className={({ isActive }) =>
+                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                }
+                            >
+                                Daftar Request Donasi
+                            </NavLink>
+                            <NavLink
+                                to="/HistoryDonasi"
+                                className={({ isActive }) =>
+                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                }
+                            >
+                                History Donasi
+                            </NavLink>
+                            <Button variant="outline-danger" onClick={openLogoutModal}>
+                                Logout
+                            </Button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Logout Confirmation Modal */}
             <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Konfirmasi Logout</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    Apakah Anda yakin ingin keluar?
-                </Modal.Body>
+                <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={closeLogoutModal}>
                         Batal
@@ -79,6 +87,4 @@ const NavbarOwner = () => {
             </Modal>
         </>
     );
-};
-
-export default NavbarOwner;
+}

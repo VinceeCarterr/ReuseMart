@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from "../../../api/api.js";
-import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col, Toast, ToastContainer  } from 'react-bootstrap';
 
 const KelolaDonasiModal = ({ show, onHide }) => {
     const [reqDonasiList, setReqDonasiList] = useState([]);
@@ -8,6 +8,10 @@ const KelolaDonasiModal = ({ show, onHide }) => {
 
     const [selectedReqId, setSelectedReqId] = useState('');
     const [selectedBarangId, setSelectedBarangId] = useState('');
+
+    const [toastShow, setToastShow] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastVariant, setToastVariant] = useState("success");
 
     const fetchData = async () => {
         try {
@@ -32,22 +36,29 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                 tanggal_donasi: new Date().toISOString().slice(0, 10)
             });
 
-
             await api.put(`/barang/${selectedBarangId}/updateStatus`);
-
 
             await api.put(`/user/add-point-by-barang/${selectedBarangId}`);
 
             onHide();
             setSelectedReqId('');
             setSelectedBarangId('');
+
+            showToast("Berhasil Melakukan Donasi");
         } catch (error) {
             console.error("Gagal daftar transaksi:", error);
             alert("Gagal membuat transaksi.");
         }
     };
 
+    const showToast = (message, variant) => {
+        setToastMessage(message);
+        setToastVariant(variant);
+        setToastShow(true);
+    }
+
     return (
+        <div>
         <Modal show={show} onHide={onHide} centered backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>Kelola Donasi</Modal.Title>
@@ -96,6 +107,24 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                 </Form>
             </Modal.Body>
         </Modal>
+        <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3"
+            style={{ minWidth: "300px" }}>
+                <Toast
+                        show={toastShow}
+                        onClose={() => setToastShow(false)}
+                        delay={3000}
+                        autohide
+                        bg={toastVariant}
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">{toastVariant === "success" ? "Sukses" : "Error"}</strong>
+                    </Toast.Header>
+                    <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
+                        {toastMessage}
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
+        </div>
     );
 };
 

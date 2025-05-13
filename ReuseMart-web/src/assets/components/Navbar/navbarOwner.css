@@ -1,40 +1,57 @@
-
-.navbar-owner {
+.navbar-Owner {
+    position: relative;
+    z-index: 1045;
+    background-color: #fffcf7;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     border-bottom: 4px solid #f0f0f0;
-    background-color: #FFFCF7;
-    transition: all 0.3s ease;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.navbar-owner:hover {
+.navbar-Owner:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-owner a {
-    text-decoration: none;
+.navbar-Owner .logo-container {
+    padding-right: 2rem;
+    padding-left: 1rem;
+}
+
+.logo-container {
+    position: relative;
+    border-right: 1px solid rgba(0, 0, 0, 0.15);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-right: 2rem;
+}
+
+.logo-container a:hover .logo-img,
+.logo-container a:hover .logo-text {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+.logo-img {
+    height: 48px;
 }
 
 .logo-text {
-    position: relative;
-    top: 5px;
+    color: #198754;
 }
 
-button:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
-}
-
-.navbar-owner .dropdown-menu {
-    background-color: #FFFCF7;
-    border: 1px solid #ddd;
-}
-
-.navbar-owner .dropdown-menu .dropdown-item {
+.navbar-Owner .nav-link {
     color: #333;
+    text-decoration: underline;
+    transition: color 0.2s, text-decoration-color 0.2s;
 }
 
-.navbar-owner .dropdown-menu .dropdown-item:hover {
-    background-color: #FFFCF7;
-    color: #000;
+.navbar-Owner .nav-link:hover {
+    color: #198754;
+    text-decoration: underline;
+}
+
+.navbar-Owner .active {
+    color: #198754 !important;
+    font-weight: bold;
+    text-decoration: underline;
 }

@@ -27,8 +27,9 @@ Route::post('/reset-password', [UserController::class, 'resetPassword']);
 Route::get('/user/public', [UserController::class, 'publicList']);
     
 //fotobarang
+Route::get('/foto_barang', [Foto_BarangController::class, 'index']);
 Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBarangId']);
-
+Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
 
 
 Route::get('/barang', [BarangController::class, 'index']);
