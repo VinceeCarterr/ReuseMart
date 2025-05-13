@@ -9,27 +9,27 @@ import 'aos/dist/aos.css';
 import AuthModal from "../components/authModal.jsx";
 
 const ProductCard = ({ barang }) => (
-  <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
-    <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
-      <img 
-        src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
-        alt="Gambar 1" 
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-      />
-    </div>
-    <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
-      <div style={{ flexGrow: 1 }}>
-        <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
-        <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>
-          {barang.harga?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
-        </Card.Title>
-        <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
-        <Card.Text style={{ fontSize: '0.9rem' }}>
-          Rating: {barang.rating ? barang.rating : 'N/A'}
-        </Card.Text>
-      </div>
-    </Card.Body>
-  </Card>
+    <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
+        <img 
+            src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+            alt="Gambar 1" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+        />
+        </div>
+        <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+        <div style={{ flexGrow: 1 }}>
+            <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
+            <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>
+            {barang.harga?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
+            </Card.Title>
+            <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
+            <Card.Text style={{ fontSize: '0.9rem' }}>
+            Rating: {barang.rating ? barang.rating : 'N/A'}
+            </Card.Text>
+        </div>
+        </Card.Body>
+    </Card>
 );
 
 const LandingPage = () => {
@@ -42,13 +42,13 @@ const LandingPage = () => {
     const fetchBarang = async () => {
         try {
             const [ { data: barangData }, { data: ratingsData } ] = await Promise.all([
-              api.get('/barang'),
-              api.get('/user-ratings'),
+                api.get('/barang'),
+                api.get('/user-ratings'),
             ]);
 
             const combined = barangData.map(item => {
-              const userRating = ratingsData.find(r => r.id_barang === item.id_barang)?.rating ?? null;
-              return { ...item, rating: userRating };
+                const userRating = ratingsData.find(r => r.id_barang === item.id_barang)?.rating ?? null;
+                return { ...item, rating: userRating };
             });
             setBarangList(combined);
         } catch (err) {
@@ -76,16 +76,16 @@ const LandingPage = () => {
 
     // Filtered list by search query
     const filteredList = barangList.filter(barang =>
-      barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
+        barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
         <div>
             <NavbarLandingPage
-              onLoginClick={() => handleAuthOpen("login")}
-              onRegisterClick={() => handleAuthOpen("register")}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+                onLoginClick={() => handleAuthOpen("login")}
+                onRegisterClick={() => handleAuthOpen("register")}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
             />
             <AuthModal show={showAuthModal} onHide={handleAuthClose} mode={authMode} onSwitch={setAuthMode} />
 

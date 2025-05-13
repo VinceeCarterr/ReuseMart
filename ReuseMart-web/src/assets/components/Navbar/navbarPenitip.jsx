@@ -6,7 +6,7 @@ import api from "../../../api/api.js";
 import ProfilePenitipModal from "../Penitip/profilePenitipModal.jsx";
 import "./navbarPenitip.css";
 
-const NavbarPenitip = () => {
+const NavbarPenitip = ({searchQuery, onSearchChange}) => {
   const navigate = useNavigate();
 
   let userName = "Penitip";
@@ -70,6 +70,8 @@ const NavbarPenitip = () => {
                   type="search"
                   placeholder="Mau cari apa hari ini?"
                   className="search-input"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
                 />
               </Form>
             </div>

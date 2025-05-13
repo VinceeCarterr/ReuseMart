@@ -32,6 +32,7 @@ const ProductCard = ({ barang }) => (
 const PenitipLandingPage = () => {
     const [barangList, setBarangList] = useState([]);
     const [highlightProducts, setHighlightProducts] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const scrollRef = useRef(null);
 
     const fetchBarang = async () => {
@@ -83,9 +84,16 @@ const PenitipLandingPage = () => {
         return () => el.removeEventListener("wheel", onWheel);
     }, []);
 
+    const filteredList = barangList.filter(barang =>
+        barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <>
-            <NavbarPenitip />
+            <NavbarPenitip
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+            />
 
             {/* Hero */}
             <Container className="my-5">
@@ -111,7 +119,7 @@ const PenitipLandingPage = () => {
                             ref={scrollRef}
                             className="horizontal-scroll d-flex flex-row overflow-auto mb-2"
                         >
-                            {barangList
+                            {filteredList
                                 .filter(barang => 
                                     barang.status === 'Available' && barang.status_periode === "Periode 2")
                                 .map((barang, index) => (
@@ -138,7 +146,7 @@ const PenitipLandingPage = () => {
             {/* All Products */}
             <Container className="mt-4">
                 <Row>
-                    {barangList
+                    {filteredList
                         .filter(barang => 
                             (barang.status === 'Available' && 
                             (barang.status_periode === "Periode 1" || barang.status_periode === "Periode 2"))

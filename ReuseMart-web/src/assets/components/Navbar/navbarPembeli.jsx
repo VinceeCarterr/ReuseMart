@@ -6,7 +6,7 @@ import api from "../../../api/api.js";
 import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
-const NavbarPembeli = () => {
+const NavbarPembeli = ( {searchQuery, onSearchChange} ) => {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -68,6 +68,8 @@ const NavbarPembeli = () => {
                   type="search"
                   placeholder="Mau cari apa hari ini?"
                   className="search-input"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
                 />
               </Form>
             </div>

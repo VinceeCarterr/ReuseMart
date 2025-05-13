@@ -6,7 +6,7 @@ import api from "../../../api/api.js";
 import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
-const NavbarOrganisasi = () => {
+const NavbarOrganisasi = ( {searchQuery, onSearchChange} ) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,8 +75,8 @@ const NavbarOrganisasi = () => {
               autoComplete="off"
                 placeholder="Mau cari apa hari ini?"
               className="search-input"
-              value={searchTerm}
-                onChange={handleSearchChange}
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
               />
             </Form>
             </div>

@@ -35,7 +35,7 @@ const OrganisasiLandingPage = () => {
   const { search } = useLocation();
   const q = new URLSearchParams(search).get("q")?.toLowerCase() || "";
   const [barangList, setBarangList] = useState([]);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [highlightProducts, setHighlightProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const scrollRef = useRef(null);
@@ -95,9 +95,15 @@ const OrganisasiLandingPage = () => {
     b.nama_barang.toLowerCase().includes(q)
   );
 
+  const filteredList = barangList.filter(barang =>
+        barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div>
-      <NavbarOrganisasi />
+      <NavbarOrganisasi 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}/>
 
       {/* Hero */}
       <Container className="my-5">
@@ -122,7 +128,7 @@ const OrganisasiLandingPage = () => {
               ref={scrollRef}
               className="horizontal-scroll d-flex flex-row overflow-auto mb-2"
             >
-              {barangList
+              {filteredList
                 .filter(barang => 
                 barang.status === 'Available' && barang.status_periode === "Periode 2")
                 .map((barang, index) => (
@@ -149,7 +155,7 @@ const OrganisasiLandingPage = () => {
       {/* Products */}
       <Container className="mt-4">
         <Row>
-          {barangList
+          {filteredList
             .filter(barang => 
               (barang.status === 'Available' && 
                 (barang.status_periode === "Periode 1" || barang.status_periode === "Periode 2"))
