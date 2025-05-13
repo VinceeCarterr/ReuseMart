@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Container, Row, Col, Card } from "react-bootstrap";
+import { Link } from "react-router-dom";
+
 import "../landingPage.css";
 import NavbarOrganisasi from "../../components/Navbar/navbarOrgansiasi.jsx";
 import AOS from "aos";
@@ -8,24 +10,19 @@ import "aos/dist/aos.css";
 import api from "../../../api/api.js";
 
 const ProductCard = ({ barang }) => (
-  <Card className="ProductCart mb-3">
-    <div style={{ height: "150px", backgroundColor: "#ccc" }}>
-      <img
-        src={barang.foto1}
-        alt={barang.nama_barang}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-      />
+  <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
+      <img src={barang.foto1} alt="Gambar 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
     </div>
-    <Card.Body>
-      <Card.Title style={{ fontWeight: 575 }}>{barang.nama_barang}</Card.Title>
-      <Card.Title style={{ fontWeight: 575 }}>
-        Rp {barang.harga.toLocaleString("id-ID")}
-      </Card.Title>
-      <Card.Text>
-        {barang.kategori}
-        <br />
-        Rating Penjual: {barang.rating}
-      </Card.Text>
+    <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+      <div style={{ flexGrow: 1 }}>
+        <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
+        <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
+        <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
+        <Card.Text style={{ fontSize: '0.9rem' }}>
+          Rating: {barang.rating ? barang.rating : 'N/A'}
+        </Card.Text>
+      </div>
     </Card.Body>
   </Card>
 );
@@ -33,6 +30,7 @@ const ProductCard = ({ barang }) => (
 const OrganisasiLandingPage = () => {
   const { search } = useLocation();
   const q = new URLSearchParams(search).get("q")?.toLowerCase() || "";
+  const [barangList, setBarangList] = useState([]);
 
   const [highlightProducts, setHighlightProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -42,14 +40,38 @@ const OrganisasiLandingPage = () => {
     AOS.init({ duration: 800 });
   }, []);
 
+  const fetchBarang = async () => {
+    try {
+            // Fetch barang
+      const { data } = await api.get("/barang");
+
+            // Fetch user ratings
+      const ratingsResponse = await api.get('/user-ratings');
+      const ratingsData = ratingsResponse.data;
+
+            // Combine barang data with ratings
+      const combinedData = data.map(barang => {
+      const ratingObj = ratingsData.find(r => r.id_barang === barang.id_barang);
+    return {
+      ...barang,
+        rating: ratingObj ? ratingObj.rating : null
+      };
+    });
+
+            // Filter available barang
+    const available = combinedData.filter(b => b.status === "Available");
+    setBarangList(available);
+    setHighlightProducts(available.slice(0, 6));
+      } catch (err) {
+        console.error("Failed to fetch barang or ratings:", err);
+        setBarangList([]);
+        setHighlightProducts([]);
+    }
+  };
+
   useEffect(() => {
-    api
-      .get("/barang")
-      .then(({ data }) => {
-        setHighlightProducts(data.slice(0, 6));
-        setAllProducts(data.filter((b) => b.status === "Available"));
-      })
-      .catch(console.error);
+    fetchBarang();
+    AOS.init({ duration: 800 });
   }, []);
 
   useEffect(() => {
@@ -88,29 +110,26 @@ const OrganisasiLandingPage = () => {
       {/* Products */}
       <Container className="mt-4">
         <Row>
-          {visible.length === 0 ? (
-            <Col>
-              <p className="text-center text-muted">
-                {q ? `Tidak ada produk untuk "${q}".` : "Belum ada produk tersedia."}
-              </p>
-            </Col>
-          ) : (
-            visible.map((barang, idx) => (
-              <Col
-                data-aos="fade-down"
-                key={idx}
-                xs={6}
-                sm={4}
-                md={4}
-                lg={2}
-                className="mb-3"
-              >
-                <a href={`/produk/${barang.id_barang}`} style={{ textDecoration: "none" }}>
+          {barangList
+            .filter(barang => 
+              (barang.status === 'Available' && 
+                (barang.status_periode === "Periode 1" || barang.status_periode === "Periode 2"))
+            )
+              .map((barang, index) => (
+                <Col 
+                  data-aos="fade-down" 
+                  key={index} 
+                  xs={6} 
+                  sm={4} 
+                  md={4} 
+                  lg={2} 
+                  className="mb-3"
+                >
+                <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
                   <ProductCard barang={barang} />
-                </a>
-              </Col>
-            ))
-          )}
+                </Link>
+            </Col>
+          ))}
         </Row>
       </Container>
     </div>

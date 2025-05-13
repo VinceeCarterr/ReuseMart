@@ -33,7 +33,7 @@ function App() {
           <Route path="/organisasi" element={<OrganisasiPage />} />
           <Route path="/organisasiLP" element={<OrganisasiLandingPage />} />
           <Route path="/request-donasi" element={<ReqDonasi />} />
-          <Route path="penitipLP" element={<PenitipLandingPage />} />
+          <Route path="/penitipLP" element={<PenitipLandingPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/ownerLP" element={<OwnerLandingPage />}/>
           <Route path="/HistoryDonasi" element={<HistoryDonasi />} />

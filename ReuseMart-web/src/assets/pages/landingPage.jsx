@@ -12,7 +12,7 @@ const ProductCard = ({ barang }) => (
     <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
             <img 
-                src={barang.foto1 ? `http://localhost:8000${barang.foto1}` : '/placeholder.jpg'} 
+                src={barang.foto1 ? `http://localhost:8000${barang.path}` : '/placeholder.jpg'} 
                 alt="Gambar 1" 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
@@ -59,7 +59,7 @@ const LandingPage = () => {
                         return {
                             ...barang,
                             rating: ratingObj ? ratingObj.rating : null,
-                            foto1: foto1
+                            path: foto1
                         };
                     } catch (fotoError) {
                         console.error(`Failed to fetch photos for barang ${barang.id_barang}:`, fotoError);
@@ -68,7 +68,7 @@ const LandingPage = () => {
                         return {
                             ...barang,
                             rating: ratingObj ? ratingObj.rating : null,
-                            foto1: null
+                            path: null
                         };
                     }
                 })

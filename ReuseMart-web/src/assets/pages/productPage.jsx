@@ -3,8 +3,13 @@ import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Form, ListGroup, Alert, Spinner } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import api from "../../api/api.js"; // Pastikan path-nya benar
-import NavbarLandingPage from "../components/Navbar/navbar.jsx";
+
 import "./productPage.css"; // Pastikan path-nya benar
+
+import NavbarLandingPage from "../components/Navbar/navbar.jsx";
+import NavbarPenitipPage from "../components/Navbar/navbarPenitip.jsx";
+import NavbarPembeliPage from "../components/Navbar/navbarPembeli.jsx";
+import NavbarOrganisasiPage from "../components/Navbar/navbarOrgansiasi.jsx";
 
 const ProductPage = () => {
     const { id } = useParams();
@@ -15,17 +20,35 @@ const ProductPage = () => {
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+    
+    let profile = {};
+    try{
+        profile = JSON.parse(localStorage.getItem("profile") || "{}");
+    }catch{ }
 
+    const role = profile.role?.trim().toLowerCase() || "";
+
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+    const renderNavbar = () => {
+        switch (role){
+            case "penitip":
+                return <NavbarPenitipPage />;
+            case "pembeli":
+                return <NavbarPembeliPage />;
+            case "organisasi":
+                return <NavbarOrganisasiPage />;
+            default:
+                return <NavbarLandingPage />;
+        }
+    };
 
     useEffect(() => {
         const fetchPhotos = async () => {
             try {
                 const response = await api.get(`/foto-barang/${id}`);
                 setFotos(response.data);
-                setFotos(response.data);
                 if (response.data.length > 0) {
-                    setSelectedPhoto(response.data[0].path); // Ganti 'url' dengan 'path'
+                    setSelectedPhoto(response.data[0].path);
                 }
             } catch (error) {
                 console.error("Gagal mengambil foto barang:", error);
@@ -34,8 +57,6 @@ const ProductPage = () => {
 
         fetchPhotos();
     }, [id]);
-
-    
 
     // Fetch product details
     useEffect(() => {
@@ -139,7 +160,7 @@ const ProductPage = () => {
 
     return (
         <div>
-            <NavbarLandingPage />
+            {renderNavbar()}
             <Container className="mt-1">
                 <Row>
                     <Col md={6} className="my-5 d-flex flex-column align-items-center">

@@ -52,7 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
 
-
     Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
     Route::get('transaksi/historyPenitip', [TransaksiController::class, 'historyPenitip']);
     Route::get('kategori', [KategoriController::class, 'index']);
