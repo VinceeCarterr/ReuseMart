@@ -50,15 +50,16 @@ export default function NavbarOwner() {
                             <NavLink
                                 to="/ownerLP"
                                 className={({ isActive }) =>
-                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                    `text-decoration-none fs-5 me-4 nav-link ${isActive ? 'active' : ''}`
                                 }
                             >
                                 Daftar Request Donasi
                             </NavLink>
+
                             <NavLink
                                 to="/HistoryDonasi"
                                 className={({ isActive }) =>
-                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                    `text-decoration-none fs-5 me-4 nav-link ${isActive ? 'active' : ''}`
                                 }
                             >
                                 History Donasi
