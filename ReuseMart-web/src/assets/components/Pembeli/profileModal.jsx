@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Modal, Spinner, Row, Col, Form } from "react-bootstrap";
 import { FiEdit2 } from "react-icons/fi";
 import api from "../../../api/api.js";
@@ -10,14 +10,21 @@ export default function ProfileModal({ show, onHide }) {
   const [uploading, setUploading] = useState(false);
   const baseURL = api.defaults.baseURL.replace(/\/api\/?$/, "");
 
-  useEffect(() => {
-    if (!show) return;
+  const fetchProfile = useCallback(async () => {
     setProfile(null);
-    api
-      .get("user")
-      .then(({ data }) => setProfile(data))
-      .catch(() => setProfile({}));
-  }, [show]);
+    try {
+      const { data } = await api.get("user");
+      setProfile(data);
+    } catch {
+      setProfile({});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (show) {
+      fetchProfile();
+    }
+  }, [show, fetchProfile]);
 
   const fullName = profile
     ? [profile.first_name, profile.last_name].filter(Boolean).join(" ")
@@ -32,18 +39,21 @@ export default function ProfileModal({ show, onHide }) {
     formData.append("profile_picture", file);
     setUploading(true);
     try {
-      const { data } = await api.post("user/avatar", formData, {
+      await api.post("user/avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setProfile((prev) => ({
-        ...prev,
-        profile_picture: data.profile_picture,
-      }));
+      await fetchProfile();
     } catch (err) {
       console.error(err);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
+
+  // append a timestamp so the browser always pulls the new image
+  const avatarSrc = profile?.profile_picture
+    ? `${baseURL}/storage/${profile.profile_picture}?t=${Date.now()}`
+    : null;
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
@@ -63,9 +73,9 @@ export default function ProfileModal({ show, onHide }) {
                 className="mt-3"
                 style={{ position: "relative", width: 200, height: 200 }}
               >
-                {profile.profile_picture ? (
+                {avatarSrc ? (
                   <img
-                    src={`${baseURL}/storage/${profile.profile_picture}`}
+                    src={avatarSrc}
                     alt={fullName}
                     className="img-fluid rounded-circle profile-avatar"
                   />
@@ -73,12 +83,7 @@ export default function ProfileModal({ show, onHide }) {
                   <div className="bg-secondary rounded-circle profile-avatar" />
                 )}
 
-                {/* now positioned & styled via CSS */}
-                <FiEdit2
-                  onClick={pickFile}
-                  className="edit-icon"
-                />
-
+                <FiEdit2 onClick={pickFile} className="edit-icon" />
                 <input
                   ref={fileInputRef}
                   type="file"
