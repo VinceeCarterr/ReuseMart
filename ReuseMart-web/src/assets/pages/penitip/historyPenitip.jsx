@@ -55,6 +55,10 @@ const HistoryPenitip = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmItem, setConfirmItem] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showAmbilConfirm, setShowAmbilConfirm] = useState(false);
+  const [showDonasiConfirm, setShowDonasiConfirm] = useState(false);
+  const [actionItem, setActionItem] = useState(null);
+
 
   const statuses = ["Available", "Sold", "Expired", "Donated"];
 
@@ -132,7 +136,7 @@ const HistoryPenitip = () => {
   };
 
   // handle perpanjang after confirmation
-    const handlePerpanjang = async () => {
+  const handlePerpanjang = async () => {
     if (!confirmItem) return;
 
     // set today's date in YYYY-MM-DD
@@ -151,7 +155,40 @@ const HistoryPenitip = () => {
     } catch (err) {
         console.error("Perpanjang error:", err.response ?? err);
     }
-    };
+  };
+
+  const openAmbilConfirm = item => { setActionItem(item); setShowAmbilConfirm(true); };
+  const closeAmbilConfirm = () => { setActionItem(null); setShowAmbilConfirm(false); };
+  const openDonasiConfirm = item => { setActionItem(item); setShowDonasiConfirm(true); };
+  const closeDonasiConfirm = () => { setActionItem(null); setShowDonasiConfirm(false); };
+
+  const handleAmbil = async () => {
+    if (!actionItem) return;
+    try {
+      await api.patch(
+        `/transaksi/historyPenitip/${actionItem.id_barang}`,
+        { status: "Akan Ambil" }
+      );
+      closeAmbilConfirm();
+      fetchHistory();
+    } catch (err) {
+      console.error("Ambil error:", err.response ?? err);
+    }
+  };
+
+  const handleDonasi = async () => {
+    if (!actionItem) return;
+    try {
+      await api.patch(
+        `/transaksi/historyPenitip/${actionItem.id_barang}`,
+        { status: "Untuk Donasi" }
+      );
+      closeDonasiConfirm();
+      fetchHistory();
+    } catch (err) {
+      console.error("Donasi error:", err.response ?? err);
+    }
+  };
 
   const getCountdown = (tanggalTitip, nowTs = now) => {
     const due = new Date(tanggalTitip).getTime() + 30*24*3600*1000;
@@ -358,39 +395,95 @@ const HistoryPenitip = () => {
                     </Row>
                 </Card.Body>
 
-               <Card.Footer className="d-flex justify-content-between align-items-end py-3 px-4">
-                <div>
-                    <small className="d-block mb-1">
-                    Dititipkan:{" "}
-                    {item.tanggal_titip
-                        ? new Date(item.tanggal_titip).toLocaleDateString("id-ID")
-                        : "–"}
-                    </small>
-                    {item.status === "Available" && item.status_periode !== "Expired" && (
-                    <small className="d-block">
-                        Masa penitipan: <strong>{val}</strong> {unit} {rest.join(" ")}
-                    </small>
-                    )}
-                </div>
-                <div className="d-flex">
-                    <Button
-                    size="sm"
-                    variant="outline-success"
-                    onClick={() => openDetail(item)}
-                    >
-                    Lihat Detail
-                    </Button>
-                    {item.status === "Available" && !expired && extendable && (
-                    <Button
-                        size="sm"
-                        variant="success"
-                        className="ms-2"
-                        onClick={() => openConfirm(item)}
-                    >
-                        Perpanjang
-                    </Button>
-                    )}
-                </div>
+                <Card.Footer className="d-flex justify-content-between align-items-end py-3 px-4">
+                    <div>
+                        <small className="d-block mb-1">
+                        Dititipkan:{" "}
+                        {item.tanggal_titip
+                            ? new Date(item.tanggal_titip).toLocaleDateString("id-ID")
+                            : "–"}
+                        </small>
+
+                        {item.status_periode === "Expired" && item.status === "Akan Ambil" && (
+                        <small className="d-block">
+                            Batas waktu pengambilan:{" "}
+                            {(() => {
+                            // calculate pickup deadline = tanggal_titip +30d +2d
+                            const endTitip = new Date(item.tanggal_titip).getTime() + 30*24*3600*1000;
+                            const pickupDeadline = endTitip + 2*24*3600*1000;
+                            const diff = pickupDeadline - now;
+
+                            if (diff <= 0) {
+                                // kalau sudah lewat → patch status ke "Untuk Donasi"
+                                api
+                                .patch(`/transaksi/historyPenitip/${item.id_barang}`, { status: "Untuk Donasi" })
+                                .then(fetchHistory)
+                                .catch(console.error);
+                                return "Waktu pengambilan habis";
+                            }
+                            // format remaining time
+                            const sec = Math.floor(diff/1000);
+                            const h = Math.floor(sec/3600);
+                            const m = Math.floor((sec%3600)/60);
+                            const s = sec % 60;
+                            return h < 24
+                                ? `${h}j ${m}m ${s}s`
+                                : `${Math.ceil(h/24)} hari`;
+                            })()}
+                        </small>
+                        )}
+
+                        {item.status_periode === "Expired" && item.status === "Available" && (
+                        <small className="d-block">
+                            Batas sebelum barang didonasikan:{" "}
+                            {(() => {
+                            // calculate donation deadline = tanggal_titip +30d +7d
+                            const donateDeadline =
+                                new Date(item.tanggal_titip).getTime() + (30 + 7)*24*3600*1000;
+                            const diff = donateDeadline - now;
+
+                            if (diff <= 0) {
+                                return "Sudah didonasikan";
+                            }
+                            // format remaining time
+                            const sec = Math.floor(diff/1000);
+                            const h = Math.floor(sec/3600);
+                            const m = Math.floor((sec%3600)/60);
+                            const s = sec % 60;
+                            return h < 24
+                                ? `${h}j ${m}m ${s}s`
+                                : `${Math.ceil(h/24)} hari`;
+                            })()}
+                        </small>
+                        )}
+
+                        {item.status === "Available" && item.status_periode !== "Expired" && (
+                        <small className="d-block">
+                            Masa penitipan: <strong>{val}</strong> {unit} {rest.join(" ")}
+                        </small>
+                        )}
+                    </div>
+
+                    <div className="d-flex">
+                        <Button size="sm" variant="outline-success" onClick={() => openDetail(item)}>
+                        Lihat Detail
+                        </Button>
+                        {item.status === "Available" && !expired && extendable && (
+                        <Button size="sm" variant="success" className="ms-2" onClick={() => openConfirm(item)}>
+                            Perpanjang
+                        </Button>
+                        )}
+                        {item.status === "Available" && item.status_periode === "Expired" && (
+                        <>
+                            <Button size="sm" variant="warning" className="ms-2" onClick={() => openAmbilConfirm(item)}>
+                            Ambil
+                            </Button>
+                            <Button size="sm" variant="danger" className="ms-2" onClick={() => openDonasiConfirm(item)}>
+                            Donasikan
+                            </Button>
+                        </>
+                        )}
+                    </div>
                 </Card.Footer>
                 </Card>
             </Col>
@@ -408,6 +501,29 @@ const HistoryPenitip = () => {
             <Button variant="secondary" onClick={closeConfirm}>Batal</Button>
             <Button variant="primary"   onClick={handlePerpanjang}>Ya, Perpanjang</Button>
           </Modal.Footer>
+        </Modal>
+
+        <Modal show={showAmbilConfirm} onHide={closeAmbilConfirm} centered>
+            <Modal.Header closeButton>
+            <Modal.Title>Konfirmasi Ambil</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Apakah Anda yakin ingin mengambil barang?</Modal.Body>
+            <Modal.Footer>
+            <Button variant="secondary" onClick={closeAmbilConfirm}>Batal</Button>
+            <Button variant="primary" onClick={handleAmbil}>Ya, Ambil</Button>
+            </Modal.Footer>
+        </Modal>
+
+        {/* CONFIRM DONASI MODAL */}
+        <Modal show={showDonasiConfirm} onHide={closeDonasiConfirm} centered>
+            <Modal.Header closeButton>
+            <Modal.Title>Konfirmasi Donasi</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Apakah Anda yakin ingin mendonasikan barang?</Modal.Body>
+            <Modal.Footer>
+            <Button variant="secondary" onClick={closeDonasiConfirm}>Batal</Button>
+            <Button variant="danger" onClick={handleDonasi}>Ya, Donasikan</Button>
+            </Modal.Footer>
         </Modal>
 
         {/* DATE RANGE MODAL */}
