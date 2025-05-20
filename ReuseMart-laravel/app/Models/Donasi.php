@@ -19,7 +19,7 @@ class Donasi extends Model
 
     public function requestDonasi()
     {
-        return $this->belongsTo(RequestDonasi::class, 'id_reqdonasi');
+        return $this->belongsTo(Req_Donasi::class, 'id_reqdonasi');
     }
 
     public function barang()
