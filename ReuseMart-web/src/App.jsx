@@ -19,6 +19,8 @@ import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
 import ResetPassword from "./assets/pages/resetPasswordPage.jsx";
 import Unauthorized from "./assets/pages/unauthorize.jsx";
 import GudangLandingPage from "./assets/pages/gudang/gudangLP.jsx";
+import Penjadwalan from "./assets/pages/gudang/penjadwalan.jsx";
+import CatatPengambilan from "./assets/pages/gudang/catatPengambilan.jsx"
 
 function App() {
   return (
@@ -44,6 +46,8 @@ function App() {
           <Route path="/ownerLP" element={<ProtectedRoute allowedRoles={['owner']}> <OwnerLandingPage /> </ProtectedRoute>} />
           <Route path="/HistoryDonasi" element={<ProtectedRoute allowedRoles={['owner']}> <HistoryDonasi /> </ProtectedRoute>} />
           <Route path="/gudangLP" element = {<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
+          <Route path="/catatPengambilan" element = {<ProtectedRoute allowedRoles={['gudang']}> <CatatPengambilan /></ProtectedRoute>} />
+          <Route path="/penjadwalan" element = {<ProtectedRoute allowedRoles={['gudang']}> <Penjadwalan /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute allowedRoles={['pembeli']}> <KeranjangPage /> </ProtectedRoute>} />
           <Route path="/checkout-options" element={<ProtectedRoute allowedRoles={['pembeli']}> <CheckoutOptionsPage /> </ProtectedRoute>} />
         </Routes>

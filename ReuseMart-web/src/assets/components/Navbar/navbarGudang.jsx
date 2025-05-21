@@ -48,20 +48,28 @@ export default function NavbarGudang() {
 
                         <div className="col-auto mx-3 d-flex align-items-center">
                             <NavLink
-                                to="/Gudang"
+                                to="/gudangLP"
                                 className={({ isActive }) =>
                                     `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
                                 }
                             >
-                                Pegawai
+                                Barang
                             </NavLink>
                             <NavLink
-                                to="/organisasi"
+                                to="/catatPengambilan"
                                 className={({ isActive }) =>
                                     `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
                                 }
                             >
-                                Organisasi
+                                Catat Pengambilan
+                            </NavLink>
+                            <NavLink
+                                to="/penjadwalan"
+                                className={({ isActive }) =>
+                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                }
+                            >
+                                Penjadwalan
                             </NavLink>
                             <Button variant="outline-danger" onClick={openLogoutModal}>
                                 Logout
