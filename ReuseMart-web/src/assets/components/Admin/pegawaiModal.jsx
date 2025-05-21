@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from "../../../api/api.js";
-import { Modal, Button, Form, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col, Toast, ToastContainer, InputGroup } from 'react-bootstrap';
+import { Eye, EyeSlash } from 'react-bootstrap-icons'; // Import eye icons
 
 const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
     const [selectedJabatan, setSelectedJabatan] = useState("");
@@ -11,6 +12,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
     const [password, setPassword] = useState("");
     const [tglLahir, setTglLahir] = useState("");
     const [formErrors, setFormErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false); // New state for password visibility
 
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
@@ -100,6 +102,7 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
             setTglLahir('');
             setSelectedJabatan('');
             setFormErrors({});
+            setShowPassword(false); // Reset password visibility
 
             showToast("Berhasil Menambah Pegawai", "success");
             onHide();
@@ -116,7 +119,6 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
 
                 setFormErrors(formattedErrors);
 
-                // Jika error email, tampilkan toast khusus
                 if (formattedErrors.email) {
                     showToast(formattedErrors.email, "danger");
                 }
@@ -131,6 +133,11 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
         setToastMessage(message);
         setToastVariant(variant);
         setToastShow(true);
+    };
+
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     // Set max date to today
@@ -214,16 +221,24 @@ const PegawaiModal = ({ show, onHide, fetchPegawai }) => {
                             <Col>
                                 <Form.Group>
                                     <Form.Label><strong>Password</strong></Form.Label>
-                                    <Form.Control
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        type="password"
-                                        placeholder="Masukkan Password"
-                                        isInvalid={!!formErrors.password}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {formErrors.password}
-                                    </Form.Control.Feedback>
+                                    <InputGroup>
+                                        <Form.Control
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Masukkan Password"
+                                            isInvalid={!!formErrors.password}
+                                        />
+                                        <InputGroup.Text
+                                            onClick={togglePasswordVisibility}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {showPassword ? <EyeSlash /> : <Eye />}
+                                        </InputGroup.Text>
+                                        <Form.Control.Feedback type="invalid">
+                                            {formErrors.password}
+                                        </Form.Control.Feedback>
+                                    </InputGroup>
                                 </Form.Group>
                             </Col>
                             <Col>

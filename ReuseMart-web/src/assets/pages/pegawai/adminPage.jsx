@@ -82,7 +82,7 @@ const AdminPage = () => {
                 setPegawaiList(prev => prev.filter(p => p.id_pegawai !== pegawaiToDelete.id_pegawai));
                 setShowDeleteModal(false);
                 setPegawaiToDelete(null);
-                showToast("Berhasil Menghapus Pegawai", "danger");
+                showToast("Berhasil Menghapus Pegawai", "success");
             } catch (error) {
                 console.error('Failed to delete pegawai:', error);
             }
@@ -219,7 +219,7 @@ const AdminPage = () => {
                         bg={toastVariant}
                 >
                     <Toast.Header>
-                        <strong className="me-auto">{toastVariant === "danger" ? "Alert" : "Error"}</strong>
+                        <strong className="me-auto">{toastVariant === "success" ? "Alert" : "Error"}</strong>
                     </Toast.Header>
                     <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
                         {toastMessage}

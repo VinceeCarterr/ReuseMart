@@ -40,7 +40,14 @@ class UserController extends Controller
 
     public function publicList()
     {
-        $users = User::select('id_user', 'first_name', 'last_name')->get();
+        $users = User::select('id_user', 'first_name', 'last_name', 'no_telp', 'rating')->get();
+
+        return response()->json($users);
+    }
+
+    public function gudangList()
+    {
+        $users = User::select('id_user','id_role', 'first_name', 'last_name', 'no_telp', 'rating')->get();
 
         return response()->json($users);
     }

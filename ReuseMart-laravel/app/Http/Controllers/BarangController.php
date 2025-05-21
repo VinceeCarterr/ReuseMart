@@ -78,7 +78,6 @@ class BarangController extends Controller
     {
         try {
             $barang = Barang::findOrFail($id);
-            $barang->status_periode = 'Sudah didonasikan';
             $barang->status = "Donated";
             $barang->save();
             return response()->json($barang);

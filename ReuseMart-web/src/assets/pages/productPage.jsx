@@ -226,7 +226,7 @@ const ProductPage = () => {
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
                                     {/* Updated to show user rating instead of barang.rating */}
-                                    Rating: {userRating !== null ? userRating : 'N/A'}
+                                    Rating Penitip: {userRating !== null ? userRating : 'N/A'}
                                 </p>
                             </Col>
                             <Col md={6} style={{ textAlign: 'right' }}>

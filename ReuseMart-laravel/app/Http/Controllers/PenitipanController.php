@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\Log;
 class PenitipanController extends Controller
 {
     public function index()
-    {
-        try {
-            $penitipans = Penitipan::all();
-            return response()->json($penitipans);
-        } catch (Exception $e) {
-            Log::error('Error fetching penitipans: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to fetch penitipans'], 500);
-        }
+{
+    try {
+        $penitipan = Penitipan::all();
+        return response()->json($penitipan);
+    } catch (Exception $e) {
+        Log::error('Error fetching penitipans: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch penitipans'], 500);
     }
+}
 
     public function show($id)
     {

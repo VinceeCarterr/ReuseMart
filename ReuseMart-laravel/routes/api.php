@@ -114,4 +114,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/updateReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'update']);
         Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
     });
+
+    Route::middleware('role:gudang')->group(function () {
+        Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
+        Route::get('/penitipan', [PenitipanController::class, 'index']);
+        Route::get('/pegawai', [PegawaiController::class, 'index']);
+        Route::get('/pegawai', [PegawaiController::class, 'index']);
+        Route::get('/user/gudang', [UserController::class, 'gudangList']);
+    });
+
 });

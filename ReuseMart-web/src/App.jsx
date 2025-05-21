@@ -16,6 +16,7 @@ import ReqDonasi from "./assets/pages/organisasi/reqDonasi.jsx";
 import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
 import ResetPassword from "./assets/pages/resetPasswordPage.jsx";
 import Unauthorized from "./assets/pages/unauthorize.jsx";
+import GudangLandingPage from "./assets/pages/gudang/gudangLP.jsx";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="penitipLP" element={<ProtectedRoute allowedRoles={['penitip']}> <PenitipLandingPage /> </ProtectedRoute>} />
           <Route path="/ownerLP" element={<ProtectedRoute allowedRoles={['owner']}> <OwnerLandingPage /> </ProtectedRoute>}/>
           <Route path="/HistoryDonasi" element={<ProtectedRoute allowedRoles={['owner']}> <HistoryDonasi /> </ProtectedRoute>} />
+          <Route path="/gudangLP" element = {<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
         </Routes>
       </div>
     </Router>
