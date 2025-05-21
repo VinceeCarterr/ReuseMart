@@ -4,20 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Komisi;
+use App\Models\DetilTransaksi;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class KomisiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        try {
-            $komisi = Komisi::all();
-            return response()->json($komisi);
-        } catch (Exception $e) {
-            Log::error('Error fetching komisi: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to fetch komisi'], 500);
+        $query = Komisi::query();
+
+        if ($request->filled('id_dt')) {
+            $query->where('id_dt', $request->id_dt);
         }
+
+        return response()->json($query->get());
     }
 
     public function show($id)
@@ -33,14 +35,28 @@ class KomisiController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $komisi = Komisi::create($request->all());
-            return response()->json($komisi, 201);
-        } catch (Exception $e) {
-            Log::error('Error creating komisi: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create komisi'], 500);
+        // validate payload
+        $validator = Validator::make($request->all(), [
+            'id_dt'                 => 'required|exists:detiltransaksi,id_dt',
+            'presentase_perusahaan' => 'required|numeric',
+            'presentase_hunter'     => 'required|numeric',
+            'komisi_perusahaan'     => 'required|numeric',
+            'komisi_hunter'         => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        // create the komisi
+        $komisi = Komisi::create($validator->validated());
+
+        return response()->json($komisi, 201);
     }
+
+
 
     public function update(Request $request, $id)
     {
