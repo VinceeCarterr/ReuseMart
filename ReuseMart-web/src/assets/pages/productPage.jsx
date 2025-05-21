@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Form, ListGroup, Alert, Spinner } from 'react-bootstrap';
 import { Link } from "react-router-dom";
-import api from "../../api/api.js"; // Pastikan path-nya benar
-
-import "./productPage.css"; // Pastikan path-nya benar
+import api from "../../api/api.js";
+import "./productPage.css";
 
 import NavbarLandingPage from "../components/Navbar/navbar.jsx";
 import NavbarPenitipPage from "../components/Navbar/navbarPenitip.jsx";
@@ -13,26 +12,30 @@ import NavbarOrganisasiPage from "../components/Navbar/navbarOrgansiasi.jsx";
 
 const ProductPage = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [barang, setBarang] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
     const [fotos, setFotos] = useState([]);
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [loading, setLoading] = useState(false);
-    // New state to store user rating
+    const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [userRating, setUserRating] = useState(null);
-    
+
     let profile = {};
-    try{
+    try {
         profile = JSON.parse(localStorage.getItem("profile") || "{}");
-    }catch{ }
+    } catch {
+        profile = {};
+    }
 
     const role = profile.role?.trim().toLowerCase() || "";
-
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
     const renderNavbar = () => {
-        switch (role){
+        switch (role) {
             case "penitip":
                 return <NavbarPenitipPage />;
             case "pembeli":
@@ -60,7 +63,6 @@ const ProductPage = () => {
         fetchPhotos();
     }, [id]);
 
-    // Fetch product details
     useEffect(() => {
         const fetchBarang = async () => {
             try {
@@ -73,7 +75,6 @@ const ProductPage = () => {
         fetchBarang();
     }, [id]);
 
-    // New useEffect to fetch user rating for the product
     useEffect(() => {
         const fetchUserRating = async () => {
             try {
@@ -89,7 +90,6 @@ const ProductPage = () => {
         fetchUserRating();
     }, [id]);
 
-    // Fetch comments
     useEffect(() => {
         const fetchComments = async () => {
             try {
@@ -104,7 +104,6 @@ const ProductPage = () => {
         fetchComments();
     }, [id]);
 
-    // Handle adding a new comment
     const handleAddComment = async (e) => {
         e.preventDefault();
         if (!newComment.trim()) {
@@ -143,7 +142,41 @@ const ProductPage = () => {
         }
     };
 
-    // Format garansi
+    const handleAddToCart = async () => {
+        if (!isLoggedIn) {
+            setError("Silakan login untuk menambahkan barang ke keranjang.");
+            navigate('/login');
+            return;
+        }
+
+        setAddToCartLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            const response = await api.post('/cart/add', {
+                id_barang: id,
+            });
+            setSuccessMessage(response.data.message);
+            setTimeout(() => {
+                navigate('/cart');
+            }, 1200);
+        } catch (error) {
+            if (error.response?.status === 401) {
+                setError("Sesi Anda telah berakhir. Silakan login kembali.");
+                localStorage.removeItem('token');
+                setIsLoggedIn(false);
+                navigate('/login');
+            } else if (error.response?.status === 400) {
+                setError(error.response.data.error || "Barang tidak tersedia untuk dibeli.");
+            } else {
+                setError(error.response?.data.error || "Gagal menambahkan barang ke keranjang. Silakan coba lagi.");
+            }
+        } finally {
+            setAddToCartLoading(false);
+        }
+    };
+
     const cekGaransi = (garansi) => {
         if (!garansi || isNaN(new Date(garansi))) {
             return "Tidak ada garansi";
@@ -163,7 +196,6 @@ const ProductPage = () => {
         });
     };
 
-    // Format waktu komentar
     const formatWaktu = (waktu) => {
         return new Date(waktu).toLocaleString('id-ID', {
             year: 'numeric',
@@ -182,7 +214,6 @@ const ProductPage = () => {
             <Container className="mt-1">
                 <Row>
                     <Col md={6} className="my-5 d-flex flex-column align-items-center">
-                        {/* Foto Utama */}
                         <div className="main-image-container mb-3">
                             <img
                                 src={selectedPhoto ? `http://localhost:8000/storage/${selectedPhoto}` : "image.png"}
@@ -190,8 +221,6 @@ const ProductPage = () => {
                                 className="main-image"
                             />
                         </div>
-
-                        {/* Thumbnail */}
                         {fotos.length > 1 && (
                             <div className="thumbnail-scroll-container">
                                 <div className="thumbnail-list d-flex gap-2">
@@ -212,7 +241,6 @@ const ProductPage = () => {
                             </div>
                         )}
                     </Col>
-
                     <Col md={6} className="ProductDesc my-5" style={{ borderRadius: 10, padding: 20, backgroundColor: '#f8f9fa' }}>
                         <h2 className="text-success fw-bold">{barang.nama_barang}</h2>
                         <h4 className="text-success fw-bold">Rp {barang.harga}</h4>
@@ -225,20 +253,31 @@ const ProductPage = () => {
                                 <p>
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
-                                    {/* Updated to show user rating instead of barang.rating */}
                                     Rating: {userRating !== null ? userRating : 'N/A'}
                                 </p>
                             </Col>
                             <Col md={6} style={{ textAlign: 'right' }}>
-                                <Button variant="outline-success">Tambah ke Keranjang</Button>
+                                <Button
+                                    variant="outline-success"
+                                    onClick={handleAddToCart}
+                                    disabled={addToCartLoading}
+                                >
+                                    {addToCartLoading ? (
+                                        <Spinner animation="border" size="sm" />
+                                    ) : (
+                                        "Tambah ke Keranjang"
+                                    )}
+                                </Button>
                             </Col>
                         </Row>
+                        {/* Tampilkan pesan sukses atau error */}
+                        {successMessage && <Alert variant="success" className="mt-3">{successMessage}</Alert>}
+                        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
                         <Card className="mt-4">
                             <Card.Header className="bg-success text-white">
                                 <h5 className="mb-0">Forum Diskusi</h5>
                             </Card.Header>
                             <Card.Body>
-                                {error && <Alert variant="danger">{error}</Alert>}
                                 {comments.length === 0 ? (
                                     <p className="text-muted">Belum ada komentar.</p>
                                 ) : (

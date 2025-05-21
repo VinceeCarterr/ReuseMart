@@ -65,6 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:pembeli')->group(function () {
         Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
         Route::post('user/avatar', [UserController::class, 'updateAvatar']);
+        Route::post('/cart/add', [TransaksiController::class, 'addToCart']);
+        Route::get('/cart', [TransaksiController::class, 'getCart']);
+        Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
     });
 
     Route::middleware('role:penitip')->group(function () {
@@ -103,7 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
         Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
-    });    
+    });
 
 
     //kelola req donasi
