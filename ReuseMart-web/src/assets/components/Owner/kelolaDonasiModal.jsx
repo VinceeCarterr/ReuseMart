@@ -95,7 +95,7 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                                         onChange={(e) => setSelectedBarangId(e.target.value)}
                                     >
                                         <option value="">Pilih</option>
-                                        {barangList.filter((barang) => barang.status_periode === "Barang untuk Donasi")
+                                        {barangList.filter((barang) => barang.status === "Untuk Donasi")
                                             .map((barang) => (
                                                 <option key={barang.id_barang} value={barang.id_barang}>
                                                     {barang.nama_barang}

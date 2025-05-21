@@ -20,6 +20,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
         variant: "success"
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     useEffect(() => {
         if (pegawai) {
@@ -176,6 +177,19 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
         }
     };
 
+    const handleConfirmUpdate = () => {
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmSubmit = () => {
+        setShowConfirmModal(false);
+        handleUpdate();
+    };
+
+    const handleCancelConfirm = () => {
+        setShowConfirmModal(false);
+    };
+
     const handleResetPassword = async () => {
         try {
             setIsSubmitting(true);
@@ -299,7 +313,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                             <Col md={6}>
                                 <Button 
                                     variant="success" 
-                                    onClick={handleUpdate}
+                                    onClick={handleConfirmUpdate}
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -309,6 +323,38 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                     </Form>
                 </Modal.Body>
             </Modal>
+
+            <Modal 
+                show={showConfirmModal} 
+                onHide={handleCancelConfirm} 
+                centered 
+                backdrop={true}
+                size="sm"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Apakah Anda yakin ingin memperbarui data pegawai?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleCancelConfirm}
+                        disabled={isSubmitting}
+                    >
+                        Batal
+                    </Button>
+                    <Button 
+                        variant="success" 
+                        onClick={handleConfirmSubmit}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Menyimpan...' : 'Ya, Perbarui'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
                 <Toast
                     show={toast.show}
