@@ -502,4 +502,50 @@ class UserController extends Controller
             ], 404);
         }
     }
+
+    public function updateAllUserRatings()
+{
+    try {
+        
+        $users = DB::table('penitipan')
+            ->join('barang', 'penitipan.id_barang', '=', 'barang.id_barang')
+            ->whereNotNull('barang.rating') 
+            ->where('barang.rating', '>', 0)
+            ->select('penitipan.id_user', DB::raw('ROUND(AVG(barang.rating), 2) as avg_rating'))
+            ->groupBy('penitipan.id_user')
+            ->get();
+
+        Log::info('Fetched user ratings', ['users' => $users]);
+        $updatedCount = 0;
+        foreach ($users as $user) {
+            $userModel = User::find($user->id_user);
+            if ($userModel) {
+                $userModel->rating = $user->avg_rating;
+                $userModel->save();
+                $updatedCount++;
+                Log::info("Updated rating for user {$user->id_user}: {$user->avg_rating}");
+            } else {
+                Log::warning("User not found: {$user->id_user}");
+            }
+        }
+        $usersWithNoRatings = User::whereNotIn('id_user', $users->pluck('id_user')->toArray())
+            ->whereNotNull('rating')
+            ->update(['rating' => null]);
+        
+        Log::info("Reset ratings for {$usersWithNoRatings} users with no rated items");
+
+        return response()->json([
+            'message' => 'Rating semua user diperbarui.',
+            'updated_users' => $updatedCount,
+            'reset_ratings' => $usersWithNoRatings,
+        ], 200);
+    } catch (Exception $e) {
+        Log::error("Failed to update user ratings: {$e->getMessage()}");
+        return response()->json([
+            'error' => 'Gagal memperbarui rating user',
+            'exception' => $e->getMessage(),
+        ], 500);
+    }
+}
+
 }
