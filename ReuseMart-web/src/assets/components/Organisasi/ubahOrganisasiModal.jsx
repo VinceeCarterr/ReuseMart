@@ -11,6 +11,7 @@ const UbahOrganisasiModal = ({ show, onHide, organisasiData, onUpdateSuccess }) 
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [toastVariant, setToastVariant] = useState("success");
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     useEffect(() => {
         if (organisasiData) {
@@ -145,7 +146,17 @@ const UbahOrganisasiModal = ({ show, onHide, organisasiData, onUpdateSuccess }) 
 
                         <div className="d-flex justify-content-end mt-4">
                             <Button variant="secondary" onClick={onHide}>Batal</Button>
-                            <Button variant="success" className="ms-2" onClick={handleUpdate}>Simpan</Button>
+                            <Button
+                                variant="success"
+                                className="ms-2"
+                                onClick={() => {
+                                    onHide();
+                                    setShowConfirmModal(true);
+                                }}
+                            >
+                                Simpan
+                            </Button>
+
                         </div>
                     </Form>
                 </Modal.Body>
@@ -169,6 +180,29 @@ const UbahOrganisasiModal = ({ show, onHide, organisasiData, onUpdateSuccess }) 
                     </Toast.Body>
                 </Toast>
             </ToastContainer>
+
+            <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi Perubahan</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Apakah Anda yakin ingin menyimpan perubahan data organisasi ini?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+                        Batal
+                    </Button>
+                    <Button
+                        variant="success"
+                        onClick={() => {
+                            setShowConfirmModal(false);
+                            handleUpdate();
+                        }}
+                    >
+                        Ya, Simpan
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 };

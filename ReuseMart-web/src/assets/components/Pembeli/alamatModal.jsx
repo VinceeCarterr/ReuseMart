@@ -130,7 +130,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                         <Row className="mt-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Label</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Label</Form.Label>
                                     <Form.Control
                                         type="text"
                                         placeholder="Masukkan Label"
@@ -143,7 +143,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Kota</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kota</Form.Label>
                                     <Form.Control
                                         type="text"
                                         placeholder="Yogyakarta"
@@ -157,7 +157,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                         <Row className="mt-3">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Kecamatan</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kecamatan</Form.Label>
                                     <Form.Select
                                         value={selectedKecamatan}
                                         onChange={handleKecamatanChange}
@@ -173,7 +173,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Kode Pos</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kode Pos</Form.Label>
                                     <Form.Select
                                         value={selectedKodePos}
                                         onChange={handleKodePosChange}
@@ -193,7 +193,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                         <Row className="mt-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Alamat Lengkap</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Alamat Lengkap</Form.Label>
                                     <Form.Control
                                         type="text"
                                         placeholder="Masukkan alamat lengkap"
@@ -206,7 +206,7 @@ const AlamatModal = ({ show, onHide, onSuccess }) => {
                             </Col>
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Catatan</Form.Label>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Catatan</Form.Label>
                                     <Form.Control
                                         type="text"
                                         placeholder="Masukkan Catatan"

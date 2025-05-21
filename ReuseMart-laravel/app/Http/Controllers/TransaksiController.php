@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Transaksi;
 use App\Models\Barang;
-use App\Models\Penitipan;
+use App\Models\DetilTransaksi;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Carbon\Carbon;
@@ -306,4 +307,130 @@ class TransaksiController extends Controller
         return response()->json(['message' => 'Updated successfully']);
     }
 
+    public function addToCart(Request $request)
+    {
+        $request->validate([
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+        try {
+            $user = $request->user();
+
+            $barang = Barang::findOrFail($request->id_barang);
+
+            if ($barang->status !== 'Available') {
+                return response()->json(['error' => 'Barang tidak tersedia untuk dibeli'], 400);
+            }
+
+            $transaksi = Transaksi::firstOrCreate(
+                ['id_user' => $user->id_user, 'id_pembayaran' => null],
+                [
+                    'tanggal_transaksi' => now(),
+                    'jumlah_item' => 0,
+                    'metode_pengiriman' => 'Belum Dipilih',
+                    'alamat' => '',
+                    'biaya_pengiriman' => 0,
+                    'diskon' => 0,
+                    'subtotal' => 0,
+                    'total' => 0,
+                ]
+            );
+
+            DetilTransaksi::create([
+                'id_transaksi' => $transaksi->id_transaksi,
+                'id_barang' => $request->id_barang,
+            ]);
+
+            $barang->status = 'On Hold';
+            $barang->save();
+
+            return response()->json(['message' => 'Barang berhasil ditambahkan ke keranjang'], 201);
+        } catch (Exception $e) {
+            Log::error('Gagal add to cart: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal menambahkan barang ke keranjang'], 500);
+        }
+    }
+
+    public function getCart(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $transaksi = Transaksi::with(['detilTransaksi.Barang.foto'])
+                ->where('id_user', $user->id_user)
+                ->whereNull('id_pembayaran')
+                ->first();
+
+            if (!$transaksi) {
+                return response()->json([
+                    'message' => 'Keranjang kosong',
+                    'data' => [],
+                ], 200);
+            }
+
+            return response()->json([
+                'message' => 'Keranjang berhasil diambil',
+                'data' => [
+                    'id_transaksi' => $transaksi->id_transaksi,
+                    'items' => $transaksi->detilTransaksi->map(function ($detil) {
+                        if (!$detil->Barang) {
+                            return null;
+                        }
+                        return [
+                            'id_barang' => $detil->Barang->id_barang,
+                            'nama_barang' => $detil->Barang->nama_barang,
+                            'harga' => $detil->Barang->harga,
+                            'foto' => $detil->Barang->foto->isNotEmpty() ? url('storage/' . $detil->Barang->foto->first()->path) : null,
+                        ];
+                    })->filter()->values(),
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Gagal mengambil keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal mengambil keranjang'], 500);
+        }
+    }
+
+    public function removeFromCart(Request $request)
+    {
+        $request->validate([
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $user = $request->user();
+
+                $transaksi = Transaksi::where('id_user', $user->id_user)
+                    ->whereNull('id_pembayaran')
+                    ->first();
+
+                if (!$transaksi) {
+                    return response()->json(['error' => 'Keranjang tidak ditemukan'], 404);
+                }
+
+                $detil = DetilTransaksi::where('id_transaksi', $transaksi->id_transaksi)
+                    ->where('id_barang', $request->id_barang)
+                    ->first();
+
+                if (!$detil) {
+                    return response()->json(['error' => 'Barang tidak ditemukan di keranjang'], 404);
+                }
+
+                $detil->delete();
+
+                $barang = Barang::findOrFail($request->id_barang);
+                $barang->status = 'Available';
+                $barang->save();
+
+                if ($transaksi->detilTransaksi()->count() === 0) {
+                    $transaksi->delete();
+                }
+
+                return response()->json(['message' => 'Barang berhasil dihapus dari keranjang'], 200);
+            });
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus barang dari keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal menghapus barang dari keranjang'], 500);
+        }
+    }
 }
