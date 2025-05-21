@@ -138,17 +138,29 @@ const AlamatPage = () => {
 
   const handleDelete = async () => {
     if (!alamatToDelete) return;
+
+    if (alamatList.length <= 1) {
+      setToastVariant("danger");
+      setToastMessage(
+        `Alamat "${alamatToDelete.label}" gagal dihapus dari database karena pembeli harus memiliki minimal 1 alamat`
+      );
+      setShowToast(true);
+      setShowDeleteModal(false);
+      setAlamatToDelete(null);
+      return;
+    }
+
     try {
       await api.delete(`/alamat/${alamatToDelete.id_alamat}`);
       setAlamatList((prev) =>
         prev.filter((x) => x.id_alamat !== alamatToDelete.id_alamat)
       );
       setToastVariant("success");
-      setToastMessage("Alamat berhasil dihapus");
+      setToastMessage(`Alamat "${alamatToDelete.label}" berhasil dihapus`);
       setShowToast(true);
     } catch (e) {
       setToastVariant("danger");
-      setToastMessage("Gagal menghapus alamat");
+      setToastMessage(`Gagal menghapus alamat "${alamatToDelete.label}"`);
       console.error("Error deleting address:", e);
     } finally {
       setShowDeleteModal(false);

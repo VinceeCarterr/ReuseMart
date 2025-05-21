@@ -25,6 +25,7 @@ const UbahAlamatModal = ({ show, onHide, alamatData, onUpdateSuccess }) => {
     const [catatan, setCatatan] = useState("");
     const [selectedKecamatan, setSelectedKecamatan] = useState("");
     const [selectedKodePos, setSelectedKodePos] = useState("");
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     useEffect(() => {
         if (alamatData) {
@@ -42,7 +43,12 @@ const UbahAlamatModal = ({ show, onHide, alamatData, onUpdateSuccess }) => {
         setSelectedKodePos("");
     };
 
-    const handleUpdate = async () => {
+    const handleSubmitClick = () => {
+        onHide(); // Tutup modal form ubah
+        setShowConfirmModal(true); // Tampilkan modal konfirmasi
+    };
+
+    const handleConfirmUpdate = async () => {
         try {
             await api.put(`/alamat/${alamatData.id_alamat}`, {
                 ...alamatData,
@@ -52,107 +58,131 @@ const UbahAlamatModal = ({ show, onHide, alamatData, onUpdateSuccess }) => {
                 kecamatan: selectedKecamatan,
                 kode_pos: selectedKodePos,
             });
-            onUpdateSuccess();
-            onHide();
+            onUpdateSuccess(); // Refresh data parent
         } catch (err) {
             console.error("Gagal mengubah alamat:", err);
+        } finally {
+            setShowConfirmModal(false); // Tutup modal konfirmasi
         }
     };
 
     const kodePosOptions = kecamatanToKodePos[selectedKecamatan] || [];
 
     return (
-        <Modal show={show} onHide={onHide} centered size="lg">
-            <Modal.Header closeButton>
-                <Modal.Title className="w-100 text-center">Ubah Alamat</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form>
-                    <Row className="mt-3">
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Label</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Masukkan Label"
-                                    value={label}
-                                    onChange={(e) => setLabel(e.target.value)}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Kota</Form.Label>
-                                <Form.Control type="text" value="Yogyakarta" disabled />
-                            </Form.Group>
-                        </Col>
-                    </Row>
+        <>
+            {/* Modal Ubah Alamat */}
+            <Modal show={show} onHide={onHide} centered size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title className="w-100 text-center">Ubah Alamat</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Row className="mt-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Label</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Masukkan Label"
+                                        value={label}
+                                        onChange={(e) => setLabel(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kota</Form.Label>
+                                    <Form.Control type="text" value="Yogyakarta" disabled />
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    <Row className="mt-3">
-                        <Col md={6}>
-                            <Form.Group>
-                                <Form.Label>Kecamatan</Form.Label>
-                                <Form.Select
-                                    value={selectedKecamatan}
-                                    onChange={handleKecamatanChange}
-                                >
-                                    <option value="">Pilih Kecamatan</option>
-                                    {Object.keys(kecamatanToKodePos).map((kec) => (
-                                        <option key={kec} value={kec}>{kec}</option>
-                                    ))}
-                                </Form.Select>
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group>
-                                <Form.Label>Kode Pos</Form.Label>
-                                <Form.Select
-                                    value={selectedKodePos}
-                                    onChange={(e) => setSelectedKodePos(e.target.value)}
-                                    disabled={!selectedKecamatan}
-                                >
-                                    <option value="">Pilih Kode Pos</option>
-                                    {kodePosOptions.map((kode) => (
-                                        <option key={kode} value={kode}>{kode}</option>
-                                    ))}
-                                </Form.Select>
-                            </Form.Group>
-                        </Col>
-                    </Row>
+                        <Row className="mt-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kecamatan</Form.Label>
+                                    <Form.Select
+                                        value={selectedKecamatan}
+                                        onChange={handleKecamatanChange}
+                                    >
+                                        <option value="">Pilih Kecamatan</option>
+                                        {Object.keys(kecamatanToKodePos).map((kec) => (
+                                            <option key={kec} value={kec}>{kec}</option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Kode Pos</Form.Label>
+                                    <Form.Select
+                                        value={selectedKodePos}
+                                        onChange={(e) => setSelectedKodePos(e.target.value)}
+                                        disabled={!selectedKecamatan}
+                                    >
+                                        <option value="">Pilih Kode Pos</option>
+                                        {kodePosOptions.map((kode) => (
+                                            <option key={kode} value={kode}>{kode}</option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    <Row className="mt-3">
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Alamat Lengkap</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Masukkan alamat lengkap"
-                                    value={alamat}
-                                    onChange={(e) => setAlamat(e.target.value)}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col>
-                            <Form.Group>
-                                <Form.Label>Catatan</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Masukkan Catatan"
-                                    value={catatan}
-                                    onChange={(e) => setCatatan(e.target.value)}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
+                        <Row className="mt-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Alamat Lengkap</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Masukkan alamat lengkap"
+                                        value={alamat}
+                                        onChange={(e) => setAlamat(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label style={{ fontWeight: 'bold' }}>Catatan</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Masukkan Catatan"
+                                        value={catatan}
+                                        onChange={(e) => setCatatan(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    <br />
-                    <div className="d-flex justify-content-end">
-                        <Button variant="secondary" onClick={onHide}>Batal</Button>
-                        <Button variant="success" onClick={handleUpdate} className="ms-2">Simpan</Button>
-                    </div>
-                </Form>
-            </Modal.Body>
-        </Modal>
+                        <br />
+                        <div className="d-flex justify-content-end">
+                            <Button variant="secondary" onClick={onHide}>Batal</Button>
+                            <Button variant="success" className="ms-2" onClick={handleSubmitClick}>
+                                Simpan
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+
+            {/* Modal Konfirmasi Simpan */}
+            <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi Perubahan</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Apakah Anda yakin ingin menyimpan perubahan alamat ini?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+                        Batal
+                    </Button>
+                    <Button variant="success" onClick={handleConfirmUpdate}>
+                        Ya, Simpan
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 };
 

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Transaksi;
 use App\Models\Barang;
-use App\Models\Penitipan;
+use App\Models\DetilTransaksi;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Carbon\Carbon;
@@ -104,188 +105,332 @@ class TransaksiController extends Controller
 
     public function historyPenitip(Request $request)
     {
-        $idPenitip = $request->user()->id_user;
+        // 1) Normalize incoming status to Title Case
+        if ($request->filled('status')) {
+            $request->merge([
+                'status' => ucwords(strtolower($request->input('status')))
+            ]);
+        }
+
+        // 1b) Normalize incoming status_periode to Title Case (e.g. "periode 1" → "Periode 1")
+        if ($request->filled('status_periode')) {
+            $request->merge([
+                'status_periode' => ucwords(strtolower($request->input('status_periode')))
+            ]);
+        }
+
+        // 2) Validate filters
+        $request->validate([
+            'start_date'     => 'nullable|date',
+            'end_date'       => 'nullable|date|after_or_equal:start_date',
+            'status'         => 'nullable|in:Available,Sold,Donated,On Hold',
+            'status_periode' => 'nullable|in:Periode 1,Periode 2,Expired',
+            'category'       => 'nullable|string',
+            'search'         => 'nullable|string',
+            'per_page'       => 'nullable|integer|min:1|max:100',
+        ]);
 
         try {
-            // Validasi input untuk filter
-            $request->validate([
-                'start_date' => 'nullable|date',
-                'end_date' => 'nullable|date|after_or_equal:start_date',
-                'status' => 'nullable|in:Available,Sold,Donated,On Hold',
-                'category' => 'nullable|string',
-                'search' => 'nullable|string',
-                'per_page' => 'nullable|integer|min:1|max:100',
-            ]);
+            $idPenitip = $request->user()->id_user;
 
-            // Query untuk mengambil barang yang dititipkan oleh penitip
             $query = Barang::with([
-                'penitipan.user' => function ($q) {
-                    $q->select('id_user', 'first_name', 'last_name');
-                },
-                'kategori' => function ($q) {
-                    $q->select('id_kategori', 'nama_kategori', 'sub_kategori');
-                },
-                'detilTransaksi.transaksi.pembayaran',
-                'detilTransaksi.transaksi.pengiriman',
-                'detilTransaksi.transaksi.pengambilan',
-                'detilTransaksi.komisi',
-                'donasi.requestDonasi.user' => function ($q) {
-                    $q->select('id_user', 'first_name', 'last_name');
-                },
-                'foto' => function ($q) {
-                    $q->select('id_foto', 'id_barang', 'path');
-                },
-            ])
-                ->whereHas('penitipan', function ($q) use ($idPenitip) {
-                    $q->where('id_user', $idPenitip);
-                })
+                    'penitipan.user:id_user,first_name,last_name',
+                    'kategori:id_kategori,nama_kategori,sub_kategori',
+                    'detilTransaksi.transaksi.pembayaran',
+                    'detilTransaksi.transaksi.pengiriman',
+                    'detilTransaksi.transaksi.pengambilan',
+                    'detilTransaksi.komisi',
+                    'donasi:id_donasi,id_reqdonasi,id_barang,tanggal_donasi',
+                    'donasi.requestDonasi:id_reqdonasi,id_user',
+                    'donasi.requestDonasi.user:id_user,first_name,last_name',
+                    'foto:id_foto,id_barang,path',
+                ])
+                ->whereHas('penitipan', fn($q) =>
+                    $q->where('id_user', $idPenitip)
+                )
                 ->select([
-                    'id_barang',
-                    'kode_barang',
-                    'nama_barang',
-                    'id_kategori',
-                    'deskripsi',
-                    'harga',
-                    'status',
-                    'status_periode',
-                    'tanggal_titip',
-                    'byHunter',
-                    'garansi',
+                    'id_barang','kode_barang','nama_barang','id_kategori',
+                    'deskripsi','harga','status','status_periode',
+                    'tanggal_titip','byHunter','garansi',
                 ]);
 
-            // Filter berdasarkan periode penitipan
+            // Apply your optional filters…
             if ($request->filled('start_date')) {
                 $query->whereDate('tanggal_titip', '>=', $request->start_date);
             }
             if ($request->filled('end_date')) {
                 $query->whereDate('tanggal_titip', '<=', $request->end_date);
             }
-
-            // Filter berdasarkan status barang
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
             }
-
-            // Filter berdasarkan kategori
+            if ($request->filled('status_periode')) {
+                $query->where('status_periode', $request->status_periode);
+            }
             if ($request->filled('category')) {
-                $query->whereHas('kategori', function ($q) use ($request) {
-                    $q->where('nama_kategori', 'like', '%' . $request->category . '%')
-                        ->orWhere('sub_kategori', 'like', '%' . $request->category . '%');
-                });
+                $query->whereHas('kategori', fn($q) =>
+                    $q->where('nama_kategori', 'like', "%{$request->category}%")
+                    ->orWhere('sub_kategori',  'like', "%{$request->category}%")
+                );
             }
-
-            // Pencarian berdasarkan nama atau kode barang
             if ($request->filled('search')) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('nama_barang', 'like', '%' . $request->search . '%')
-                        ->orWhere('kode_barang', 'like', '%' . $request->search . '%');
-                });
+                $query->where(fn($q) =>
+                    $q->where('nama_barang', 'like', "%{$request->search}%")
+                    ->orWhere('kode_barang', 'like', "%{$request->search}%")
+                );
             }
 
-            // Urutkan dan paginasi
-            $query->orderBy('tanggal_titip', 'desc');
-            $perPage = $request->input('per_page', 10);
-            $barangs = $query->paginate($perPage);
+            $barangs = $query
+                ->orderBy('tanggal_titip', 'desc')
+                ->paginate($request->input('per_page', 10));
 
-            // Format hasil
-            $result = $barangs->getCollection()->map(function ($barang) {
-                // Tentukan masa penitipan berdasarkan status_periode
-                $days = $barang->status_periode === 'Periode 2' ? 60 : 30;
-                $akhirPenitipan = $barang->tanggal_titip
-                    ? Carbon::parse($barang->tanggal_titip)->addDays($days)
+            $items = $barangs->getCollection()->map(function ($b) {
+                // consign period end
+                $days = $b->status_periode === 'Periode 2' ? 60 : 30;
+                $akhir = $b->tanggal_titip
+                    ? Carbon::parse($b->tanggal_titip)->addDays($days)
                     : null;
 
-                // Inisialisasi default
-                $komisiPerusahaan = 0;
-                $komisiHunter = 0;
-                $saldoPenitip = 0;
-                $transaksi = null;
-
-                if ($barang->status === 'Sold' && $barang->detilTransaksi && $barang->detilTransaksi->isNotEmpty()) {
-                    $detilTransaksi = $barang->detilTransaksi->first();
-                    $transaksi = $detilTransaksi->transaksi;
-                    $komisi = $detilTransaksi->komisi;
-
-                    // Komisi perusahaan: 20% untuk Periode 1, 30% untuk Periode 2
-                    $komisiRate = $barang->status_periode === 'Periode 2' ? 0.30 : 0.20;
-                    $komisiPerusahaan = $komisi ? $komisi->komisi_perusahaan : ($barang->harga * $komisiRate);
-                    $komisiHunter = $barang->byHunter ? ($barang->harga * 0.05) : 0;
-                    $saldoPenitip = $barang->harga - $komisiPerusahaan - $komisiHunter;
+                // sold commissions
+                $komisiPerusahaan = $komisiHunter = $saldo = 0;
+                $trans = null;
+                if ($b->status === 'Sold' && $b->detilTransaksi->isNotEmpty()) {
+                    $dt   = $b->detilTransaksi->first();
+                    $rate = $b->status_periode === 'Periode 2' ? 0.30 : 0.20;
+                    $komisiPerusahaan = $dt->komisi
+                        ? $dt->komisi->komisi_perusahaan
+                        : ($b->harga * $rate);
+                    $komisiHunter = $b->byHunter ? ($b->harga * 0.05) : 0;
+                    $saldo        = $b->harga - $komisiPerusahaan - $komisiHunter;
+                    $trans        = $dt->transaksi;
                 }
 
-                $donasi = null;
-                if ($barang->status === 'Donated' && $barang->donasi && $barang->donasi->requestDonasi && $barang->donasi->requestDonasi->user) {
-                    $donasi = [
-                        'organisasi' => $barang->donasi->requestDonasi->user->first_name . ' ' . $barang->donasi->requestDonasi->user->last_name,
-                        'tanggal_donasi' => $barang->donasi->created_at,
+                // donated payload
+                $donasiInfo = null;
+                if ($b->status === 'Donated' && $b->donasi && $b->donasi->requestDonasi && $b->donasi->requestDonasi->user) {
+                    $u = $b->donasi->requestDonasi->user;
+                    $donasiInfo = [
+                        'organisasi'     => "{$u->first_name} {$u->last_name}",
+                        'tanggal_donasi' => $b->donasi->tanggal_donasi,
                     ];
                 }
 
-                // Ambil foto dari tabel foto_barang dengan pengecekan
-                $fotos = $barang->foto ? $barang->foto->map(function ($foto) {
-                    return $foto->path ?? '';
-                })->toArray() : [];
-
                 return [
-                    'id_barang' => $barang->id_barang,
-                    'kode_barang' => $barang->kode_barang,
-                    'nama_barang' => $barang->nama_barang,
-                    'kategori' => $barang->kategori ? [
-                        'nama_kategori' => $barang->kategori->nama_kategori ?? '',
-                        'sub_kategori' => $barang->kategori->sub_kategori ?? '',
-                    ] : null,
-                    'deskripsi' => $barang->deskripsi ?? '',
-                    'harga' => $barang->harga ?? 0,
-                    'foto' => $fotos,
-                    'status' => $barang->status ?? '',
-                    'status_periode' => $barang->status_periode ?? '',
-                    'tanggal_titip' => $barang->tanggal_titip,
-                    'akhir_penitipan' => $akhirPenitipan,
-                    'garansi' => $barang->garansi ?? '',
-                    'transaksi' => $transaksi ? [
-                        'id_transaksi' => $transaksi->id_transaksi ?? '',
-                        'tanggal_transaksi' => $transaksi->tanggal_transaksi,
-                        'subtotal' => $transaksi->subtotal ?? 0,
-                        'metode_pengiriman' => $transaksi->metode_pengiriman ?? '',
-                        'alamat' => $transaksi->alamat ?? '',
-                        'status_pembayaran' => $transaksi->pembayaran ? $transaksi->pembayaran->status_pembayaran : null,
-                        'pengiriman' => $transaksi->pengiriman ? [
-                            'status_pengiriman' => $transaksi->pengiriman->status_pengiriman ?? '',
-                            'tanggal_pengiriman' => $transaksi->pengiriman->tanggal_pengiriman,
+                    'id_barang'       => $b->id_barang,
+                    'kode_barang'     => $b->kode_barang,
+                    'nama_barang'     => $b->nama_barang,
+                    'kategori'        => [
+                        'nama_kategori' => $b->kategori->nama_kategori,
+                        'sub_kategori'  => $b->kategori->sub_kategori,
+                    ],
+                    'deskripsi'       => $b->deskripsi,
+                    'harga'           => $b->harga,
+                    'foto'            => $b->foto->pluck('path')->toArray(),
+                    'status'          => $b->status,
+                    'status_periode'  => $b->status_periode,
+                    'tanggal_titip'   => $b->tanggal_titip,
+                    'akhir_penitipan' => $akhir,
+                    'garansi'         => $b->garansi,
+                    'transaksi'       => $trans ? [
+                        'id_transaksi'      => $trans->id_transaksi,
+                        'tanggal_transaksi' => $trans->tanggal_transaksi,
+                        'subtotal'          => $trans->subtotal,
+                        'metode_pengiriman' => $trans->metode_pengiriman,
+                        'alamat'            => $trans->alamat,
+                        'status_pembayaran' => $trans->pembayaran->status_pembayaran ?? null,
+                        'pengiriman'        => $trans->pengiriman ? [
+                            'status_pengiriman'  => $trans->pengiriman->status_pengiriman,
+                            'tanggal_pengiriman' => $trans->pengiriman->tanggal_pengiriman,
                         ] : null,
-                        'pengambilan' => $transaksi->pengambilan ? [
-                            'status_pengambilan' => $transaksi->pengambilan->status_pengambilan ?? '',
-                            'tanggal_pengambilan' => $transaksi->pengambilan->tanggal_pengambilan,
+                        'pengambilan'       => $trans->pengambilan ? [
+                            'status_pengambilan'  => $trans->pengambilan->status_pengambilan,
+                            'tanggal_pengambilan' => $trans->pengambilan->tanggal_pengambilan,
                         ] : null,
                         'komisi_perusahaan' => $komisiPerusahaan,
-                        'komisi_hunter' => $komisiHunter,
-                        'saldo_penitip' => $saldoPenitip,
+                        'komisi_hunter'     => $komisiHunter,
+                        'saldo_penitip'     => $saldo,
                     ] : null,
-                    'donasi' => $donasi,
+                    'donasi'          => $donasiInfo,
                 ];
             });
 
-            // Ganti koleksi paginasi dengan hasil yang diformat
-            $barangs->setCollection($result);
-
-            // Kembalikan respons
             return response()->json([
-                'data' => $barangs->items(),
+                'data'         => $items,
                 'current_page' => $barangs->currentPage(),
-                'last_page' => $barangs->lastPage(),
-                'per_page' => $barangs->perPage(),
-                'total' => $barangs->total(),
+                'last_page'    => $barangs->lastPage(),
+                'per_page'     => $barangs->perPage(),
+                'total'        => $barangs->total(),
             ]);
-        } catch (Exception $e) {
-            Log::error('Error fetching history for penitip: ' . $e->getMessage(), [
-                'user_id' => $idPenitip,
-                'request' => $request->all(),
-                'exception' => $e->getTraceAsString(),
+        }
+        catch (Exception $e) {
+            Log::error("Error fetching penitip history: {$e->getMessage()}", [
+                'user_id' => $request->user()->id_user,
+                'filters' => $request->only(['status','status_periode','start_date','end_date','category','search','per_page']),
+                'trace'   => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'error' => 'Failed to fetch penitip history',
+                'error'   => 'Failed to fetch penitip history',
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function updateHistoryPenitip(Request $request, $id_barang)
+    {
+        $request->validate([
+            // only the fields we allow to change:
+            'tanggal_titip'   => 'sometimes|date',
+            'status_periode'  => 'sometimes|in:Periode 1,Periode 2,Expired',
+            'status'          => 'sometimes|in:Available,Sold,Donated,On Hold,Untuk Donasi,Akan Ambil',
+        ]);
+
+        $barang = Barang::findOrFail($id_barang);
+
+        // only allow updates if this user owns it:
+        if ($request->user()->id_user !== $barang->penitipan->id_user) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // apply only provided fields:
+        if ($request->has('tanggal_titip')) {
+            $barang->tanggal_titip = $request->input('tanggal_titip');
+        }
+        if ($request->has('status_periode')) {
+            $barang->status_periode = $request->input('status_periode');
+        }
+        if ($request->has('status')) {
+            $barang->status = $request->input('status');
+        }
+
+        $barang->save();
+
+        return response()->json(['message' => 'Updated successfully']);
+    }
+
+    public function addToCart(Request $request)
+    {
+        $request->validate([
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+        try {
+            $user = $request->user();
+
+            $barang = Barang::findOrFail($request->id_barang);
+
+            if ($barang->status !== 'Available') {
+                return response()->json(['error' => 'Barang tidak tersedia untuk dibeli'], 400);
+            }
+
+            $transaksi = Transaksi::firstOrCreate(
+                ['id_user' => $user->id_user, 'id_pembayaran' => null],
+                [
+                    'tanggal_transaksi' => now(),
+                    'jumlah_item' => 0,
+                    'metode_pengiriman' => 'Belum Dipilih',
+                    'alamat' => '',
+                    'biaya_pengiriman' => 0,
+                    'diskon' => 0,
+                    'subtotal' => 0,
+                    'total' => 0,
+                ]
+            );
+
+            DetilTransaksi::create([
+                'id_transaksi' => $transaksi->id_transaksi,
+                'id_barang' => $request->id_barang,
+            ]);
+
+            $barang->status = 'On Hold';
+            $barang->save();
+
+            return response()->json(['message' => 'Barang berhasil ditambahkan ke keranjang'], 201);
+        } catch (Exception $e) {
+            Log::error('Gagal add to cart: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal menambahkan barang ke keranjang'], 500);
+        }
+    }
+
+    public function getCart(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $transaksi = Transaksi::with(['detilTransaksi.Barang.foto'])
+                ->where('id_user', $user->id_user)
+                ->whereNull('id_pembayaran')
+                ->first();
+
+            if (!$transaksi) {
+                return response()->json([
+                    'message' => 'Keranjang kosong',
+                    'data' => [],
+                ], 200);
+            }
+
+            return response()->json([
+                'message' => 'Keranjang berhasil diambil',
+                'data' => [
+                    'id_transaksi' => $transaksi->id_transaksi,
+                    'items' => $transaksi->detilTransaksi->map(function ($detil) {
+                        if (!$detil->Barang) {
+                            return null;
+                        }
+                        return [
+                            'id_barang' => $detil->Barang->id_barang,
+                            'nama_barang' => $detil->Barang->nama_barang,
+                            'harga' => $detil->Barang->harga,
+                            'foto' => $detil->Barang->foto->isNotEmpty() ? url('storage/' . $detil->Barang->foto->first()->path) : null,
+                        ];
+                    })->filter()->values(),
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Gagal mengambil keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal mengambil keranjang'], 500);
+        }
+    }
+
+    public function removeFromCart(Request $request)
+    {
+        $request->validate([
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $user = $request->user();
+
+                $transaksi = Transaksi::where('id_user', $user->id_user)
+                    ->whereNull('id_pembayaran')
+                    ->first();
+
+                if (!$transaksi) {
+                    return response()->json(['error' => 'Keranjang tidak ditemukan'], 404);
+                }
+
+                $detil = DetilTransaksi::where('id_transaksi', $transaksi->id_transaksi)
+                    ->where('id_barang', $request->id_barang)
+                    ->first();
+
+                if (!$detil) {
+                    return response()->json(['error' => 'Barang tidak ditemukan di keranjang'], 404);
+                }
+
+                $detil->delete();
+
+                $barang = Barang::findOrFail($request->id_barang);
+                $barang->status = 'Available';
+                $barang->save();
+
+                if ($transaksi->detilTransaksi()->count() === 0) {
+                    $transaksi->delete();
+                }
+
+                return response()->json(['message' => 'Barang berhasil dihapus dari keranjang'], 200);
+            });
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus barang dari keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal menghapus barang dari keranjang'], 500);
         }
     }
 }

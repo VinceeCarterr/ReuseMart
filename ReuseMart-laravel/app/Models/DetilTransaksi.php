@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class DetilTransaksi extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'detiltransaksi';
     protected $primaryKey = 'id_dt';
+    public $timestamps = false;
     protected $fillable = [
         'id_transaksi',
         'id_barang',
