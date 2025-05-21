@@ -30,11 +30,15 @@ Route::get('/foto_barang', [Foto_BarangController::class, 'index']);
 Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBarangId']);
 Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
 
+Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
     Route::get('/penitipan', [PenitipanController::class, 'index']);
+
+    
 
     //authentifikasi | mengelola data pegawai
     Route::middleware('role:admin')->group(function () {
@@ -68,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cart/add', [TransaksiController::class, 'addToCart']);
         Route::get('/cart', [TransaksiController::class, 'getCart']);
         Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
+        Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
     });
 
     Route::middleware('role:penitip')->group(function () {

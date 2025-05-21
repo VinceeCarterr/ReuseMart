@@ -87,6 +87,19 @@ class BarangController extends Controller
         }
     }
 
+    public function updateRatingBarang($id, Request $request)
+    {
+        try {
+            $barang = Barang::findOrFail($id);
+            $barang->rating = $request->input('rating');
+            $barang->save();
+            return response()->json($barang);
+        } catch (Exception $e) {
+            Log::error('Error updating barang rating: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update barang rating'], 500);
+        }
+    }
+
     public function getUserRatings()
     {
         try {

@@ -12,7 +12,13 @@ import {
   Form,
   Dropdown,
 } from "react-bootstrap";
-import { FiShoppingCart, FiClock, FiUser, FiCalendar } from "react-icons/fi";
+import {
+  FiShoppingCart,
+  FiClock,
+  FiUser,
+  FiCalendar,
+  FiStar,
+} from "react-icons/fi";
 import { Truck } from "react-bootstrap-icons";
 import api from "../../../api/api.js";
 import ProfileModal from "../../components/Pembeli/profileModal.jsx";
@@ -27,52 +33,58 @@ const HistoryPembeli = () => {
     profile = JSON.parse(localStorage.getItem("profile") || "{}");
   } catch {}
   const first = profile.first_name ?? profile.firstName ?? profile.name;
-  const last  = profile.last_name  ?? profile.lastName;
-  const userName =
-    first && last ? `${first} ${last}` : first ? first : "User";
+  const last = profile.last_name ?? profile.lastName;
+  const userName = first && last ? `${first} ${last}` : first ? first : "User";
 
   // ———— NAVBAR STATE ————
-  const [groupedCats, setGroupedCats]     = useState([]);
-  const [activeCatIdx, setActiveCatIdx]   = useState(0);
-  const [showMega, setShowMega]           = useState(false);
-  const [showLogoutModal, setShowLogoutModal]   = useState(false);
+  const [groupedCats, setGroupedCats] = useState([]);
+  const [activeCatIdx, setActiveCatIdx] = useState(0);
+  const [showMega, setShowMega] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [searchTerm, setSearchTerm]       = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    api.get("/kategori")
-       .then(({ data }) => setGroupedCats(data))
-       .catch(console.error);
+    api
+      .get("/kategori")
+      .then(({ data }) => setGroupedCats(data))
+      .catch(console.error);
   }, []);
 
-  const openLogoutModal     = () => setShowLogoutModal(true);
-  const closeLogoutModal    = () => setShowLogoutModal(false);
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
   const handleConfirmLogout = () => {
     localStorage.clear();
     navigate("/");
   };
-  const openProfileModal    = () => setShowProfileModal(true);
-  const closeProfileModal   = () => setShowProfileModal(false);
+  const openProfileModal = () => setShowProfileModal(true);
+  const closeProfileModal = () => setShowProfileModal(false);
 
   // ———— HISTORY STATE & FILTERS ————
-  const [orders, setOrders]             = useState([]);
-  const [filter, setFilter]             = useState("Delivery");
-  const [showDetail, setShowDetail]     = useState(false);
-  const [selectedTx, setSelectedTx]     = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [filter, setFilter] = useState("Delivery");
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedTx, setSelectedTx] = useState(null);
   const [showSSInline, setShowSSInline] = useState(false);
 
-  // date‐range
+  // ———— RATING STATE ————
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [rating, setRating] = useState(0);
+
+  // date-range
   const [showDateModal, setShowDateModal] = useState(false);
-  const [fromDate, setFromDate]           = useState("");
-  const [toDate, setToDate]               = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
-    api.get("transaksi/history")
-       .then(({ data }) => setOrders(data))
-       .catch(console.error);
+    api
+      .get("transaksi/history")
+      .then(({ data }) => setOrders(data))
+      .catch(console.error);
   }, []);
 
-  const openDetail  = (tx) => {
+  const openDetail = (tx) => {
     setSelectedTx(tx);
     setShowDetail(true);
     setShowSSInline(false);
@@ -83,31 +95,83 @@ const HistoryPembeli = () => {
     setShowSSInline(false);
   };
 
+  const openRatingModal = (item) => {
+    setSelectedItem(item);
+    setRating(item.rating || 0);
+    setShowRatingModal(true);
+  };
+
+  const closeRatingModal = () => {
+    setShowRatingModal(false);
+    setSelectedItem(null);
+    setRating(0);
+  };
+
+  const updateRatingAllUser = async () => {
+    try {
+      await api.post("/updateAllUserRatings");
+    } catch (error) {
+      console.error("Failed to update User Rating:", error);
+    }
+  };
+
+  const handleRatingSubmit = async () => {
+    if (!selectedItem || rating < 1 || rating > 5) {
+      alert("Please select a valid rating (1-5).");
+      return;
+    }
+
+    try {
+      await api.put(`/barang/${selectedItem.barang.id_barang}/updateRating`, {
+        rating: rating,
+      });
+
+      // Update local orders state to reflect the new rating
+      setOrders((prevOrders) =>
+        prevOrders.map((tx) => ({
+          ...tx,
+          detil_transaksi: tx.detil_transaksi.map((dt) =>
+            dt.barang.id_barang === selectedItem.barang.id_barang
+              ? { ...dt, rating: rating }
+              : dt
+          ),
+        }))
+      );
+
+      await updateRatingAllUser();
+      closeRatingModal(); // Close modal after successful submission
+    } catch (error) {
+      console.error(
+        "Failed to submit rating:",
+        error.response?.data || error.message
+      );
+      alert("Failed to submit rating. Please try again.");
+    }
+  };
+
   // base filter by delivery/pickup
-  let filtered = orders.filter(tx => tx.metode_pengiriman === filter);
+  let filtered = orders.filter((tx) => tx.metode_pengiriman === filter);
 
   // search by product name
   if (searchTerm) {
-    filtered = filtered.filter(tx => {
-      const nama =
-        tx.detil_transaksi?.[0]?.barang?.nama_barang ?? "";
+    filtered = filtered.filter((tx) => {
+      const nama = tx.detil_transaksi?.[0]?.barang?.nama_barang ?? "";
       return nama.toLowerCase().includes(searchTerm.toLowerCase());
     });
   }
 
-  // inclusive date‐range filter
+  // inclusive date-range filter
   if (fromDate && toDate) {
-    const from = new Date(fromDate)
-    from.setHours(0,0,0,0)
-    const to = new Date(toDate)
-    to.setHours(23,59,59,999)
+    const from = new Date(fromDate);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
 
-    filtered = filtered.filter(tx => {
-      const d = new Date(tx.tanggal_transaksi)
-      d.setHours(0,0,0,0)
-
-      return d >= from && d <= to
-    })
+    filtered = filtered.filter((tx) => {
+      const d = new Date(tx.tanggal_transaksi);
+      d.setHours(0, 0, 0, 0);
+      return d >= from && d <= to;
+    });
   }
 
   const handleResetDates = () => {
@@ -121,7 +185,6 @@ const HistoryPembeli = () => {
       <div className="py-3 navbar-pembeli">
         <div className="container-fluid">
           <div className="row align-items-center justify-content-between">
-
             {/* Logo */}
             <div className="col-auto logo-container">
               <Link
@@ -133,9 +196,7 @@ const HistoryPembeli = () => {
                   alt="ReuseMart"
                   className="logo-img"
                 />
-                <span className="ms-2 fs-4 fw-bold logo-text">
-                  ReuseMart
-                </span>
+                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
               </Link>
             </div>
 
@@ -146,7 +207,7 @@ const HistoryPembeli = () => {
                 placeholder="Cari produk..."
                 className="search-input"
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
@@ -164,9 +225,7 @@ const HistoryPembeli = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
+                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""}`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -174,7 +233,7 @@ const HistoryPembeli = () => {
                       ))}
                     </div>
                     <div className="mega-menu-content">
-                      {groupedCats[activeCatIdx]?.sub_kategori.map(sub => (
+                      {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
                         <Link
                           key={sub.id}
                           to={`/kategori/${sub.id}`}
@@ -240,6 +299,54 @@ const HistoryPembeli = () => {
       {/* Profile Modal */}
       <ProfileModal show={showProfileModal} onHide={closeProfileModal} />
 
+      {/* Rating Modal */}
+      <Modal show={showRatingModal} onHide={closeRatingModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Beri Penilaian</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>
+                Berikan rating untuk{" "}
+                <strong>{selectedItem?.barang?.nama_barang || "produk"}</strong>
+              </Form.Label>
+              <div className="d-flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FiStar
+                    key={star}
+                    size={30}
+                    fill={star <= rating ? "gold" : "none"}
+                    stroke={star <= rating ? "gold" : "black"}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setRating(star)}
+                  />
+                ))}
+              </div>
+            </Form.Group>
+          </Form>
+          <Row>
+            <Col>
+              <Button
+                variant="secondary"
+                onClick={closeRatingModal}
+                className="me-2"
+              >
+                Batal
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleRatingSubmit}
+                disabled={rating < 1 || rating > 5}
+                
+              >
+                Kirim
+              </Button>
+            </Col>
+          </Row>
+        </Modal.Body>
+      </Modal>
+
       {/* ========== PAGE CONTENT ========== */}
       <Container className="mt-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -250,7 +357,7 @@ const HistoryPembeli = () => {
               style={{ cursor: "pointer" }}
               onClick={() => setShowDateModal(true)}
             />
-            {["Delivery", "Pick Up"].map(m => (
+            {["Delivery", "Pick Up"].map((m) => (
               <span
                 key={m}
                 className={`filter-option ${filter === m ? "active" : ""}`}
@@ -264,25 +371,24 @@ const HistoryPembeli = () => {
 
         {filtered.length === 0 && (
           <p className="text-center text-muted">
-            Tidak ada riwayat untuk “{filter}” 
-            {fromDate && toDate
-              ? ` dari ${fromDate} sampai ${toDate}`
-              : ""}.
+            Tidak ada riwayat untuk “{filter}”
+            {fromDate && toDate ? ` dari ${fromDate} sampai ${toDate}` : ""}.
           </p>
         )}
 
         <Row>
-          {filtered.map(tx => {
-            const dt       = tx.detil_transaksi?.[0] || {};
-            const br       = dt.barang || {};
-            const imgPath  = br.foto?.[0]?.path || "defaults/no-image.png";
-            const seller   = br.penitipan?.user;
+          {filtered.map((tx) => {
+            const dt = tx.detil_transaksi?.[0] || {};
+            const br = dt.barang || {};
+            const imgPath = br.foto?.[0]?.path || "defaults/no-image.png";
+            const seller = br.penitipan?.user;
             const sellerName = seller
               ? `${seller.first_name} ${seller.last_name}`
               : "—";
-            const status   = tx.pengiriman?.status_pengiriman ||
-                             tx.pengambilan?.status_pengambilan ||
-                             "—";
+            const status =
+              tx.pengiriman?.status_pengiriman ||
+              tx.pengambilan?.status_pengambilan ||
+              "—";
 
             return (
               <Col md={6} key={tx.id_transaksi} className="mb-4">
@@ -313,8 +419,7 @@ const HistoryPembeli = () => {
                   </Card.Body>
                   <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                     <small className="tanggal-text">
-                      {new Date(tx.tanggal_transaksi)
-                        .toLocaleDateString("id-ID")}
+                      {new Date(tx.tanggal_transaksi).toLocaleDateString("id-ID")}
                     </small>
                     <div className="d-flex align-items-center">
                       <Button
@@ -325,8 +430,14 @@ const HistoryPembeli = () => {
                       >
                         Lihat Detail
                       </Button>
-                      <Button size="sm" variant="success" className="me-3">
-                        Nilai
+                      <Button
+                        size="sm"
+                        variant={dt.rating > 0 ? "secondary" : "success"}
+                        className="me-3"
+                        onClick={() => openRatingModal(dt)}
+                        disabled={dt.barang.rating > 0}
+                      >
+                        {dt.barang.rating > 0 ? `Rated: ${dt.barang.rating}` : "Beri Rating"}
                       </Button>
                       <div className="fw-bold">
                         Total: Rp{(tx.total || 0).toLocaleString("id-ID")}
@@ -340,15 +451,19 @@ const HistoryPembeli = () => {
         </Row>
       </Container>
 
-      {/* Date‐Range Modal */}
-      <Modal show={showDateModal} onHide={() => setShowDateModal(false)} centered>
+      {/* Date-Range Modal */}
+      <Modal
+        show={showDateModal}
+        onHide={() => setShowDateModal(false)}
+        centered
+      >
         <Modal.Body>
           <Form.Group className="mb-3">
             <Form.Label className="fw-bold">Dari</Form.Label>
             <Form.Control
               type="date"
               value={fromDate}
-              onChange={e => setFromDate(e.target.value)}
+              onChange={(e) => setFromDate(e.target.value)}
             />
           </Form.Group>
           <Form.Group>
@@ -356,7 +471,7 @@ const HistoryPembeli = () => {
             <Form.Control
               type="date"
               value={toDate}
-              onChange={e => setToDate(e.target.value)}
+              onChange={(e) => setToDate(e.target.value)}
             />
           </Form.Group>
         </Modal.Body>
@@ -381,9 +496,7 @@ const HistoryPembeli = () => {
               <div className="d-flex justify-content-between mb-4">
                 <h5>
                   {selectedTx.detil_transaksi?.[0]?.barang?.penitipan?.user
-                    ? `${selectedTx.detil_transaksi[0].barang.penitipan.user.first_name} ${
-                        selectedTx.detil_transaksi[0].barang.penitipan.user.last_name
-                      }`
+                    ? `${selectedTx.detil_transaksi[0].barang.penitipan.user.first_name} ${selectedTx.detil_transaksi[0].barang.penitipan.user.last_name}`
                     : "—"}
                 </h5>
                 <div className="status-area text-success">
@@ -399,11 +512,13 @@ const HistoryPembeli = () => {
                     <th>Foto</th>
                     <th>Nama Produk</th>
                     <th className="text-end">Harga</th>
+                    <th className="text-end">Rating</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedTx.detil_transaksi?.map(dt => {
-                    const fp = dt.barang.foto?.[0]?.path || "defaults/no-image.png";
+                  {selectedTx.detil_transaksi?.map((dt) => {
+                    const fp =
+                      dt.barang.foto?.[0]?.path || "defaults/no-image.png";
                     return (
                       <tr key={dt.id_dt}>
                         <td>
@@ -416,6 +531,22 @@ const HistoryPembeli = () => {
                         <td>{dt.barang.nama_barang}</td>
                         <td className="text-end">
                           Rp{(dt.barang.harga || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="text-end">
+                          {dt.rating > 0 ? (
+                            <span>
+                              {dt.rating} <FiStar fill="gold" stroke="gold" />
+                            </span>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() => openRatingModal(dt)}
+                              disabled={dt.rating > 0}
+                            >
+                              Nilai
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -474,7 +605,9 @@ const HistoryPembeli = () => {
                     </td>
                   </tr>
                   <tr className="total-row">
-                    <td><strong>Total</strong></td>
+                    <td>
+                      <strong>Total</strong>
+                    </td>
                     <td className="text-end">
                       <strong>
                         Rp{(selectedTx.total || 0).toLocaleString("id-ID")}
