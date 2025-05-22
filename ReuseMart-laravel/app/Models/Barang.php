@@ -15,6 +15,7 @@ class Barang extends Model
     protected $fillable = [
         'id_kategori',
         'id_pegawai',
+        'id_penitipan',
         'nama_barang',
         'kategori',
         'deskripsi',
@@ -47,9 +48,9 @@ class Barang extends Model
         return $this->hasOne(Donasi::class, 'id_barang');
     }
 
-    public function Penitipan()
+    public function penitipan()
     {
-        return $this->hasOne(Penitipan::class, 'id_barang');
+        return $this->belongsTo(Penitipan::class, 'id_penitipan');
     }
 
     public function Forum()

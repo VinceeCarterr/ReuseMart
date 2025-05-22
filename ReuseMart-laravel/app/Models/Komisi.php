@@ -10,6 +10,7 @@ class Komisi extends Model
     use HasFactory;
     protected $table = 'komisi';
     protected $primaryKey = 'id_komisi';
+    public $timestamps = false;
     protected $fillable = [
         'id_dt',
         'presentase_perusahaan',

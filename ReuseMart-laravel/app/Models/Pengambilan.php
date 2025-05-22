@@ -10,6 +10,7 @@ class Pengambilan extends Model
     use HasFactory;
     protected $table = 'pengambilan';
     protected $primaryKey = 'id_pengambilan';
+    public $timestamps = false;
     protected $fillable = [
         'id_transaksi',
         'tanggal_pengambilan',
