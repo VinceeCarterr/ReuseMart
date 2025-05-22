@@ -13,12 +13,12 @@ class Penitipan extends Model
     public $timestamps = false;
     protected $fillable = [
         'id_user',
-        'id_barang',
+        'jumlah_barang',
     ];
 
     public function barang()
     {
-        return $this->belongsTo(Barang::class, 'id_barang');
+        return $this->hasMany(Barang::class, 'id_penitipan', 'id_penitipan');
     }
 
     public function user()

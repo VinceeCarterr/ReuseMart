@@ -83,7 +83,7 @@ const Penjadwalan = () => {
     let pctHunter = 0;
     if (byHunter) {
       pctHunter = 0.05;
-      pctCompany = pctCompany-0.05;
+      pctCompany = pctCompany - 0.05;
     }
 
     const komisiPerusahaan = Math.round(pctCompany * total);
@@ -755,60 +755,77 @@ const Penjadwalan = () => {
                   {selectedTransaksi.detil_transaksi?.[0]?.komisi && (
                     <>
                       {(() => {
-  const det = selectedTransaksi.detil_transaksi[0];
-  const kom = det.komisi || {};
-  const total = selectedTransaksi.total || 0;
-  const komHun = kom.komisi_hunter || 0;
-  const komPer = kom.komisi_perusahaan || 0;
+                        const det = selectedTransaksi.detil_transaksi[0];
+                        const kom = det.komisi || {};
+                        const total = selectedTransaksi.total || 0;
+                        const komHun = kom.komisi_hunter || 0;
+                        const komPer = kom.komisi_perusahaan || 0;
 
-  // compute soldDays & bonus
-  const { tanggal_titip, status_periode } = det.barang;
-  const soldDays = Math.floor(
-    (new Date(selectedTransaksi.tanggal_transaksi) - new Date(tanggal_titip)) /
-      (1000 * 60 * 60 * 24)
-  );
-  const bonus =
-    status_periode === "Periode 1" && soldDays < 7
-      ? Math.round(0.1 * komPer)
-      : 0;
+                        // compute soldDays & bonus
+                        const { tanggal_titip, status_periode } = det.barang;
+                        const soldDays = Math.floor(
+                          (new Date(selectedTransaksi.tanggal_transaksi) -
+                            new Date(tanggal_titip)) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                        const bonus =
+                          status_periode === "Periode 1" && soldDays < 7
+                            ? Math.round(0.1 * komPer)
+                            : 0;
 
-  const penghasilan = total - komHun - komPer + bonus;
+                        const penghasilan = total - komHun - komPer + bonus;
 
-  return (
-    <>
-      {/* Komisi Hunter */}
-      <tr style={{ borderTop: "1px solid #ccc", paddingTop: 10 }}>
-        <td style={{ paddingTop: 20 }}><strong>Komisi Hunter</strong></td>
-        <td className="text-end" style={{ paddingTop: 20 }}>
-          Rp{komHun.toLocaleString("id-ID")}
-        </td>
-      </tr>
-      {/* Komisi Reuse Mart */}
-      <tr>
-        <td><strong>Komisi Reuse Mart</strong></td>
-        <td className="text-end">
-          Rp{komPer.toLocaleString("id-ID")}
-        </td>
-      </tr>
-      {/* BONUS (only if >0) */}
-      {bonus > 0 && (
-        <tr>
-          <td><strong>Bonus Penitip (10%)</strong></td>
-          <td className="text-end">
-            Rp{bonus.toLocaleString("id-ID")}
-          </td>
-        </tr>
-      )}
-      {/* Penghasilan Penitip */}
-      <tr>
-        <td><strong>Penghasilan Penitip</strong></td>
-        <td className="text-end">
-          Rp{penghasilan.toLocaleString("id-ID")}
-        </td>
-      </tr>
-    </>
-  );
-})()}
+                        return (
+                          <>
+                            {/* Komisi Hunter */}
+                            <tr
+                              style={{
+                                borderTop: "1px solid #ccc",
+                                paddingTop: 10,
+                              }}
+                            >
+                              <td style={{ paddingTop: 20 }}>
+                                <strong>Komisi Hunter</strong>
+                              </td>
+                              <td
+                                className="text-end"
+                                style={{ paddingTop: 20 }}
+                              >
+                                Rp{komHun.toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                            {/* Komisi Reuse Mart */}
+                            <tr>
+                              <td>
+                                <strong>Komisi Reuse Mart</strong>
+                              </td>
+                              <td className="text-end">
+                                Rp{komPer.toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                            {/* BONUS (only if >0) */}
+                            {bonus > 0 && (
+                              <tr>
+                                <td>
+                                  <strong>Bonus Penitip (10%)</strong>
+                                </td>
+                                <td className="text-end">
+                                  Rp{bonus.toLocaleString("id-ID")}
+                                </td>
+                              </tr>
+                            )}
+                            {/* Penghasilan Penitip */}
+                            <tr>
+                              <td>
+                                <strong>Penghasilan Penitip</strong>
+                              </td>
+                              <td className="text-end">
+                                Rp{penghasilan.toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                          </>
+                        );
+                      })()}
                     </>
                   )}
                 </tbody>
