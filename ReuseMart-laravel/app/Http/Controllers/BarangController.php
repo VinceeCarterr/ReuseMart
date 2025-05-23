@@ -103,15 +103,17 @@ class BarangController extends Controller
     public function getUserRatings()
     {
         try {
-            $ratings = Barang::with(['penitipan.user' => function ($query) {
-                $query->select('id_user', 'rating');
+            $ratings = Barang::with(['penitipan' => function ($query) {
+                $query->with(['user' => function ($userQuery) {
+                    $userQuery->select('id_user', 'rating');
+                }]);
             }])
             ->whereIn('status', ['Available'])
             ->whereIn('status_periode', ['Periode 1', 'Periode 2'])
             ->get()
             ->map(function ($barang) {
                 return [
-                    'id_barang' => $barang->id_barang,
+                    'id_penitipan' => $barang->id_penitipan,
                     'rating' => $barang->penitipan && $barang->penitipan->user ? $barang->penitipan->user->rating : null
                 ];
             });

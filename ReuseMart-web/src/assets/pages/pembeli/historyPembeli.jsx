@@ -105,6 +105,7 @@ const HistoryPembeli = () => {
     setShowRatingModal(false);
     setSelectedItem(null);
     setRating(0);
+    
   };
 
   const updateRatingAllUser = async () => {
@@ -139,6 +140,7 @@ const HistoryPembeli = () => {
       );
 
       await updateRatingAllUser();
+      
       closeRatingModal(); // Close modal after successful submission
     } catch (error) {
       console.error(
@@ -432,12 +434,12 @@ const HistoryPembeli = () => {
                       </Button>
                       <Button
                         size="sm"
-                        variant={dt.rating > 0 ? "secondary" : "success"}
+                        variant="success"
                         className="me-3"
                         onClick={() => openRatingModal(dt)}
-                        disabled={dt.barang.rating > 0}
+                        disabled={dt.barang.rating > 0 || dt.rating > 0}
                       >
-                        {dt.barang.rating > 0 ? `Rated: ${dt.barang.rating}` : "Beri Rating"}
+                        {dt.barang.rating > 0 ? `Rated: ${dt.barang.rating}` : "Beri Rating" }
                       </Button>
                       <div className="fw-bold">
                         Total: Rp{(tx.total || 0).toLocaleString("id-ID")}
@@ -540,6 +542,7 @@ const HistoryPembeli = () => {
                           ) : (
                             <Button
                               size="sm"
+                              
                               variant="success"
                               onClick={() => openRatingModal(dt)}
                               disabled={dt.rating > 0}

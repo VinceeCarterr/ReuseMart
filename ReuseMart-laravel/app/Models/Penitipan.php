@@ -18,7 +18,7 @@ class Penitipan extends Model
 
     public function barang()
     {
-        return $this->belongsTo(Barang::class, 'id_barang');
+        return $this->hasMany(Barang::class, 'id_barang');
     }
 
     public function user()

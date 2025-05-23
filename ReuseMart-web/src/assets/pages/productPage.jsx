@@ -64,30 +64,31 @@ const ProductPage = () => {
     }, [id]);
 
     useEffect(() => {
-        const fetchBarang = async () => {
+        const fetchBarangAndRating = async () => {
             try {
-                const response = await api.get(`/barang/${id}`);
-                setBarang(response.data);
-            } catch (error) {
-                console.error("Gagal mengambil data produk:", error);
-            }
-        };
-        fetchBarang();
-    }, [id]);
+                const [barangResponse, penitipanResponse, userResponse] = await Promise.all([
+                    api.get(`/barang/${id}`),
+                    api.get('/penitipan'),
+                    api.get('/user/public')
+                ]);
 
-    useEffect(() => {
-        const fetchUserRating = async () => {
-            try {
-                const response = await api.get('/user-ratings');
-                const ratingData = response.data.find(r => r.id_barang === parseInt(id));
-                setUserRating(ratingData ? ratingData.rating : null);
+                const barangData = barangResponse.data;
+                const penitipan = penitipanResponse.data.find(p => p.id_penitipan === barangData.id_penitipan);
+                const user = penitipan ? userResponse.data.find(u => u.id_user === penitipan.id_user) : null;
+
+                setBarang({
+                    ...barangData,
+                    rating: user ? user.rating : null // Attach user rating to barang
+                });
+                setUserRating(user ? user.rating : null);
             } catch (error) {
-                console.error("Gagal mengambil rating pengguna:", error);
+                console.error("Gagal mengambil data produk atau rating:", error);
+                setBarang(null);
                 setUserRating(null);
             }
         };
 
-        fetchUserRating();
+        fetchBarangAndRating();
     }, [id]);
 
     useEffect(() => {
@@ -254,7 +255,7 @@ const ProductPage = () => {
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
                                     {/* Updated to show user rating instead of barang.rating */}
-                                    Rating Penitip: {userRating !== null ? userRating : 'N/A'}
+                                    Rating Penitip: {userRating !== 0 ? userRating : 'Belum memiliki rating'}
                                 </p>
                             </Col>
                             <Col md={6} style={{ textAlign: 'right' }}>

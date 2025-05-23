@@ -11,29 +11,31 @@ import AuthModal from "../components/authModal.jsx";
 const ProductCard = ({ barang }) => (
     <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
-        <img 
-            src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
-            alt="Gambar 1" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-        />
+            <img 
+                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+                alt="Gambar 1" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
         </div>
         <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
-        <div style={{ flexGrow: 1 }}>
-            <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
-            <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>
-            {barang.harga?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
-            </Card.Title>
-            <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
-            <Card.Text style={{ fontSize: '0.9rem' }}>
-            Rating: {barang.rating ? barang.rating : 'N/A'}
-            </Card.Text>
-        </div>
+            <div style={{ flexGrow: 1 }}>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
+                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>
+                    {barang.harga?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
+                </Card.Title>
+                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
+                <Card.Text style={{ fontSize: '0.9rem' }}>
+                    Rating Penitip: {barang.rating ? `${barang.rating}` : 'Belum memiliki rating'}
+                </Card.Text>
+            </div>
         </Card.Body>
     </Card>
 );
 
 const LandingPage = () => {
     const [barangList, setBarangList] = useState([]);
+    const [penitipanList, setPenitipanList] = useState([]);
+    const [userList, setUserList] = useState([]);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [authMode, setAuthMode] = useState("login");
     const [searchQuery, setSearchQuery] = useState("");
@@ -41,19 +43,30 @@ const LandingPage = () => {
 
     const fetchBarang = async () => {
         try {
-            const [ { data: barangData }, { data: ratingsData } ] = await Promise.all([
+            const [tempBarang, tempPenitipan, tempUser] = await Promise.all([
                 api.get('/barang'),
-                api.get('/user-ratings'),
+                api.get('/penitipan'),
+                api.get('/user/public')
             ]);
 
-            const combined = barangData.map(item => {
-                const userRating = ratingsData.find(r => r.id_barang === item.id_barang)?.rating ?? null;
-                return { ...item, rating: userRating };
+            // Map barang with corresponding penitipan rating
+            const barangWithRatings = tempBarang.data.map(barang => {
+                const penitipan = tempPenitipan.data.find(p => p.id_penitipan === barang.id_penitipan);
+                const user  = penitipan ? tempUser.data.find(u=> u.id_user === penitipan.id_user) : null;
+                return {
+                    ...barang,
+                    rating: user ? user.rating : null // Assuming rating is in penitipan
+                };
             });
-            setBarangList(combined);
+
+            setBarangList(barangWithRatings);
+            setPenitipanList(tempPenitipan.data);
+            setUserList(tempUser.data);
         } catch (err) {
-            console.error('Failed to fetch barang or ratings:', err);
+            console.error('Failed to fetch data:', err);
             setBarangList([]);
+            setPenitipanList([]);
+            setUserList([]);
         }
     };
 
@@ -102,12 +115,12 @@ const LandingPage = () => {
                             {filteredList
                                 .filter(barang => barang.status === 'Available' && barang.status_periode === "Periode 2")
                                 .map((barang, index) => (
-                                <div key={index} className="highlight-card me-3 flex-shrink-0">
-                                    <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
-                                        <ProductCard barang={barang} />
-                                    </Link>
-                                </div>
-                            ))}
+                                    <div key={index} className="highlight-card me-3 flex-shrink-0">
+                                        <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
+                                            <ProductCard barang={barang} />
+                                        </Link>
+                                    </div>
+                                ))}
                         </div>
                     </Container>
                 </Row>

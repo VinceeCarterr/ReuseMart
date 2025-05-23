@@ -49,7 +49,7 @@ class Barang extends Model
 
     public function Penitipan()
     {
-        return $this->hasOne(Penitipan::class, 'id_barang');
+        return $this->belongsTo(Penitipan::class, 'id_penitipan', 'id_penitipan');
     }
 
     public function Forum()
