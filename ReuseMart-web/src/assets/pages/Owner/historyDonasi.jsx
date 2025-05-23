@@ -62,7 +62,7 @@ const HistoryDonasi = () => {
             const barang = await api.get("/barang");
             const user = await api.get("/user/public");
             const reqDonasi = await api.get("/reqDonasi/all");
-            const penitipan = await api.get("/penitipan");
+            const penitipan = await api.get("/penitipan/owner");
 
             console.log("reqDonasiList:", reqDonasi.data); // Debug reqDonasi data
 
@@ -84,8 +84,10 @@ const HistoryDonasi = () => {
     const getUserById = (id) => userList.find(user => user.id_user === id);
     const getReqDonasiById = (id) => reqDonasiList.find(req => req.id_reqdonasi === id);
     const getPenjualByBarangId = (id) => {
-        const penitipan = penitipanList.find(p => p.id_barang === id);
-        return penitipan ? getUserById(penitipan.id_user) : null;
+        const barang = barangList.find(b => b.id_barang === id);
+        if (!barang || !barang.id_penitipan) return null;
+        const penitipan = penitipanList.find(p => p.id_penitipan === barang.id_penitipan);
+        return penitipan ? userList.find(u => u.id_user === penitipan.id_user) : null;
     };
 
     const groupedDonasi = donasiList.reduce((acc, donasi) => {

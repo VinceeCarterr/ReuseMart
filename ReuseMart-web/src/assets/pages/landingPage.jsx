@@ -45,7 +45,7 @@ const LandingPage = () => {
         try {
             const [tempBarang, tempPenitipan, tempUser] = await Promise.all([
                 api.get('/barang'),
-                api.get('/penitipan'),
+                api.get('/penitipan/public'),
                 api.get('/user/public')
             ]);
 

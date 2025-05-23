@@ -32,7 +32,7 @@ Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments
 Route::get('/foto_barang', [Foto_BarangController::class, 'index']);
 Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBarangId']);
 Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
-Route::get('/penitipan', [PenitipanController::class, 'index']);
+Route::get('/penitipan/public', [PenitipanController::class, 'index']);
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -111,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //mendonasikan barang
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
+        Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
@@ -129,6 +130,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
+        Route::put('/barang/{id}', [BarangController::class, 'update']);
+        Route::get('/barangGudang', [BarangController::class, 'index']);
+        Route::get('/alamat/gudang', [AlamatController::class, 'index']);
+        Route::post('/foto/addFoto', [Foto_BarangController::class, 'store']);
+        Route::post('/forum/addForum', [ForumController::class, 'store']);
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
         Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
         Route::get('/penitipan', [PenitipanController::class, 'index']);

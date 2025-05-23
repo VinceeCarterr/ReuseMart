@@ -10,6 +10,7 @@ class Forum extends Model
     use HasFactory;
     protected $table = 'forum';
     protected $primaryKey = 'id_forum';
+    public $timestamps = false;
     protected $fillable = [
         'id_barang',
     ];

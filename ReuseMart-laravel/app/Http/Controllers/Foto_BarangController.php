@@ -23,14 +23,26 @@ class Foto_BarangController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $foto_barang = Foto_Barang::create($request->all());
-            return response()->json($foto_barang, 201);
-        } catch (Exception $e) {
-            Log::error('Error storing photo: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to store photo'], 500);
-        }
+        $request->validate([
+            'file' => 'required|image|max:2048',
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+
+        $file = $request->file('file');
+
+        $path = $file->store('Foto_Barang', 'public');
+
+        $foto = new Foto_Barang();
+        $foto->id_barang = $request->id_barang;
+        $foto->path = $path; 
+        $foto->save();
+
+        return response()->json([
+            'message' => 'Foto berhasil diunggah',
+            'data' => $foto,
+        ], 201);
     }
+
 
     public function show($id)
     {
