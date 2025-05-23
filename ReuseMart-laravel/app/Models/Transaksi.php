@@ -36,7 +36,7 @@ class Transaksi extends Model
 
     public function detilTransaksi()
     {
-        return $this->hasMany(DetilTransaksi::class, 'id_transaksi');
+        return $this->hasMany(DetilTransaksi::class, 'id_transaksi', 'id_transaksi');
     }
 
     public function pengiriman()

@@ -122,4 +122,49 @@ class BarangController extends Controller
             return response()->json(['error' => 'Failed to fetch user ratings'], 500);
         }
     }
+
+    public function akanAmbilAll()
+    {
+        $items = Barang::with([
+                'foto', 
+                'kategori', 
+                'Penitipan.user'  // eager-load the user who titip
+            ])
+            ->where('status', 'Akan Ambil')
+            ->get();
+
+        // if you want to follow your other APIs returning { data: [...] }
+        return response()->json(['data' => $items]);
+    }
+
+    public function markAsTaken(Request $request, $id)
+    {
+        $barang = Barang::findOrFail($id);
+
+        try {
+            $barang->update([
+                'status'        => 'Sudah Ambil',
+                'tanggal_titip' => '1111-11-11 11:11:11',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("markAsTaken failed for barang #{$id}: ".$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $barang,
+        ]);
+    }
+
+    public function patchStatusBarang(Request $req, $id)
+    {
+        $b = Barang::findOrFail($id);
+        $b->status = $req->input('status');
+        $b->save();
+        return response()->json($b, 200);
+    }
 }

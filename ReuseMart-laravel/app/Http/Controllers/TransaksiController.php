@@ -433,4 +433,46 @@ class TransaksiController extends Controller
             return response()->json(['error' => 'Gagal menghapus barang dari keranjang'], 500);
         }
     }
+
+    public function penjadwalan(Request $request)
+    {
+        $request->validate([
+            'metode_pengiriman' => 'nullable|in:Delivery,Pick Up',
+            'search'            => 'nullable|string',
+        ]);
+
+        $query = Transaksi::with([
+            'user',                                 
+            'pembayaran',                           
+            'pengiriman.pegawai',                   
+            'pengambilan',       
+            'detilTransaksi.Komisi',                   
+            'detilTransaksi.Barang.foto',
+            'detilTransaksi.Barang.penitipan.user',
+        ])
+        ->whereHas('pembayaran', fn($q) =>
+            $q->where('status_pembayaran', 'Berhasil')
+        );
+
+        if ($request->filled('metode_pengiriman')) {
+            $query->where('metode_pengiriman', $request->metode_pengiriman);
+        }
+
+        if ($request->filled('search')) {
+            $term = $request->search;
+            $query->where(function($q) use($term) {
+                $q->where('id_transaksi', 'like', "%{$term}%")
+                ->orWhereHas('user', fn($u) =>
+                    $u->where('first_name','like',"%{$term}%")
+                        ->orWhere('last_name', 'like',"%{$term}%")
+                );
+            });
+        }
+
+        $schedules = $query
+            ->orderBy('tanggal_transaksi','desc')
+            ->get();
+
+    return response()->json($schedules);
+    }
 }

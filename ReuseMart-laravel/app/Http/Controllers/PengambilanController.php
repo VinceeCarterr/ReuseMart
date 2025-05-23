@@ -33,28 +33,42 @@ class PengambilanController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'id_transaksi'        => 'required|exists:transaksi,id_transaksi|unique:pengambilan,id_transaksi',
+            'tanggal_pengambilan' => 'required|date',
+            'status_pengambilan'  => 'required|in:Belum diambil,Sudah diambil,Tidak diambil',
+        ]);
+
         try {
-            $pengambilan = new Pengambilan();
-            $pengambilan->fill($request->all());
-            $pengambilan->save();
-            return response()->json($pengambilan, 201);
+            $pengambilan = Pengambilan::create($request->only([
+                'id_transaksi',
+                'tanggal_pengambilan',
+                'status_pengambilan',
+            ]));
+
+            return response()->json([
+                'message'     => 'Pengambilan berhasil dijadwalkan',
+                'pengambilan' => $pengambilan,
+            ], 201);
         } catch (Exception $e) {
-            Log::error('Error storing pengambilan data: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to store pengambilan data'], 500);
+            Log::error('Error scheduling pengambilan: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Gagal menjadwalkan pengambilan'
+            ], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
-        try {
-            $pengambilan = Pengambilan::findOrFail($id);
-            $pengambilan->fill($request->all());
-            $pengambilan->save();
-            return response()->json($pengambilan);
-        } catch (Exception $e) {
-            Log::error('Error updating pengambilan data: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update pengambilan data'], 500);
-        }
+        $request->validate([
+            'status_pengambilan' => 'required|string'
+        ]);
+
+        $ambil = Pengambilan::findOrFail($id);
+        $ambil->status_pengambilan = $request->status_pengambilan;
+        $ambil->save();
+
+        return response()->json($ambil);
     }
 
     public function destroy($id)
