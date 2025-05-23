@@ -12,6 +12,9 @@ use App\Http\Controllers\ForumController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\Foto_BarangController;
 use App\Http\Controllers\PenitipanController;
+use App\Http\Controllers\PengirimanController;
+use App\Http\Controllers\PengambilanController;
+use App\Http\Controllers\KomisiController;
 
 use Illuminate\Http\Request;
 
@@ -128,7 +131,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
         Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
+        Route::get('/penitipan', [PenitipanController::class, 'index']);
         Route::get('/user/gudang', [UserController::class, 'gudangList']);
+        Route::get('akan-ambil', [BarangController::class, 'akanAmbilAll']);
+        Route::patch('/barang/{id}/ambil', [BarangController::class, 'markAsTaken']);
+        Route::get('/transaksi/penjadwalan', [TransaksiController::class, 'penjadwalan']);
+        Route::post('/pengiriman',   [PengirimanController::class,   'store']);
+        Route::post('/pengambilan',  [PengambilanController::class,  'store']);
+        Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
+        Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
+        Route::post('/komisi', [KomisiController::class, 'store']);
+        Route::get('/komisi', [KomisiController::class, 'index']);
     });
 
+    Route::middleware('role:admin,gudang')->group(function () {
+        Route::get('/pegawai', [PegawaiController::class, 'index']);
+    });
 });

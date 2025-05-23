@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengiriman;
+use App\Models\Transaksi;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -31,14 +32,32 @@ class PengirimanController extends Controller
         }
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
+        $request->validate([
+            'id_transaksi'     => 'required|exists:transaksi,id_transaksi',
+            'id_pegawai'       => 'required|exists:pegawai,id_pegawai',
+            'tanggal_pengiriman'=> 'required|date',
+            'status_pengiriman'=> 'required|string',
+        ]);
+
         try {
-            $pengiriman = Pengiriman::create($request->all());
-            return response()->json($pengiriman, 201);
+            $pengiriman = Pengiriman::create($request->only([
+                'id_transaksi',
+                'id_pegawai',
+                'tanggal_pengiriman',
+                'status_pengiriman',
+            ]));
+
+            return response()->json([
+                'message'    => 'Pengiriman berhasil dijadwalkan',
+                'pengiriman' => $pengiriman,
+            ], 201);
         } catch (Exception $e) {
-            Log::error('Error creating pengiriman: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create pengiriman'], 500);
+            Log::error('Error scheduling pengiriman: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Gagal menjadwalkan pengiriman'
+            ], 500);
         }
     }
 

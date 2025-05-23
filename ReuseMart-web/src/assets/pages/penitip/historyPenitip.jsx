@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Row,
@@ -9,6 +9,7 @@ import {
   Modal,
   Table,
   Form,
+  Carousel,
   Dropdown,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
@@ -59,12 +60,12 @@ const HistoryPenitip = () => {
   const [showDonasiConfirm, setShowDonasiConfirm] = useState(false);
   const [actionItem, setActionItem] = useState(null);
 
-
   const statuses = ["Available", "Sold", "Expired", "Donated"];
 
   // load kategori for mega-menu
   useEffect(() => {
-    api.get("/kategori")
+    api
+      .get("/kategori")
       .then(({ data }) => setGroupedCats(data))
       .catch(console.error);
   }, []);
@@ -82,9 +83,9 @@ const HistoryPenitip = () => {
       ...(filterStatus === "Expired"
         ? { status_periode: "Expired" }
         : { status: filterStatus }),
-      ...(search    && { search }),
+      ...(search && { search }),
       ...(startDate && { start_date: startDate }),
-      ...(endDate   && { end_date: endDate }),
+      ...(endDate && { end_date: endDate }),
     };
 
     try {
@@ -92,11 +93,16 @@ const HistoryPenitip = () => {
       let data = response.data.data;
 
       if (filterStatus === "Available") {
-        data = data.filter(item => item.status_periode !== "Expired");
-     }
+        data = data.filter((item) => item.status_periode !== "Expired");
+      }
 
       if (filterStatus === "Expired") {
-        data = data.filter(item => item.status !== "Donated");
+        data = data.filter(
+          (item) =>
+            item.status_periode === "Expired" &&
+            item.status !== "Sold" &&
+            item.status !== "Donated"
+        );
       }
 
       setItems(data);
@@ -109,24 +115,27 @@ const HistoryPenitip = () => {
   };
 
   useEffect(() => {
-    items.forEach(item => {
-      const due = new Date(item.tanggal_titip).getTime() + 30*24*3600*1000;
-      if (now >= due
-        && item.status_periode !== "Expired"
-        && !expiredPatched.current.has(item.id_barang)
+    items.forEach((item) => {
+      const due =
+        new Date(item.tanggal_titip).getTime() + 30 * 24 * 3600 * 1000;
+      if (
+        now >= due &&
+        item.status_periode !== "Expired" &&
+        !expiredPatched.current.has(item.id_barang)
       ) {
         expiredPatched.current.add(item.id_barang);
-        api.patch(`/transaksi/historyPenitip/${item.id_barang}`, {
-          status_periode: "Expired"
-        })
-        .then(() => fetchHistory())
-        .catch(console.error);
+        api
+          .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
+            status_periode: "Expired",
+          })
+          .then(() => fetchHistory())
+          .catch(console.error);
       }
     });
   }, [now, items]);
 
   // open / close confirm modal
-  const openConfirm = item => {
+  const openConfirm = (item) => {
     setConfirmItem(item);
     setShowConfirm(true);
   };
@@ -143,32 +152,42 @@ const HistoryPenitip = () => {
     const today = new Date().toISOString().split("T")[0];
 
     try {
-        await api.patch(
-        `/transaksi/historyPenitip/${confirmItem.id_barang}`,
-        {
-            tanggal_titip: today,
-            status_periode: "Periode 2"
-        }
-        );
-        closeConfirm();
-        fetchHistory();
+      await api.patch(`/transaksi/historyPenitip/${confirmItem.id_barang}`, {
+        tanggal_titip: today,
+        status_periode: "Periode 2",
+      });
+      closeConfirm();
+      fetchHistory();
     } catch (err) {
-        console.error("Perpanjang error:", err.response ?? err);
+      console.error("Perpanjang error:", err.response ?? err);
     }
   };
 
-  const openAmbilConfirm = item => { setActionItem(item); setShowAmbilConfirm(true); };
-  const closeAmbilConfirm = () => { setActionItem(null); setShowAmbilConfirm(false); };
-  const openDonasiConfirm = item => { setActionItem(item); setShowDonasiConfirm(true); };
-  const closeDonasiConfirm = () => { setActionItem(null); setShowDonasiConfirm(false); };
+  const openAmbilConfirm = (item) => {
+    setActionItem(item);
+    setShowAmbilConfirm(true);
+  };
+  const closeAmbilConfirm = () => {
+    setActionItem(null);
+    setShowAmbilConfirm(false);
+  };
+  const openDonasiConfirm = (item) => {
+    setActionItem(item);
+    setShowDonasiConfirm(true);
+  };
+  const closeDonasiConfirm = () => {
+    setActionItem(null);
+    setShowDonasiConfirm(false);
+  };
 
   const handleAmbil = async () => {
     if (!actionItem) return;
+    const today = new Date().toISOString().split("T")[0];
     try {
-      await api.patch(
-        `/transaksi/historyPenitip/${actionItem.id_barang}`,
-        { status: "Akan Ambil" }
-      );
+      await api.patch(`/transaksi/historyPenitip/${actionItem.id_barang}`, {
+        status: "Akan Ambil",
+        tanggal_titip: today,
+      });
       closeAmbilConfirm();
       fetchHistory();
     } catch (err) {
@@ -179,10 +198,9 @@ const HistoryPenitip = () => {
   const handleDonasi = async () => {
     if (!actionItem) return;
     try {
-      await api.patch(
-        `/transaksi/historyPenitip/${actionItem.id_barang}`,
-        { status: "Untuk Donasi" }
-      );
+      await api.patch(`/transaksi/historyPenitip/${actionItem.id_barang}`, {
+        status: "Untuk Donasi",
+      });
       closeDonasiConfirm();
       fetchHistory();
     } catch (err) {
@@ -191,35 +209,60 @@ const HistoryPenitip = () => {
   };
 
   const getCountdown = (tanggalTitip, nowTs = now) => {
-    const due = new Date(tanggalTitip).getTime() + 30*24*3600*1000;
+    const due = new Date(tanggalTitip).getTime() + 30 * 24 * 3600 * 1000;
     const diff = due - nowTs;
-    if (diff <= 0)   return { text: "Perpanjangan tersedia", expired: true, extendable: false };
-    const totalSec = Math.floor(diff/1000);
-    const hh = Math.floor(totalSec/3600);
-    const mm = Math.floor((totalSec%3600)/60);
+    if (diff <= 0)
+      return {
+        text: "Perpanjangan tersedia",
+        expired: true,
+        extendable: false,
+      };
+    const totalSec = Math.floor(diff / 1000);
+    const hh = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
     const ss = totalSec % 60;
-    if (hh < 24)    return {
-      text: `${String(hh).padStart(2,'0')}j ${String(mm).padStart(2,'0')}m ${String(ss).padStart(2,'0')}s`,
-      expired: false,
-      extendable: true
-    };
-    const days = Math.ceil(hh/24);
+    if (hh < 24)
+      return {
+        text: `${String(hh).padStart(2, "0")}j ${String(mm).padStart(
+          2,
+          "0"
+        )}m ${String(ss).padStart(2, "0")}s`,
+        expired: false,
+        extendable: true,
+      };
+    const days = Math.ceil(hh / 24);
     return { text: `${days} hari tersisa`, expired: false, extendable: false };
   };
 
   // logout & profile handlers
-  const openLogoutModal    = () => setShowLogoutModal(true);
-  const closeLogoutModal   = () => setShowLogoutModal(false);
-  const handleConfirmLogout= () => { localStorage.clear(); navigate("/"); };
-  const openProfileModal   = () => setShowProfileModal(true);
-  const closeProfileModal  = () => setShowProfileModal(false);
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const handleConfirmLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+  const openProfileModal = () => setShowProfileModal(true);
+  const closeProfileModal = () => setShowProfileModal(false);
 
   // detail modal handlers
-  const openDetail = item => { setSelectedItem(item); setShowDetail(true); };
-  const closeDetail= ()    => { setSelectedItem(null); setShowDetail(false); };
+  const openDetail = (item) => {
+    setSelectedItem(item);
+    setShowDetail(true);
+  };
+  const closeDetail = () => {
+    setSelectedItem(null);
+    setShowDetail(false);
+  };
 
-  const handleSearch     = e => { e.preventDefault(); fetchHistory(); };
-  const handleResetDates = () => { setStartDate(""); setEndDate(""); setShowDateModal(false); };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchHistory();
+  };
+  const handleResetDates = () => {
+    setStartDate("");
+    setEndDate("");
+    setShowDateModal(false);
+  };
 
   return (
     <>
@@ -229,8 +272,15 @@ const HistoryPenitip = () => {
           <div className="row align-items-center justify-content-between">
             {/* Logo */}
             <div className="col-auto logo-container">
-              <Link to="/penitipLP" className="d-flex align-items-center logo-link">
-                <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+              <Link
+                to="/penitipLP"
+                className="d-flex align-items-center logo-link"
+              >
+                <img
+                  src="/logo_ReuseMart.png"
+                  alt="ReuseMart"
+                  className="logo-img"
+                />
                 <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
               </Link>
             </div>
@@ -241,7 +291,7 @@ const HistoryPenitip = () => {
                   type="search"
                   placeholder="Cari nama/kode barang..."
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="search-input"
                 />
               </Form>
@@ -260,7 +310,9 @@ const HistoryPenitip = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={cat.nama_kategori}
-                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""}`}
+                          className={`mega-menu-item ${
+                            idx === activeCatIdx ? "active" : ""
+                          }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -268,8 +320,12 @@ const HistoryPenitip = () => {
                       ))}
                     </div>
                     <div className="mega-menu-content">
-                      {groupedCats[activeCatIdx]?.sub_kategori.map(sub => (
-                        <Link key={sub.id} to={`/kategori/${sub.id}`} className="mega-menu-link">
+                      {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
+                        <Link
+                          key={sub.id}
+                          to={`/kategori/${sub.id}`}
+                          className="mega-menu-link"
+                        >
                           {sub.nama}
                         </Link>
                       ))}
@@ -277,17 +333,28 @@ const HistoryPenitip = () => {
                   </div>
                 )}
               </div>
-              <Link to="/cart" className="text-dark fs-3 icon-link"><FiShoppingCart/></Link>
-              <Link to="/historyPenitip" className="text-dark fs-3 icon-link"><FiClock/></Link>
+              <Link to="/cart" className="text-dark fs-3 icon-link">
+                <FiShoppingCart />
+              </Link>
+              <Link to="/historyPenitip" className="text-dark fs-3 icon-link">
+                <FiClock />
+              </Link>
               <Dropdown>
                 <Dropdown.Toggle variant="light" className="profile-toggle">
-                  <FiUser className="me-2 fs-3"/><span className="fw-bold">{userName}</span>
+                  <FiUser className="me-2 fs-3" />
+                  <span className="fw-bold">{userName}</span>
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.Item onClick={openProfileModal}>Profil</Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/orders">Pesanan Saya</Dropdown.Item>
-                  <Dropdown.Divider/>
-                  <Dropdown.Item onClick={openLogoutModal}>Keluar</Dropdown.Item>
+                  <Dropdown.Item onClick={openProfileModal}>
+                    Profil
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/orders">
+                    Pesanan Saya
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={openLogoutModal}>
+                    Keluar
+                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
@@ -297,16 +364,22 @@ const HistoryPenitip = () => {
 
       {/* LOGOUT MODAL */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
-        <Modal.Header closeButton><Modal.Title>Konfirmasi Logout</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title>Konfirmasi Logout</Modal.Title>
+        </Modal.Header>
         <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeLogoutModal}>Batal</Button>
-          <Button variant="danger"    onClick={handleConfirmLogout}>Keluar</Button>
+          <Button variant="secondary" onClick={closeLogoutModal}>
+            Batal
+          </Button>
+          <Button variant="danger" onClick={handleConfirmLogout}>
+            Keluar
+          </Button>
         </Modal.Footer>
       </Modal>
 
       {/* PROFILE MODAL */}
-      <ProfilePenitipModal show={showProfileModal} onHide={closeProfileModal}/>
+      <ProfilePenitipModal show={showProfileModal} onHide={closeProfileModal} />
 
       {/* CONTENT */}
       <Container className="mt-5">
@@ -320,10 +393,12 @@ const HistoryPenitip = () => {
               onClick={() => setShowDateModal(true)}
             />
             <div>
-              {statuses.map(status => (
+              {statuses.map((status) => (
                 <span
                   key={status}
-                  className={`filter-option ${filterStatus === status ? "active" : ""}`}
+                  className={`filter-option ${
+                    filterStatus === status ? "active" : ""
+                  }`}
                   onClick={() => setFilterStatus(status)}
                 >
                   {status}
@@ -342,153 +417,240 @@ const HistoryPenitip = () => {
 
         {/* ITEM CARDS */}
         <Row>
-        {items.map(item => {
-            const { text, expired, extendable } = getCountdown(item.tanggal_titip);
+          {items.map((item) => {
+            const { text, expired, extendable } = getCountdown(
+              item.tanggal_titip
+            );
             const [val, unit, ...rest] = text.split(" ");
 
             return (
-            <Col md={6} key={item.id_barang} className="mb-4">
+              <Col md={6} key={item.id_barang} className="mb-4">
                 <Card className="history-card h-100 d-flex flex-column">
-                <Card.Header className="d-flex justify-content-between align-items-center py-3 px-4 fw-bold">
+                  <Card.Header className="d-flex justify-content-between align-items-center py-3 px-4 fw-bold">
                     <div>
                       {item.nama_barang}
-                      {item.status_periode === "Periode 2" && item.status==="Available" && (
-                        <span className="ms-2 text-warning">(Perpanjang)</span>
-                      )}
+                      {item.status_periode === "Periode 2" &&
+                        item.status === "Available" && (
+                          <span className="ms-2 text-warning">
+                            (Perpanjang)
+                          </span>
+                        )}
                     </div>
                     <div className="status-area">
-                      {item.status==="Available" && item.status_periode==="Expired" ? (
-                        <span className="text-danger fw-bold">Masa Penitipan Habis</span>
+                      {item.status === "Available" &&
+                      item.status_periode === "Expired" ? (
+                        <span className="text-danger fw-bold">
+                          Masa Penitipan Habis
+                        </span>
                       ) : (
                         <>
-                          <Truck className="me-1 text-success"/>
-                          <span className="status-text text-success">{item.status}</span>
+                          <Truck className="me-1 text-success" />
+                          <span className="status-text text-success">
+                            {item.status}
+                          </span>
                         </>
                       )}
                     </div>
                   </Card.Header>
 
-                {/* make body flex-grow so footer is pushed down */}
-                <Card.Body className="py-4 px-4 flex-grow-1">
+                  {/* make body flex-grow so footer is pushed down */}
+                  <Card.Body className="py-4 px-4 flex-grow-1">
                     <Row className="product-row align-items-center">
-                    <Col xs={4}>
+                      <Col xs={4}>
                         <Image
-                        src={
+                          src={
                             item.foto?.length
-                            ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
-                            : "/placeholder.jpg"
-                        }
-                        thumbnail
-                        rounded
+                              ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
+                              : "/placeholder.jpg"
+                          }
+                          thumbnail
+                          rounded
                         />
-                    </Col>
-                    <Col xs={8}>
+                      </Col>
+                      <Col xs={8}>
                         <div className="product-name">{item.nama_barang}</div>
                         <div className="product-price">
-                        Rp{(item.harga || 0).toLocaleString("id-ID")}
+                          Rp{(item.harga || 0).toLocaleString("id-ID")}
                         </div>
                         <div className="product-category">
-                        {item.kategori?.nama_kategori}
-                        {item.kategori?.sub_kategori && ` - ${item.kategori.sub_kategori}`}
+                          {item.kategori?.nama_kategori}
+                          {item.kategori?.sub_kategori &&
+                            ` - ${item.kategori.sub_kategori}`}
                         </div>
-                    </Col>
+                      </Col>
                     </Row>
-                </Card.Body>
+                  </Card.Body>
 
-                <Card.Footer className="d-flex justify-content-between align-items-end py-3 px-4">
+                  <Card.Footer className="d-flex justify-content-between align-items-end py-3 px-4">
                     <div>
+                      {item.status_periode === "Expired" &&
+                      item.status === "Akan Ambil" ? (
                         <small className="d-block mb-1">
-                        Dititipkan:{" "}
-                        {item.tanggal_titip
-                            ? new Date(item.tanggal_titip).toLocaleDateString("id-ID")
+                          <strong>
+                            Tanggal Konfirmasi Pengambilan:{" "}
+                            {new Date(item.tanggal_titip).toLocaleDateString(
+                              "id-ID"
+                            )}
+                          </strong>
+                        </small>
+                      ) : item.status_periode === "Expired" ? (
+                        (() => {
+                          const titipTs = new Date(
+                            item.tanggal_titip
+                          ).getTime();
+                          const akhirTs = titipTs + 30 * 24 * 3600 * 1000;
+                          const akhirDate = new Date(akhirTs);
+
+                          return (
+                            <small className="d-block mb-1">
+                              <strong>
+                                Akhir Penitipan:{" "}
+                                {akhirDate.toLocaleDateString("id-ID")}
+                              </strong>
+                            </small>
+                          );
+                        })()
+                      ) : (
+                        <small className="d-block mb-1">
+                          Dititipkan:{" "}
+                          {item.tanggal_titip
+                            ? new Date(item.tanggal_titip).toLocaleDateString(
+                                "id-ID"
+                              )
                             : "–"}
                         </small>
+                      )}
 
-                        {item.status_periode === "Expired" && item.status === "Akan Ambil" && (
-                        <small className="d-block">
+                      {item.status_periode === "Expired" &&
+                        item.status === "Akan Ambil" && (
+                          <small className="d-block">
                             Batas waktu pengambilan:{" "}
                             {(() => {
-                            // calculate pickup deadline = tanggal_titip +30d +2d
-                            const endTitip = new Date(item.tanggal_titip).getTime() + 30*24*3600*1000;
-                            const pickupDeadline = endTitip + 2*24*3600*1000;
-                            const diff = pickupDeadline - now;
+                              // deadline = tanggal_titip + 2 hari
+                              const titipTs = new Date(
+                                item.tanggal_titip
+                              ).getTime();
+                              const pickupDeadline =
+                                titipTs + 2 * 24 * 3600 * 1000;
+                              const diff = pickupDeadline - now;
 
-                            if (diff <= 0) {
-                                // kalau sudah lewat → patch status ke "Untuk Donasi"
+                              if (diff <= 0) {
+                                // sudah lewat → ubah status ke Untuk Donasi
                                 api
-                                .patch(`/transaksi/historyPenitip/${item.id_barang}`, { status: "Untuk Donasi" })
-                                .then(fetchHistory)
-                                .catch(console.error);
+                                  .patch(
+                                    `/transaksi/historyPenitip/${item.id_barang}`,
+                                    { status: "Untuk Donasi" }
+                                  )
+                                  .then(fetchHistory)
+                                  .catch(console.error);
                                 return "Waktu pengambilan habis";
-                            }
-                            // format remaining time
-                            const sec = Math.floor(diff/1000);
-                            const h = Math.floor(sec/3600);
-                            const m = Math.floor((sec%3600)/60);
-                            const s = sec % 60;
-                            return h < 24
-                                ? `${h}j ${m}m ${s}s`
-                                : `${Math.ceil(h/24)} hari`;
+                              }
+
+                              // hitung jam, menit, detik tersisa
+                              const sec = Math.floor(diff / 1000);
+                              const h = Math.floor(sec / 3600);
+                              const m = Math.floor((sec % 3600) / 60);
+                              const s = sec % 60;
+
+                              // tampilkan countdown
+                              return h < 24 ? (
+                                <>
+                                  <strong>{h}</strong>j <strong>{m}</strong>m{" "}
+                                  <strong>{s}</strong>s
+                                </>
+                              ) : (
+                                <>
+                                  <strong>{Math.ceil(h / 24)}</strong> hari
+                                </>
+                              );
                             })()}
-                        </small>
+                          </small>
                         )}
 
-                        {item.status_periode === "Expired" && item.status === "Available" && (
-                        <small className="d-block">
+                      {item.status_periode === "Expired" &&
+                        item.status === "Available" && (
+                          <small className="d-block">
                             Batas sebelum barang didonasikan:{" "}
                             {(() => {
-                            // calculate donation deadline = tanggal_titip +30d +7d
-                            const donateDeadline =
-                                new Date(item.tanggal_titip).getTime() + (30 + 7)*24*3600*1000;
-                            const diff = donateDeadline - now;
+                              const donateDeadline =
+                                new Date(item.tanggal_titip).getTime() +
+                                (30 + 7) * 24 * 3600 * 1000;
+                              const diff = donateDeadline - now;
+                              if (diff <= 0) return "Sudah didonasikan";
 
-                            if (diff <= 0) {
-                                return "Sudah didonasikan";
-                            }
-                            // format remaining time
-                            const sec = Math.floor(diff/1000);
-                            const h = Math.floor(sec/3600);
-                            const m = Math.floor((sec%3600)/60);
-                            const s = sec % 60;
-                            return h < 24
-                                ? `${h}j ${m}m ${s}s`
-                                : `${Math.ceil(h/24)} hari`;
+                              const sec = Math.floor(diff / 1000);
+                              const h = Math.floor(sec / 3600);
+                              const days = Math.ceil(h / 24);
+
+                              return h < 24 ? (
+                                `${h}j ${Math.floor((sec % 3600) / 60)}m ${
+                                  sec % 60
+                                }s`
+                              ) : (
+                                <>
+                                  <strong>{days}</strong> hari
+                                </>
+                              );
                             })()}
-                        </small>
+                          </small>
                         )}
 
-                        {item.status === "Available" && item.status_periode !== "Expired" && (
-                        <small className="d-block">
-                            Masa penitipan: <strong>{val}</strong> {unit} {rest.join(" ")}
-                        </small>
+                      {item.status === "Available" &&
+                        item.status_periode !== "Expired" && (
+                          <small className="d-block">
+                            Masa penitipan: <strong>{val}</strong> {unit}{" "}
+                            {rest.join(" ")}
+                          </small>
                         )}
                     </div>
 
                     <div className="d-flex">
-                        <Button size="sm" variant="outline-success" onClick={() => openDetail(item)}>
+                      <Button
+                        size="sm"
+                        variant="outline-success"
+                        onClick={() => openDetail(item)}
+                      >
                         Lihat Detail
-                        </Button>
-                        {item.status === "Available" && !expired && extendable && (
-                        <Button size="sm" variant="success" className="ms-2" onClick={() => openConfirm(item)}>
+                      </Button>
+                      {item.status === "Available" &&
+                        !expired &&
+                        extendable && (
+                          <Button
+                            size="sm"
+                            variant="success"
+                            className="ms-2"
+                            onClick={() => openConfirm(item)}
+                          >
                             Perpanjang
-                        </Button>
+                          </Button>
                         )}
-                        {item.status === "Available" && item.status_periode === "Expired" && (
-                        <>
-                            <Button size="sm" variant="warning" className="ms-2" onClick={() => openAmbilConfirm(item)}>
-                            Ambil
+                      {item.status === "Available" &&
+                        item.status_periode === "Expired" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="warning"
+                              className="ms-2"
+                              onClick={() => openAmbilConfirm(item)}
+                            >
+                              Ambil
                             </Button>
-                            <Button size="sm" variant="danger" className="ms-2" onClick={() => openDonasiConfirm(item)}>
-                            Donasikan
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              className="ms-2"
+                              onClick={() => openDonasiConfirm(item)}
+                            >
+                              Donasikan
                             </Button>
-                        </>
+                          </>
                         )}
                     </div>
-                </Card.Footer>
+                  </Card.Footer>
                 </Card>
-            </Col>
+              </Col>
             );
-        })}
+          })}
         </Row>
 
         {/* CONFIRM PERPANJANG MODAL */}
@@ -496,83 +658,196 @@ const HistoryPenitip = () => {
           <Modal.Header closeButton>
             <Modal.Title>Konfirmasi Perpanjangan</Modal.Title>
           </Modal.Header>
-          <Modal.Body>Apakah Anda yakin ingin memperpanjang periode?</Modal.Body>
+          <Modal.Body>
+            Apakah Anda yakin ingin memperpanjang periode?
+          </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={closeConfirm}>Batal</Button>
-            <Button variant="primary"   onClick={handlePerpanjang}>Ya, Perpanjang</Button>
+            <Button variant="secondary" onClick={closeConfirm}>
+              Batal
+            </Button>
+            <Button variant="primary" onClick={handlePerpanjang}>
+              Ya, Perpanjang
+            </Button>
           </Modal.Footer>
         </Modal>
 
         <Modal show={showAmbilConfirm} onHide={closeAmbilConfirm} centered>
-            <Modal.Header closeButton>
+          <Modal.Header closeButton>
             <Modal.Title>Konfirmasi Ambil</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>Apakah Anda yakin ingin mengambil barang?</Modal.Body>
-            <Modal.Footer>
-            <Button variant="secondary" onClick={closeAmbilConfirm}>Batal</Button>
-            <Button variant="primary" onClick={handleAmbil}>Ya, Ambil</Button>
-            </Modal.Footer>
+          </Modal.Header>
+          <Modal.Body>Apakah Anda yakin ingin mengambil barang?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={closeAmbilConfirm}>
+              Batal
+            </Button>
+            <Button variant="primary" onClick={handleAmbil}>
+              Ya, Ambil
+            </Button>
+          </Modal.Footer>
         </Modal>
 
         {/* CONFIRM DONASI MODAL */}
         <Modal show={showDonasiConfirm} onHide={closeDonasiConfirm} centered>
-            <Modal.Header closeButton>
+          <Modal.Header closeButton>
             <Modal.Title>Konfirmasi Donasi</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>Apakah Anda yakin ingin mendonasikan barang?</Modal.Body>
-            <Modal.Footer>
-            <Button variant="secondary" onClick={closeDonasiConfirm}>Batal</Button>
-            <Button variant="danger" onClick={handleDonasi}>Ya, Donasikan</Button>
-            </Modal.Footer>
+          </Modal.Header>
+          <Modal.Body>Apakah Anda yakin ingin mendonasikan barang?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={closeDonasiConfirm}>
+              Batal
+            </Button>
+            <Button variant="danger" onClick={handleDonasi}>
+              Ya, Donasikan
+            </Button>
+          </Modal.Footer>
         </Modal>
 
         {/* DATE RANGE MODAL */}
-        <Modal show={showDateModal} onHide={() => setShowDateModal(false)} centered>
+        <Modal
+          show={showDateModal}
+          onHide={() => setShowDateModal(false)}
+          centered
+        >
           <Modal.Body>
             <Form.Group className="mb-3">
               <Form.Label>Dari</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <Form.Control
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </Form.Group>
             <Form.Group>
               <Form.Label>Sampai</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+              <Form.Control
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="primary" onClick={handleResetDates}>Reset</Button>
-            <Button variant="secondary" onClick={() => setShowDateModal(false)}>Batal</Button>
-            <Button variant="success" onClick={() => setShowDateModal(false)}>Terapkan</Button>
+            <Button variant="primary" onClick={handleResetDates}>
+              Reset
+            </Button>
+            <Button variant="secondary" onClick={() => setShowDateModal(false)}>
+              Batal
+            </Button>
+            <Button variant="success" onClick={() => setShowDateModal(false)}>
+              Terapkan
+            </Button>
           </Modal.Footer>
         </Modal>
 
         {/* DETAIL MODAL */}
         <Modal show={showDetail} onHide={closeDetail} size="lg" centered>
-          <Modal.Header closeButton><Modal.Title>Detail Penitipan</Modal.Title></Modal.Header>
+          <Modal.Header closeButton>
+            <Modal.Title>Detail Penitipan</Modal.Title>
+          </Modal.Header>
           <Modal.Body>
             {selectedItem && (
-<>
+              <>
                 <div className="d-flex justify-content-between mb-4">
                   <h5>{selectedItem.nama_barang}</h5>
                   <div className="status-area text-success">
-                    <Truck className="me-1" />{selectedItem.status}
+                    <Truck className="me-1" />
+                    {selectedItem.status}
                   </div>
                 </div>
 
                 <Row className="mb-4">
                   <Col md={4}>
-                    <Image src={ selectedItem.foto?.length ? `http://127.0.0.1:8000/storage/${selectedItem.foto[0]}` : "/placeholder.jpg"} thumbnail style={{width:"100%"}} />
+                    {selectedItem.foto?.length ? (
+                        <Carousel variant="dark">
+                          {selectedItem.foto.map((path, i) => (
+                            <Carousel.Item key={i}>
+                              <img
+                                className="d-block w-100"
+                                src={`http://127.0.0.1:8000/storage/${path}`}
+                                alt={`Slide ${i + 1}`}
+                               style={{ maxHeight: 300, objectFit: "contain" }}
+                              />
+                            </Carousel.Item>
+                          ))}
+                        </Carousel>
+                      ) : (
+                        <Image
+                          src="/placeholder.jpg"
+                          thumbnail
+                          style={{ width: "100%" }}
+                        />
+                     )}
                   </Col>
                   <Col md={8}>
                     <Table borderless>
                       <tbody>
-                        <tr><td><strong>Kode Barang</strong></td><td>{selectedItem.kode_barang}</td></tr>
-                        <tr><td><strong>Kategori</strong></td><td>{selectedItem.kategori?.nama_kategori}{selectedItem.kategori?.sub_kategori && ` - ${selectedItem.kategori.sub_kategori}`}</td></tr>
-                        <tr><td><strong>Deskripsi</strong></td><td>{selectedItem.deskripsi || "–"}</td></tr>
-                        <tr><td><strong>Harga</strong></td><td>Rp{(selectedItem.harga||0).toLocaleString("id-ID")}</td></tr>
-                        <tr><td><strong>Garansi</strong></td><td>{selectedItem.garansi || "Tidak ada"}</td></tr>
-                        <tr><td><strong>Tanggal Penitipan</strong></td><td>{selectedItem.tanggal_titip ? new Date(selectedItem.tanggal_titip).toLocaleDateString("id-ID") : "–"}</td></tr>
-                        <tr><td><strong>Akhir Penitipan</strong></td><td>{selectedItem.akhir_penitipan ? new Date(selectedItem.akhir_penitipan).toLocaleDateString("id-ID") : "–"}</td></tr>
-                        <tr><td><strong>Status Periode</strong></td><td>{selectedItem.status_periode || "–"}</td></tr>
+                        <tr>
+                          <td>
+                            <strong>Kode Barang</strong>
+                          </td>
+                          <td>{selectedItem.kode_barang}</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Kategori</strong>
+                          </td>
+                          <td>
+                            {selectedItem.kategori?.nama_kategori}
+                            {selectedItem.kategori?.sub_kategori &&
+                              ` - ${selectedItem.kategori.sub_kategori}`}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Deskripsi</strong>
+                          </td>
+                          <td>{selectedItem.deskripsi || "–"}</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Harga</strong>
+                          </td>
+                          <td>
+                            Rp
+                            {(selectedItem.harga || 0).toLocaleString("id-ID")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Garansi</strong>
+                          </td>
+                          <td>{selectedItem.garansi || "Tidak ada"}</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Tanggal Penitipan</strong>
+                          </td>
+                          <td>
+                            {selectedItem.tanggal_titip
+                              ? new Date(
+                                  selectedItem.tanggal_titip
+                                ).toLocaleDateString("id-ID")
+                              : "–"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Akhir Penitipan</strong>
+                          </td>
+                          <td>
+                            {selectedItem.akhir_penitipan
+                              ? new Date(
+                                  selectedItem.akhir_penitipan
+                                ).toLocaleDateString("id-ID")
+                              : "–"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Status Periode</strong>
+                          </td>
+                          <td>{selectedItem.status_periode || "–"}</td>
+                        </tr>
                       </tbody>
                     </Table>
                   </Col>
@@ -582,18 +857,93 @@ const HistoryPenitip = () => {
                   <>
                     <h5 className="mt-4">Detail Transaksi</h5>
                     <Table borderless responsive className="mb-4">
-                      <thead><tr><th>Detail</th><th>Informasi</th></tr></thead>
+                      <thead>
+                        <tr>
+                          <th>Detail</th>
+                          <th>Informasi</th>
+                        </tr>
+                      </thead>
                       <tbody>
-                        <tr><td>Tanggal Transaksi</td><td>{new Date(selectedItem.transaksi.tanggal_transaksi).toLocaleDateString("id-ID")}</td></tr>
-                        <tr><td>Subtotal</td><td>Rp{(selectedItem.transaksi.subtotal||0).toLocaleString("id-ID")}</td></tr>
-                        <tr><td>Metode Pengiriman</td><td>{selectedItem.transaksi.metode_pengiriman}</td></tr>
-                        <tr><td>Alamat Pengiriman</td><td>{selectedItem.transaksi.alamat||"–"}</td></tr>
-                        <tr><td>Status Pembayaran</td><td>{selectedItem.transaksi.status_pembayaran||"–"}</td></tr>
-                        {selectedItem.transaksi.pengiriman && <tr><td>Status Pengiriman</td><td>{selectedItem.transaksi.pengiriman.status_pengiriman}</td></tr>}
-                        {selectedItem.transaksi.pengambilan && <tr><td>Status Pengambilan</td><td>{selectedItem.transaksi.pengambilan.status_pengambilan}</td></tr>}
-                        <tr><td>Komisi Perusahaan</td><td>Rp{(selectedItem.transaksi.komisi_perusahaan||0).toLocaleString("id-ID")}</td></tr>
-                        <tr><td>Komisi Hunter</td><td>Rp{(selectedItem.transaksi.komisi_hunter||0).toLocaleString("id-ID")}</td></tr>
-                        <tr><td>Saldo Diterima</td><td>Rp{(selectedItem.transaksi.saldo_penitip||0).toLocaleString("id-ID")}</td></tr>
+                        <tr>
+                          <td>Tanggal Transaksi</td>
+                          <td>
+                            {new Date(
+                              selectedItem.transaksi.tanggal_transaksi
+                            ).toLocaleDateString("id-ID")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Subtotal</td>
+                          <td>
+                            Rp
+                            {(
+                              selectedItem.transaksi.subtotal || 0
+                            ).toLocaleString("id-ID")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Metode Pengiriman</td>
+                          <td>{selectedItem.transaksi.metode_pengiriman}</td>
+                        </tr>
+                        <tr>
+                          <td>Alamat Pengiriman</td>
+                          <td>{selectedItem.transaksi.alamat || "–"}</td>
+                        </tr>
+                        <tr>
+                          <td>Status Pembayaran</td>
+                          <td>
+                            {selectedItem.transaksi.status_pembayaran || "–"}
+                          </td>
+                        </tr>
+                        {selectedItem.transaksi.pengiriman && (
+                          <tr>
+                            <td>Status Pengiriman</td>
+                            <td>
+                              {
+                                selectedItem.transaksi.pengiriman
+                                  .status_pengiriman
+                              }
+                            </td>
+                          </tr>
+                        )}
+                        {selectedItem.transaksi.pengambilan && (
+                          <tr>
+                            <td>Status Pengambilan</td>
+                            <td>
+                              {
+                                selectedItem.transaksi.pengambilan
+                                  .status_pengambilan
+                              }
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td>Komisi Perusahaan</td>
+                          <td>
+                            Rp
+                            {(
+                              selectedItem.transaksi.komisi_perusahaan || 0
+                            ).toLocaleString("id-ID")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Komisi Hunter</td>
+                          <td>
+                            Rp
+                            {(
+                              selectedItem.transaksi.komisi_hunter || 0
+                            ).toLocaleString("id-ID")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Saldo Diterima</td>
+                          <td>
+                            Rp
+                            {(
+                              selectedItem.transaksi.saldo_penitip || 0
+                            ).toLocaleString("id-ID")}
+                          </td>
+                        </tr>
                       </tbody>
                     </Table>
                   </>
@@ -604,8 +954,22 @@ const HistoryPenitip = () => {
                     <h5 className="mt-4">Detail Donasi</h5>
                     <Table borderless>
                       <tbody>
-                        <tr><td><strong>Organisasi Penerima</strong></td><td>{selectedItem.donasi.organisasi}</td></tr>
-                        <tr><td><strong>Tanggal Donasi</strong></td><td>{new Date(selectedItem.donasi.tanggal_donasi).toLocaleDateString("id-ID")}</td></tr>
+                        <tr>
+                          <td>
+                            <strong>Organisasi Penerima</strong>
+                          </td>
+                          <td>{selectedItem.donasi.organisasi}</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <strong>Tanggal Donasi</strong>
+                          </td>
+                          <td>
+                            {new Date(
+                              selectedItem.donasi.tanggal_donasi
+                            ).toLocaleDateString("id-ID")}
+                          </td>
+                        </tr>
                       </tbody>
                     </Table>
                   </>
