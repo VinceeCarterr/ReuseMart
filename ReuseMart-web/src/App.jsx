@@ -19,6 +19,7 @@ import PenitipLandingPage from "./assets/pages/penitip/penitipLandingPage.jsx";
 import ResetPassword from "./assets/pages/resetPasswordPage.jsx";
 import Unauthorized from "./assets/pages/unauthorize.jsx";
 import GudangLandingPage from "./assets/pages/gudang/gudangLP.jsx";
+import UploadProofPage from "./assets/pages/pembeli/UploadProofPage.jsx";
 
 function App() {
   return (
@@ -43,9 +44,10 @@ function App() {
           <Route path="penitipLP" element={<ProtectedRoute allowedRoles={['penitip']}> <PenitipLandingPage /> </ProtectedRoute>} />
           <Route path="/ownerLP" element={<ProtectedRoute allowedRoles={['owner']}> <OwnerLandingPage /> </ProtectedRoute>} />
           <Route path="/HistoryDonasi" element={<ProtectedRoute allowedRoles={['owner']}> <HistoryDonasi /> </ProtectedRoute>} />
-          <Route path="/gudangLP" element = {<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
+          <Route path="/gudangLP" element={<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute allowedRoles={['pembeli']}> <KeranjangPage /> </ProtectedRoute>} />
           <Route path="/checkout-options" element={<ProtectedRoute allowedRoles={['pembeli']}> <CheckoutOptionsPage /> </ProtectedRoute>} />
+          <Route path="/upload-proof" element={<ProtectedRoute allowedRoles={['pembeli']}> <UploadProofPage /> </ProtectedRoute>} />
         </Routes>
       </div>
     </Router>

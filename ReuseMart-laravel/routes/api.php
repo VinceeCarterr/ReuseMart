@@ -68,11 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cart/add', [TransaksiController::class, 'addToCart']);
         Route::get('/cart', [TransaksiController::class, 'getCart']);
         Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
+        Route::post('/checkout', [TransaksiController::class, 'checkout']);
+        Route::post('/upload-proof', [TransaksiController::class, 'uploadProof']);
     });
 
     Route::middleware('role:penitip')->group(function () {
         Route::get('transaksi/historyPenitip', [TransaksiController::class, 'historyPenitip']);
-        Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+        Route::patch('transaksi/historyPenitip/{id_barang}', [TransaksiController::class, 'updateHistoryPenitip']);
     });
 
 
@@ -125,5 +127,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pegawai', [PegawaiController::class, 'index']);
         Route::get('/user/gudang', [UserController::class, 'gudangList']);
     });
-
 });
