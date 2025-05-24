@@ -35,6 +35,8 @@ Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
 
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
 
+Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
@@ -80,7 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:penitip')->group(function () {
         Route::get('transaksi/historyPenitip', [TransaksiController::class, 'historyPenitip']);
-        Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
     });
 
 
@@ -136,9 +137,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pengiriman',   [PengirimanController::class,   'store']);
         Route::post('/pengambilan',  [PengambilanController::class,  'store']);
         Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
+        Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
         Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
         Route::post('/komisi', [KomisiController::class, 'store']);
         Route::get('/komisi', [KomisiController::class, 'index']);
+        Route::patch('user/{id}', [UserController::class, 'update']);
     });
 
     Route::middleware('role:admin,gudang')->group(function () {

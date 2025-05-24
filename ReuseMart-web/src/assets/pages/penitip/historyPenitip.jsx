@@ -22,7 +22,6 @@ import "./historyPenitip.css";
 const HistoryPenitip = () => {
   const navigate = useNavigate();
 
-  // grab profile from localStorage
   let userName = "Penitip";
   try {
     const prof = JSON.parse(localStorage.getItem("profile") || "{}");
@@ -62,7 +61,6 @@ const HistoryPenitip = () => {
 
   const statuses = ["Available", "Sold", "Expired", "Donated"];
 
-  // load kategori for mega-menu
   useEffect(() => {
     api
       .get("/kategori")
@@ -70,12 +68,10 @@ const HistoryPenitip = () => {
       .catch(console.error);
   }, []);
 
-  // refetch on filters change
   useEffect(() => {
     fetchHistory();
   }, [filterStatus, search, startDate, endDate]);
 
-  // build & run fetch
   const fetchHistory = async () => {
     setLoading(true);
 
@@ -264,6 +260,27 @@ const HistoryPenitip = () => {
     setShowDateModal(false);
   };
 
+  const donatedPatched = useRef(new Set());
+  useEffect(() => {
+    items.forEach((item) => {
+      const donateDeadline =
+        new Date(item.tanggal_titip).getTime() + (30 + 7) * 24 * 3600 * 1000;
+      if (
+        now >= donateDeadline &&
+        item.status_periode === "Expired" &&
+        item.status === "Available" &&
+        !donatedPatched.current.has(item.id_barang)
+      ) {
+        donatedPatched.current.add(item.id_barang);
+        api
+          .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
+            status: "Untuk Donasi",
+          })
+          .then(() => fetchHistory())
+          .catch(console.error);
+      }
+    });
+  }, [now, items]);
   return (
     <>
       {/* NAVBAR */}
@@ -758,25 +775,25 @@ const HistoryPenitip = () => {
                 <Row className="mb-4">
                   <Col md={4}>
                     {selectedItem.foto?.length ? (
-                        <Carousel variant="dark">
-                          {selectedItem.foto.map((path, i) => (
-                            <Carousel.Item key={i}>
-                              <img
-                                className="d-block w-100"
-                                src={`http://127.0.0.1:8000/storage/${path}`}
-                                alt={`Slide ${i + 1}`}
-                               style={{ maxHeight: 300, objectFit: "contain" }}
-                              />
-                            </Carousel.Item>
-                          ))}
-                        </Carousel>
-                      ) : (
-                        <Image
-                          src="/placeholder.jpg"
-                          thumbnail
-                          style={{ width: "100%" }}
-                        />
-                     )}
+                      <Carousel variant="dark">
+                        {selectedItem.foto.map((path, i) => (
+                          <Carousel.Item key={i}>
+                            <img
+                              className="d-block w-100"
+                              src={`http://127.0.0.1:8000/storage/${path}`}
+                              alt={`Slide ${i + 1}`}
+                              style={{ maxHeight: 300, objectFit: "contain" }}
+                            />
+                          </Carousel.Item>
+                        ))}
+                      </Carousel>
+                    ) : (
+                      <Image
+                        src="/placeholder.jpg"
+                        thumbnail
+                        style={{ width: "100%" }}
+                      />
+                    )}
                   </Col>
                   <Col md={8}>
                     <Table borderless>
