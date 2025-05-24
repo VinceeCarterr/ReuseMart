@@ -510,6 +510,8 @@ class TransaksiController extends Controller
             ->get();
 
     return response()->json($schedules);
+    }
+
     public function checkout(Request $request)
     {
         $request->validate([
