@@ -70,6 +70,21 @@ const LandingPage = () => {
         }
     };
 
+    useEffect(() => {
+    const updateExpiredStatus = async () => {
+        try {
+            const response = await api.put('/barang/updateExpired');
+            console.log(response.data.message);
+            console.log(`Updated ${response.data.updated_count} records`);
+    
+        } catch (error) {
+            console.error('Failed to update expired statuses:', error.response?.data?.error || error.message);
+            
+        }
+    };
+    updateExpiredStatus();
+    }, []);
+
     useEffect(() => { fetchBarang(); }, []);
     useEffect(() => { AOS.init({ duration: 800 }); }, []);
     useEffect(() => {

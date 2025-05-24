@@ -169,4 +169,17 @@ class BarangController extends Controller
         $b->save();
         return response()->json($b, 200);
     }
+
+    public function updateStatusExpired()
+    {
+        $today = now()->startOfDay();
+        
+        $barangs = Barang::whereDate('tanggal_titip', '<', $today->subDays(30))
+            ->update(['status' => 'Expired']);
+            
+        return response()->json([
+            'message' => 'Successfully updated expired statuses for all Barang records',
+            'updated_count' => $barangs
+        ], 200);
+    }
 }

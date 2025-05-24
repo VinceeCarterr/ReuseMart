@@ -14,8 +14,8 @@ const AddBarangPage = () => {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastVariant, setToastVariant] = useState('success');
-    const [showModal, setShowModal] = useState(false); // State for modal visibility
-    const [currentPenitipanId, setCurrentPenitipanId] = useState(null); // State for penitipanId
+    const [showModal, setShowModal] = useState(false);
+    const [currentPenitipanId, setCurrentPenitipanId] = useState(null); 
     const today = new Date().toISOString().split('T')[0];
     const [sharedData, setSharedData] = useState({
         selectedUser: '',
@@ -23,7 +23,7 @@ const AddBarangPage = () => {
         tanggalTitip: '',
     });
 
-    // Define category code mapping
+
     const categoryCodeMap = {
         'Elektronik & Gadget': 'EG',
         'Pakaian & Aksesoris': 'PA',
@@ -104,7 +104,6 @@ const AddBarangPage = () => {
         setLoading(true);
         let hasError = false;
 
-        // Validate shared fields
         if (!sharedData.selectedUser || !sharedData.selectedPegawai) {
             setToastMessage('Mohon lengkapi semua field wajib: Nama Penitip dan Pilih Pegawai.');
             setToastVariant('danger');
@@ -113,7 +112,6 @@ const AddBarangPage = () => {
             return;
         }
 
-        // Validate form for each barang
         for (let i = 0; i < formData.length; i++) {
             const form = formData[i];
             if (
@@ -137,7 +135,6 @@ const AddBarangPage = () => {
         }
 
         try {
-            // Create penitipan entry
             const penitipanPayload = {
                 id_user: sharedData.selectedUser,
                 jumlah_barang: formData.length,
@@ -150,7 +147,7 @@ const AddBarangPage = () => {
                 throw new Error('ID penitipan tidak ditemukan di respons API.');
             }
 
-            // Loop through each barang to create and update
+
             for (let i = 0; i < formData.length; i++) {
                 const form = formData[i];
 

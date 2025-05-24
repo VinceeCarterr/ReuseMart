@@ -22,6 +22,7 @@ class Transaksi extends Model
         'diskon',
         'subtotal',
         'total',
+        'no_nota',
     ];
 
     public function pembayaran()

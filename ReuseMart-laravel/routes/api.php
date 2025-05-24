@@ -34,6 +34,7 @@ Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBara
 Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
 Route::get('/penitipan/public', [PenitipanController::class, 'index']);
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
+Route::put('/barang/updateExpired', [BarangController::class, 'updateStatusExpired']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

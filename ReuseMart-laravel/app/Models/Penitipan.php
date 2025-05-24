@@ -14,6 +14,7 @@ class Penitipan extends Model
     protected $fillable = [
         'id_user',
         'jumlah_barang',
+        'no_nota',
     ];
 
     public function barang()
