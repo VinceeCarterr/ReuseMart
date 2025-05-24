@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Toast, ToastContainer, Image } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Toast, ToastContainer, Image } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import NavbarGudang from "../../components/Navbar/navbarGudang.jsx";
-
 import UpdateBarangModal from "../../components/gudang/updateBarangModal.jsx";
 
-const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai, onDelete }) => {
+const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai, onDelete, onEdit }) => {
     return (
         <Col md={6} className="mx-auto mb-4">
             <Card className="req-card h-100">
@@ -56,7 +55,7 @@ const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai, onDe
                     </Row>
                 </Card.Body>
                 <Card.Footer className="text-end">
-                    <Button variant="outline-primary" className="me-2">
+                    <Button variant="outline-primary" className="me-2" onClick={() => onEdit(barang.id_barang)}>
                         <Pencil size={18} /> Edit
                     </Button>
                     <Button variant="outline-danger" onClick={() => onDelete(barang.id_barang)}>
@@ -73,11 +72,10 @@ const GudangPage = () => {
     const [listPenitipan, setListPenitipan] = useState([]);
     const [listUser, setListUser] = useState([]);
     const [listPegawai, setListPegawai] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [selectedBarangId, setSelectedBarangId] = useState(null);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
-    const [formData, setFormData] = useState({ name: '', harga: '', status: '', status_periode: '' });
-
     const [pencarian, setPencarian] = useState("");
 
     useEffect(() => {
@@ -91,11 +89,11 @@ const GudangPage = () => {
         try {
             const res = await api.get('/pegawaiGudang');
             setListPegawai(res.data);
-        } catch {
+        } catch (err) {
             console.error('Failed to fetch Pegawai:', err);
             showToastMessage('Failed to fetch Pegawai');
         }
-    }
+    };
 
     const fetchBarang = async () => {
         try {
@@ -145,6 +143,20 @@ const GudangPage = () => {
         }
     };
 
+    const handleEditBarang = (id) => {
+        setSelectedBarangId(id);
+        setShowUpdateModal(true);
+    };
+
+    const handleCloseUpdateModal = () => {
+        setShowUpdateModal(false);
+        setSelectedBarangId(null);
+    };
+
+    const handleUpdateSuccess = () => {
+        fetchBarang(); // Refresh barang list
+    };
+
     const getPegawaiByBarang = (barangId) => {
         const barang = listBarang.find(b => b.id_barang === barangId);
         if (!barang) return null;
@@ -177,7 +189,6 @@ const GudangPage = () => {
         });
     };
 
-
     const filteredList = listBarang.filter(barang => {
         const namabarang = barang.nama_barang.toLowerCase().includes(pencarian.toLowerCase());
         const status = barang.status.toLowerCase().includes(pencarian.toLowerCase());
@@ -198,7 +209,6 @@ const GudangPage = () => {
 
         return namabarang || status || status_periode || cocokPenitip || cocokPegawai;
     });
-
 
     return (
         <div>
@@ -241,6 +251,7 @@ const GudangPage = () => {
                                 barangPegawai={getPegawaiByBarang(barang.id_barang)}
                                 tanggalSelesai={hitungTanggalSelesai(barang.id_barang)}
                                 onDelete={handleDeleteBarang}
+                                onEdit={handleEditBarang}
                             />
                         ))
                     ) : (
@@ -251,7 +262,13 @@ const GudangPage = () => {
                 </Row>
             </Container>
 
-            {/* Toast Notification */}
+            <UpdateBarangModal
+                show={showUpdateModal}
+                onHide={handleCloseUpdateModal}
+                barangId={selectedBarangId}
+                onUpdate={handleUpdateSuccess}
+            />
+
             <ToastContainer position="top-end" className="p-3">
                 <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
                     <Toast.Header>
