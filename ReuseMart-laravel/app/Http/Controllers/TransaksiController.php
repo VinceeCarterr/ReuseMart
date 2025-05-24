@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Transaksi;
 use App\Models\Barang;
 use App\Models\DetilTransaksi;
+use App\Models\Pembayaran;
+use App\Jobs\CancelTransactionJob;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Carbon\Carbon;
@@ -134,24 +137,34 @@ class TransaksiController extends Controller
             $idPenitip = $request->user()->id_user;
 
             $query = Barang::with([
-                    'penitipan.user:id_user,first_name,last_name',
-                    'kategori:id_kategori,nama_kategori,sub_kategori',
-                    'detilTransaksi.transaksi.pembayaran',
-                    'detilTransaksi.transaksi.pengiriman',
-                    'detilTransaksi.transaksi.pengambilan',
-                    'detilTransaksi.komisi',
-                    'donasi:id_donasi,id_reqdonasi,id_barang,tanggal_donasi',
-                    'donasi.requestDonasi:id_reqdonasi,id_user',
-                    'donasi.requestDonasi.user:id_user,first_name,last_name',
-                    'foto:id_foto,id_barang,path',
-                ])
-                ->whereHas('penitipan', fn($q) =>
+                'penitipan.user:id_user,first_name,last_name',
+                'kategori:id_kategori,nama_kategori,sub_kategori',
+                'detilTransaksi.transaksi.pembayaran',
+                'detilTransaksi.transaksi.pengiriman',
+                'detilTransaksi.transaksi.pengambilan',
+                'detilTransaksi.komisi',
+                'donasi:id_donasi,id_reqdonasi,id_barang,tanggal_donasi',
+                'donasi.requestDonasi:id_reqdonasi,id_user',
+                'donasi.requestDonasi.user:id_user,first_name,last_name',
+                'foto:id_foto,id_barang,path',
+            ])
+                ->whereHas(
+                    'penitipan',
+                    fn($q) =>
                     $q->where('id_user', $idPenitip)
                 )
                 ->select([
-                    'id_barang','kode_barang','nama_barang','id_kategori',
-                    'deskripsi','harga','status','status_periode',
-                    'tanggal_titip','byHunter','garansi',
+                    'id_barang',
+                    'kode_barang',
+                    'nama_barang',
+                    'id_kategori',
+                    'deskripsi',
+                    'harga',
+                    'status',
+                    'status_periode',
+                    'tanggal_titip',
+                    'byHunter',
+                    'garansi',
                 ]);
 
             // Apply your optional filters…
@@ -168,15 +181,18 @@ class TransaksiController extends Controller
                 $query->where('status_periode', $request->status_periode);
             }
             if ($request->filled('category')) {
-                $query->whereHas('kategori', fn($q) =>
+                $query->whereHas(
+                    'kategori',
+                    fn($q) =>
                     $q->where('nama_kategori', 'like', "%{$request->category}%")
-                    ->orWhere('sub_kategori',  'like', "%{$request->category}%")
+                        ->orWhere('sub_kategori',  'like', "%{$request->category}%")
                 );
             }
             if ($request->filled('search')) {
-                $query->where(fn($q) =>
+                $query->where(
+                    fn($q) =>
                     $q->where('nama_barang', 'like', "%{$request->search}%")
-                    ->orWhere('kode_barang', 'like', "%{$request->search}%")
+                        ->orWhere('kode_barang', 'like', "%{$request->search}%")
                 );
             }
 
@@ -261,11 +277,10 @@ class TransaksiController extends Controller
                 'per_page'     => $barangs->perPage(),
                 'total'        => $barangs->total(),
             ]);
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             Log::error("Error fetching penitip history: {$e->getMessage()}", [
                 'user_id' => $request->user()->id_user,
-                'filters' => $request->only(['status','status_periode','start_date','end_date','category','search','per_page']),
+                'filters' => $request->only(['status', 'status_periode', 'start_date', 'end_date', 'category', 'search', 'per_page']),
                 'trace'   => $e->getTraceAsString(),
             ]);
             return response()->json([
@@ -278,7 +293,6 @@ class TransaksiController extends Controller
     public function updateHistoryPenitip(Request $request, $id_barang)
     {
         $request->validate([
-            // only the fields we allow to change:
             'tanggal_titip'   => 'sometimes|date',
             'status_periode'  => 'sometimes|in:Periode 1,Periode 2,Expired',
             'status'          => 'sometimes|in:Available,Sold,Donated,On Hold,Untuk Donasi,Akan Ambil',
@@ -286,12 +300,10 @@ class TransaksiController extends Controller
 
         $barang = Barang::findOrFail($id_barang);
 
-        // only allow updates if this user owns it:
         if ($request->user()->id_user !== $barang->penitipan->id_user) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // apply only provided fields:
         if ($request->has('tanggal_titip')) {
             $barang->tanggal_titip = $request->input('tanggal_titip');
         }
@@ -312,6 +324,7 @@ class TransaksiController extends Controller
         $request->validate([
             'id_barang' => 'required|exists:barang,id_barang',
         ]);
+
         try {
             $user = $request->user();
 
@@ -340,9 +353,6 @@ class TransaksiController extends Controller
                 'id_barang' => $request->id_barang,
             ]);
 
-            $barang->status = 'On Hold';
-            $barang->save();
-
             return response()->json(['message' => 'Barang berhasil ditambahkan ke keranjang'], 201);
         } catch (Exception $e) {
             Log::error('Gagal add to cart: ' . $e->getMessage());
@@ -355,6 +365,7 @@ class TransaksiController extends Controller
         try {
             $user = $request->user();
 
+            // Ambil transaksi yang belum selesai (belum ada pembayaran)
             $transaksi = Transaksi::with(['detilTransaksi.Barang.foto'])
                 ->where('id_user', $user->id_user)
                 ->whereNull('id_pembayaran')
@@ -367,21 +378,50 @@ class TransaksiController extends Controller
                 ], 200);
             }
 
+            // Filter barang yang belum "sold"
+            $items = $transaksi->detilTransaksi->map(function ($detil) use ($user) {
+                if (!$detil->Barang) {
+                    return null;
+                }
+
+                // Cek apakah barang sudah "sold" dengan status atau transaksi lain
+                $isSold = $detil->Barang->status === 'sold' ||
+                    Transaksi::where('id_transaksi', '!=', $detil->id_transaksi)
+                    ->whereNotNull('id_pembayaran')
+                    ->whereHas('detilTransaksi', function ($query) use ($detil) {
+                        $query->where('id_barang', $detil->Barang->id_barang);
+                    })
+                    ->exists();
+
+                if ($isSold) {
+                    // Jika barang sudah "sold", hapus dari transaksi ini
+                    $detil->delete();
+                    return null;
+                }
+
+                return [
+                    'id_barang' => $detil->Barang->id_barang,
+                    'nama_barang' => $detil->Barang->nama_barang,
+                    'harga' => $detil->Barang->harga,
+                    'foto' => $detil->Barang->foto->isNotEmpty() ? url('storage/' . $detil->Barang->foto->first()->path) : null,
+                    'status' => $detil->Barang->status, // Tambahkan status untuk frontend
+                ];
+            })->filter()->values();
+
+            // Jika tidak ada item yang valid setelah filter, hapus transaksi
+            if ($items->isEmpty()) {
+                $transaksi->delete();
+                return response()->json([
+                    'message' => 'Keranjang kosong setelah memfilter barang yang sudah sold',
+                    'data' => [],
+                ], 200);
+            }
+
             return response()->json([
                 'message' => 'Keranjang berhasil diambil',
                 'data' => [
                     'id_transaksi' => $transaksi->id_transaksi,
-                    'items' => $transaksi->detilTransaksi->map(function ($detil) {
-                        if (!$detil->Barang) {
-                            return null;
-                        }
-                        return [
-                            'id_barang' => $detil->Barang->id_barang,
-                            'nama_barang' => $detil->Barang->nama_barang,
-                            'harga' => $detil->Barang->harga,
-                            'foto' => $detil->Barang->foto->isNotEmpty() ? url('storage/' . $detil->Barang->foto->first()->path) : null,
-                        ];
-                    })->filter()->values(),
+                    'items' => $items,
                 ],
             ], 200);
         } catch (\Exception $e) {
@@ -417,10 +457,6 @@ class TransaksiController extends Controller
                 }
 
                 $detil->delete();
-
-                $barang = Barang::findOrFail($request->id_barang);
-                $barang->status = 'Available';
-                $barang->save();
 
                 if ($transaksi->detilTransaksi()->count() === 0) {
                     $transaksi->delete();
@@ -474,5 +510,155 @@ class TransaksiController extends Controller
             ->get();
 
     return response()->json($schedules);
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'metode_pengiriman' => 'required|in:Delivery,Pick Up',
+            'alamat' => 'required_if:metode_pengiriman,Delivery|string|nullable',
+            'biaya_pengiriman' => 'required|numeric|min:0',
+            'diskon' => 'nullable|numeric|min:0',
+            'points_redeemed' => 'nullable|integer|min:0',
+            'selected_items' => 'required|array',
+            'selected_items.*' => 'exists:barang,id_barang',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $user = $request->user();
+                $selectedItems = $request->selected_items;
+
+                $transaksiKeranjang = Transaksi::with('detilTransaksi.Barang')
+                    ->where('id_user', $user->id_user)
+                    ->whereNull('id_pembayaran')
+                    ->first();
+
+                if (!$transaksiKeranjang || $transaksiKeranjang->detilTransaksi->isEmpty()) {
+                    return response()->json(['error' => 'Keranjang kosong'], 400);
+                }
+
+                $detilTransaksis = $transaksiKeranjang->detilTransaksi->filter(function ($detil) use ($selectedItems) {
+                    return in_array($detil->id_barang, $selectedItems);
+                });
+
+                if ($detilTransaksis->isEmpty()) {
+                    return response()->json(['error' => 'Tidak ada barang yang dipilih untuk checkout'], 400);
+                }
+
+                $subtotal = 0;
+                foreach ($detilTransaksis as $detil) {
+                    $barang = Barang::findOrFail($detil->id_barang);
+                    if ($barang->status !== 'Available') {
+                        return response()->json(['error' => "Barang {$barang->nama_barang} sudah tidak tersedia"], 400);
+                    }
+                    $subtotal += $barang->harga;
+                }
+
+                $total = $subtotal + $request->biaya_pengiriman - ($request->diskon ?? 0);
+                $pointsRedeemed = $request->points_redeemed ?? 0;
+                if ($pointsRedeemed > 0) {
+                    if ($pointsRedeemed > $user->poin_loyalitas) {
+                        return response()->json(['error' => 'Poin loyalitas tidak cukup'], 400);
+                    }
+                    $user->poin_loyalitas -= $pointsRedeemed;
+                    $user->save();
+                }
+
+                $transaksiBaru = Transaksi::create([
+                    'id_user' => $user->id_user,
+                    'id_pembayaran' => null,
+                    'tanggal_transaksi' => now(),
+                    'jumlah_item' => $detilTransaksis->count(),
+                    'metode_pengiriman' => $request->metode_pengiriman,
+                    'alamat' => $request->metode_pengiriman === 'Delivery' ? $request->alamat : '',
+                    'biaya_pengiriman' => $request->biaya_pengiriman,
+                    'diskon' => $request->diskon ?? 0,
+                    'subtotal' => $subtotal,
+                    'total' => $total,
+                    'status' => 'Menunggu',
+                ]);
+
+                foreach ($detilTransaksis as $detil) {
+                    DetilTransaksi::create([
+                        'id_transaksi' => $transaksiBaru->id_transaksi,
+                        'id_barang' => $detil->id_barang,
+                    ]);
+                    $detil->delete();
+                }
+
+                foreach ($detilTransaksis as $detil) {
+                    $barang = Barang::findOrFail($detil->id_barang);
+                    $barang->status = 'On Hold';
+                    $barang->save();
+                }
+
+                $pembayaran = Pembayaran::create([
+                    'ss_pembayaran' => 'pending.jpg',
+                    'status_pembayaran' => 'Menunggu',
+                ]);
+
+                $transaksiBaru->update([
+                    'id_pembayaran' => $pembayaran->id_pembayaran,
+                ]);
+
+                CancelTransactionJob::dispatch($transaksiBaru->id_transaksi, $pointsRedeemed, $user->id_user)
+                    ->delay(now()->addMinutes(1));
+
+                if ($transaksiKeranjang->detilTransaksi()->count() === 0) {
+                    $transaksiKeranjang->delete();
+                }
+
+                return response()->json([
+                    'message' => 'Checkout berhasil. Silakan upload bukti pembayaran dalam 1 menit.',
+                    'transaksi_id' => $transaksiBaru->id_transaksi,
+                    'pembayaran_id' => $pembayaran->id_pembayaran,
+                ], 200);
+            });
+        } catch (Exception $e) {
+            Log::error('Gagal checkout: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal melakukan checkout: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function uploadProof(Request $request)
+    {
+        $request->validate([
+            'transaksi_id' => 'required|exists:transaksi,id_transaksi',
+            'pembayaran_id' => 'required|exists:pembayaran,id_pembayaran',
+            'proof' => 'required|image|mimes:jpeg,png,jpg|max:20480',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $transaksi = Transaksi::findOrFail($request->transaksi_id);
+                $pembayaran = Pembayaran::findOrFail($request->pembayaran_id);
+
+                if ($transaksi->id_pembayaran !== $pembayaran->id_pembayaran) {
+                    return response()->json(['error' => 'Transaksi dan pembayaran tidak sesuai'], 400);
+                }
+
+                $createdAt = $transaksi->created_at;
+                if (now()->diffInSeconds($createdAt) > 10) {
+                    return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
+                }
+
+                $file = $request->file('proof');
+                $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs($filename);
+
+                $pembayaran->update([
+                    'ss_pembayaran' => $filename,
+                    'status_pembayaran' => 'Menunggu Verifikasi',
+                ]);
+
+                return response()->json([
+                    'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
+                    'pembayaran_id' => $pembayaran->id_pembayaran,
+                    'proof_path' => $filename,
+                ], 200);
+            });
+        } catch (Exception $e) {
+            Log::error('Gagal mengunggah bukti pembayaran: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal mengunggah bukti pembayaran'], 500);
+        }
     }
 }

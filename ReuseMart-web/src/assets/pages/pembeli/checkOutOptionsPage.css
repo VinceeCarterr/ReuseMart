@@ -1,0 +1,90 @@
+/* Container utama */
+.container {
+    border-radius: 12px;
+    background-color: #fff;
+}
+
+/* Garis pemisah hitam */
+.section-divider {
+    border: 0;
+    border-top: 2px solid #000;
+    margin: 2rem 0;
+}
+
+/* Tombol utama */
+.btn-primary {
+    background-color: #28a745;
+    border-color: #28a745;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Tombol lanjutkan */
+.btn-success {
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+}
+
+/* Input form */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Input poin */
+.points-input {
+    max-width: 200px;
+}
+
+/* List group */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 12px;
+}
+
+/* Responsivitas */
+@media (max-width: 576px) {
+    .container {
+        padding: 15px;
+    }
+
+    .btn-success {
+        font-size: 1rem;
+    }
+
+    .form-control {
+        font-size: 0.9rem;
+    }
+
+    .points-input {
+        max-width: 150px;
+    }
+
+    .section-divider {
+        margin: 1.5rem 0;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+    }
+}

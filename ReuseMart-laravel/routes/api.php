@@ -79,6 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cart', [TransaksiController::class, 'getCart']);
         Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
         Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
+        Route::post('/checkout', [TransaksiController::class, 'checkout']);
+        Route::post('/upload-proof', [TransaksiController::class, 'uploadProof']);
     });
 
     Route::middleware('role:penitip')->group(function () {

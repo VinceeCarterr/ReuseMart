@@ -34,6 +34,7 @@ const KeranjangPage = () => {
             try {
                 const response = await api.get('/cart');
                 setCart(response.data.data);
+                setSelectedItems([]);
             } catch (error) {
                 setError(error.response?.data.error || 'Gagal mengambil keranjang');
                 setToastVariant('danger');
@@ -82,7 +83,7 @@ const KeranjangPage = () => {
         );
     };
 
-    const handleProceedToPayment = () => {
+    const handleProceedToCheckoutOptions = () => {
         if (selectedItems.length === 0) {
             setError('Pilih setidaknya satu barang untuk melanjutkan ke pembayaran');
             setToastVariant('danger');
@@ -90,6 +91,7 @@ const KeranjangPage = () => {
             setShowToast(true);
             return;
         }
+
         navigate('/checkout-options', { state: { selectedItems, cart } });
     };
 
@@ -200,10 +202,10 @@ const KeranjangPage = () => {
                         <Button
                             variant="success"
                             className="mt-3"
-                            onClick={handleProceedToPayment}
+                            onClick={handleProceedToCheckoutOptions}
                             disabled={loading || selectedItems.length === 0}
                         >
-                            Pembayaran
+                            Lanjutkan ke Pembayaran ({selectedItems.length} barang dipilih)
                         </Button>
                     </>
                 )}
