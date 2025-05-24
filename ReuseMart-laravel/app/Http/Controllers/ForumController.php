@@ -44,6 +44,23 @@ class ForumController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        $request->validate([    
+            'id_barang' => 'required|exists:barang,id_barang',
+        ]);
+
+        // Simpan forum baru
+        $forum = new Forum();
+        $forum->id_barang = $request->id_barang;
+        $forum->save();
+
+        return response()->json([
+            'message' => 'Forum berhasil dibuat',
+            'id_forum' => $forum->id_forum,
+        ], 201);
+    }
+
     // Menambahkan komentar baru
     public function addComment(Request $request, $id_barang)
     {

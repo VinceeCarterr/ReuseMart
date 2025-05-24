@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Toast, ToastContainer, Image } from 'react-bootstrap';
+import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import NavbarGudang from "../../components/Navbar/navbarGudang.jsx";
 
-import AddBarangModal from "../../components/gudang/addBarangModal.jsx";
 import UpdateBarangModal from "../../components/gudang/updateBarangModal.jsx";
 
-const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai ,onDelete }) => {
+const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai, onDelete }) => {
     return (
         <Col md={6} className="mx-auto mb-4">
             <Card className="req-card h-100">
@@ -15,7 +15,7 @@ const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai ,onDe
                     <Row>
                         <Col xs={4}>
                             <Image
-                                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+                                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`}
                                 thumbnail
                             />
                         </Col>
@@ -33,13 +33,13 @@ const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai ,onDe
                                 <strong>Status Periode:</strong> {barang.status_periode}
                             </div>
                             <div>
-                                <strong>Nama Penitip:</strong> {penitipanUser 
-                                    ? `${penitipanUser.first_name} ${penitipanUser.last_name}`.trim() 
+                                <strong>Nama Penitip:</strong> {penitipanUser
+                                    ? `${penitipanUser.first_name} ${penitipanUser.last_name}`.trim()
                                     : 'Unknown User'}
                             </div>
                             <div>
-                                <strong>Nama Pegawai:</strong> {barangPegawai 
-                                    ? `${barangPegawai.first_name} ${barangPegawai.last_name}`.trim() 
+                                <strong>Nama Pegawai:</strong> {barangPegawai
+                                    ? `${barangPegawai.first_name} ${barangPegawai.last_name}`.trim()
                                     : 'Unknown User'}
                             </div>
                             <div>
@@ -80,7 +80,6 @@ const GudangPage = () => {
 
     const [pencarian, setPencarian] = useState("");
 
-    // Fetch all necessary data
     useEffect(() => {
         fetchBarang();
         fetchPenitipan();
@@ -89,10 +88,10 @@ const GudangPage = () => {
     }, []);
 
     const fetchPegawai = async () => {
-        try{
-            const res = await api.get('/pegawai');
+        try {
+            const res = await api.get('/pegawaiGudang');
             setListPegawai(res.data);
-        }catch{
+        } catch {
             console.error('Failed to fetch Pegawai:', err);
             showToastMessage('Failed to fetch Pegawai');
         }
@@ -153,7 +152,9 @@ const GudangPage = () => {
     };
 
     const getUserByBarang = (barangId) => {
-        const penitipan = listPenitipan.find(p => p.id_barang === barangId);
+        const barang = listBarang.find(b => b.id_barang === barangId);
+        if (!barang || !barang.id_penitipan) return null;
+        const penitipan = listPenitipan.find(p => p.id_penitipan === barang.id_penitipan);
         return penitipan ? listUser.find(u => u.id_user === penitipan.id_user) : null;
     };
 
@@ -176,7 +177,7 @@ const GudangPage = () => {
         });
     };
 
-    
+
     const filteredList = listBarang.filter(barang => {
         const namabarang = barang.nama_barang.toLowerCase().includes(pencarian.toLowerCase());
         const status = barang.status.toLowerCase().includes(pencarian.toLowerCase());
@@ -185,11 +186,11 @@ const GudangPage = () => {
         const penitip = getUserByBarang(barang.id_barang);
         const pegawai = getPegawaiByBarang(barang.id_barang);
 
-        const namaLengkapPenitip = penitip 
-            ? `${penitip.first_name} ${penitip.last_name}`.toLowerCase() 
+        const namaLengkapPenitip = penitip
+            ? `${penitip.first_name} ${penitip.last_name}`.toLowerCase()
             : '';
-        const namaLengkapPegawai = pegawai 
-            ? `${pegawai.first_name} ${pegawai.last_name}`.toLowerCase() 
+        const namaLengkapPegawai = pegawai
+            ? `${pegawai.first_name} ${pegawai.last_name}`.toLowerCase()
             : '';
 
         const cocokPenitip = namaLengkapPenitip.includes(pencarian.toLowerCase());
@@ -202,7 +203,6 @@ const GudangPage = () => {
     return (
         <div>
             <NavbarGudang />
-            <AddBarangModal show={showModal} onHide={() => setShowModal(false)} />
             <Container className="mt-5">
                 <Row>
                     <Col md={10} className="mx-auto">
@@ -219,8 +219,10 @@ const GudangPage = () => {
                                     onChange={(e) => setPencarian(e.target.value)}
                                 />
                             </Col>
-                                <Col md={4} className="d-flex justify-content-end">
-                                <Button variant="success" onClick={() => setShowModal(true)}>Tambah Barang</Button>
+                            <Col md={4} className="d-flex justify-content-end">
+                                <NavLink to="/tambahBarang">
+                                    <Button variant="success">Tambah Barang</Button>
+                                </NavLink>
                             </Col>
                         </Row>
                         <hr />

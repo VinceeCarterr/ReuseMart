@@ -17,6 +17,7 @@ class Barang extends Model
         'id_pegawai',
         'id_penitipan',
         'nama_barang',
+        'kode_barang',
         'kategori',
         'deskripsi',
         'harga',
@@ -26,6 +27,7 @@ class Barang extends Model
         'status_periode',
         'rating',
         'byHunter',
+        'berat',
     ];
 
     public function Kategori()
@@ -50,7 +52,7 @@ class Barang extends Model
 
     public function penitipan()
     {
-        return $this->belongsTo(Penitipan::class, 'id_penitipan');
+        return $this->belongsTo(Penitipan::class, 'id_penitipan', 'id_penitipan');
     }
 
     public function Forum()

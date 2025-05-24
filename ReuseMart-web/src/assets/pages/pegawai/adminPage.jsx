@@ -64,7 +64,7 @@ const AdminPage = () => {
 
     const fetchPegawai = async () => {
         try {
-            const response = await api.get('/pegawai');
+            const response = await api.get('/pegawai/admin');
             setPegawaiList(response.data);
         } catch (error) {
             console.error('Failed to fetch pegawai:', error);

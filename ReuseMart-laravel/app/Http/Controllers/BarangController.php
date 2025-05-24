@@ -103,15 +103,17 @@ class BarangController extends Controller
     public function getUserRatings()
     {
         try {
-            $ratings = Barang::with(['penitipan.user' => function ($query) {
-                $query->select('id_user', 'rating');
+            $ratings = Barang::with(['penitipan' => function ($query) {
+                $query->with(['user' => function ($userQuery) {
+                    $userQuery->select('id_user', 'rating');
+                }]);
             }])
             ->whereIn('status', ['Available'])
             ->whereIn('status_periode', ['Periode 1', 'Periode 2'])
             ->get()
             ->map(function ($barang) {
                 return [
-                    'id_barang' => $barang->id_barang,
+                    'id_penitipan' => $barang->id_penitipan,
                     'rating' => $barang->penitipan && $barang->penitipan->user ? $barang->penitipan->user->rating : null
                 ];
             });
@@ -166,5 +168,18 @@ class BarangController extends Controller
         $b->status = $req->input('status');
         $b->save();
         return response()->json($b, 200);
+    }
+
+    public function updateStatusExpired()
+    {
+        $today = now()->startOfDay();
+        
+        $barangs = Barang::whereDate('tanggal_titip', '<', $today->subDays(30))
+            ->update(['status' => 'Expired']);
+            
+        return response()->json([
+            'message' => 'Successfully updated expired statuses for all Barang records',
+            'updated_count' => $barangs
+        ], 200);
     }
 }

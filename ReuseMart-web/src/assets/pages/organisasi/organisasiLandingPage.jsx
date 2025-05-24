@@ -24,7 +24,7 @@ const ProductCard = ({ barang }) => (
         <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
         <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
         <Card.Text style={{ fontSize: '0.9rem' }}>
-          Rating: {barang.rating ? barang.rating : 'N/A'}
+          Rating Penitip: {barang.rating ? barang.rating : 'Belum memiliki rating'}
         </Card.Text>
       </div>
     </Card.Body>

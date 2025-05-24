@@ -32,7 +32,7 @@ const ReqDonasiCard = ({ reqDonasi, getUserNameById }) => (
                             <strong>Kategori:</strong> {reqDonasi.kategori_barangreq}
                         </div>
                         <div>
-                            <strong>Deskripsi</strong> {reqDonasi.deskripsi}
+                            <strong>Deskripsi: </strong> {reqDonasi.deskripsi}
                         </div>
                     </Col>
                 </Row>

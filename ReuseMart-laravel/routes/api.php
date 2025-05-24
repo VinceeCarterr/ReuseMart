@@ -32,8 +32,9 @@ Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments
 Route::get('/foto_barang', [Foto_BarangController::class, 'index']);
 Route::get('/foto-barang/{id_barang}', [Foto_BarangController::class, 'getByBarangId']);
 Route::get('/user-ratings', [BarangController::class, 'getUserRatings']);
-
+Route::get('/penitipan/public', [PenitipanController::class, 'index']);
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
+Route::put('/barang/updateExpired', [BarangController::class, 'updateStatusExpired']);
 
 Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
 
@@ -41,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    Route::get('/penitipan', [PenitipanController::class, 'index']);
+    
 
     
 
@@ -51,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword']);
 
         //kelola data pegawai
-        Route::get('/pegawai', [PegawaiController::class, 'index']);
+        Route::get('/pegawai/admin', [PegawaiController::class, 'index']);
         Route::get('/pegawai/{id}', [PegawaiController::class, 'show']);
         Route::post('/pegawai/register', [PegawaiController::class, 'register']);
         Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
@@ -112,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //mendonasikan barang
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
+        Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
@@ -129,6 +131,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
+        Route::post('/barang/addBarang', [BarangController::class, 'store']);
+        Route::put('/barang/{id}', [BarangController::class, 'update']);
+        Route::get('/barangGudang', [BarangController::class, 'index']);
+        Route::get('/alamat/gudang', [AlamatController::class, 'index']);
+        Route::post('/foto/addFoto', [Foto_BarangController::class, 'store']);
+        Route::post('/forum/addForum', [ForumController::class, 'store']);
+        Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
+        Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
         Route::get('/penitipan', [PenitipanController::class, 'index']);
         Route::get('/user/gudang', [UserController::class, 'gudangList']);
         Route::get('akan-ambil', [BarangController::class, 'akanAmbilAll']);
