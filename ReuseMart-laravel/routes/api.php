@@ -139,6 +139,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
         Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
         Route::get('/penitipan', [PenitipanController::class, 'index']);
+        Route::put('/penitipan/{id}', [PenitipanController::class, 'update']);
+        Route::get('/penitipan/getOne/{id}', [PenitipanController::class, 'getPenitipan']);
         Route::get('/user/gudang', [UserController::class, 'gudangList']);
         Route::get('akan-ambil', [BarangController::class, 'akanAmbilAll']);
         Route::patch('/barang/{id}/ambil', [BarangController::class, 'markAsTaken']);

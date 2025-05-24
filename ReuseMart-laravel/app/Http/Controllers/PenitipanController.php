@@ -30,6 +30,12 @@ class PenitipanController extends Controller
             return response()->json(['error' => 'Penitipan not found'], 404);
         }
     }
+
+    public function getPenitipan($id)
+    {
+        $penitipan = Penitipan::findOrFail($id);
+        return response()->json($penitipan);
+    }
     
     public function store(Request $request)
     {
@@ -41,6 +47,8 @@ class PenitipanController extends Controller
             return response()->json(['error' => 'Failed to create penitipan'], 500);
         }
     }
+
+
 
     public function update(Request $request, $id)
     {

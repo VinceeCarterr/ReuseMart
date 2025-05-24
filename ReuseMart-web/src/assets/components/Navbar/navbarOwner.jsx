@@ -35,7 +35,7 @@ export default function NavbarOwner() {
                 <div className="container-fluid">
                     <div className="row align-items-center">
                         <div className="col-auto mx-3 logo-container">
-                            <NavLink to="/" className="d-flex align-items-center text-decoration-none logo-link">
+                            <NavLink to="/ownerLP" className="d-flex align-items-center text-decoration-none logo-link">
                                 <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
                                 <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
                             </NavLink>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, Tab, Button, Form, Row, Col, Toast, ToastContainer, Container } from 'react-bootstrap';
 import api from '../../../api/api.js';
 import NavbarGudang from '../../components/Navbar/navbarGudang.jsx';
-import NotaPenitipan from '../../components/gudang/notaPenitipan.jsx'; // Import NotaPenitipan
+import NotaPenitipan from '../../components/gudang/notaPenitipan.jsx';
 
 const AddBarangPage = () => {
     const [numBarangs, setNumBarangs] = useState(1);
@@ -15,14 +15,13 @@ const AddBarangPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastVariant, setToastVariant] = useState('success');
     const [showModal, setShowModal] = useState(false);
-    const [currentPenitipanId, setCurrentPenitipanId] = useState(null); 
+    const [currentPenitipanId, setCurrentPenitipanId] = useState(null);
     const today = new Date().toISOString().split('T')[0];
     const [sharedData, setSharedData] = useState({
         selectedUser: '',
         selectedPegawai: '',
         tanggalTitip: '',
     });
-
 
     const categoryCodeMap = {
         'Elektronik & Gadget': 'EG',
@@ -44,6 +43,7 @@ const AddBarangPage = () => {
             kategoriBarang: '',
             deskripsi: '',
             harga: '',
+            berat: '',
             garansi: '',
             jumlahFoto: '2',
             files: new Array(2).fill(null),
@@ -112,20 +112,45 @@ const AddBarangPage = () => {
             return;
         }
 
+        const inputStaff = pegawaiList.find(
+            (pegawai) => pegawai.id_pegawai === parseInt(sharedData.selectedPegawai) && pegawai.id_jabatan === 3
+        );
+        if (!inputStaff) {
+            setToastMessage('Pegawai yang bertanggung jawab tidak valid.');
+            setToastVariant('danger');
+            setShowToast(true);
+            setLoading(false);
+            return;
+        }
+
         for (let i = 0; i < formData.length; i++) {
             const form = formData[i];
             if (
                 !form.namaBarang ||
                 !form.harga ||
+                !form.berat ||
                 form.mainKategoriIdx === '' ||
                 !form.kategoriBarang ||
-                !form.selectedHunter
+                form.selectedHunter === ''
             ) {
                 setToastMessage(`Mohon lengkapi semua field yang wajib diisi pada tab ${i + 1}.`);
                 setToastVariant('danger');
                 setShowToast(true);
                 hasError = true;
                 break;
+            }
+
+            if (form.selectedHunter !== 'Tidak') {
+                const hunter = pegawaiList.find(
+                    (pegawai) => pegawai.id_pegawai === parseInt(form.selectedHunter) && pegawai.id_jabatan === 5
+                );
+                if (!hunter) {
+                    setToastMessage(`Hunter pada tab ${i + 1} tidak valid.`);
+                    setToastVariant('danger');
+                    setShowToast(true);
+                    hasError = true;
+                    break;
+                }
             }
         }
 
@@ -135,8 +160,13 @@ const AddBarangPage = () => {
         }
 
         try {
+            const tanggalTitip = sharedData.tanggalTitip || today;
+            const date = new Date(tanggalTitip);
+            const tahun = date.getFullYear();
+            const bulan = String(date.getMonth() + 1).padStart(2, '0');
+
             const penitipanPayload = {
-                id_user: sharedData.selectedUser,
+                id_user: parseInt(sharedData.selectedUser),
                 jumlah_barang: formData.length,
             };
 
@@ -147,6 +177,10 @@ const AddBarangPage = () => {
                 throw new Error('ID penitipan tidak ditemukan di respons API.');
             }
 
+            const noNota = `${tahun}.${bulan}.${idPenitipan}`;
+            await api.put(`/penitipan/${idPenitipan}`, {
+                no_nota: noNota,
+            });
 
             for (let i = 0; i < formData.length; i++) {
                 const form = formData[i];
@@ -183,18 +217,19 @@ const AddBarangPage = () => {
 
                 const barangPayload = {
                     nama_barang: form.namaBarang,
-                    id_kategori: selectedSubKategori.id,
+                    id_kategori: parseInt(selectedSubKategori.id),
                     id_penitipan: idPenitipan,
-                    deskripsi: form.deskripsi,
+                    deskripsi: form.deskripsi || null,
                     harga: parseFloat(form.harga),
-                    tanggal_titip: sharedData.tanggalTitip || today,
+                    berat: parseFloat(form.berat),
+                    tanggal_titip: tanggalTitip,
                     garansi: form.garansi || null,
                     kategori: selectedMainKategori.nama_kategori,
                     status: 'Available',
                     status_periode: 'Periode 1',
                     rating: 0,
-                    id_pegawai: sharedData.selectedPegawai,
-                    id_hunter: form.selectedHunter === 'Tidak' ? null : form.selectedHunter,
+                    id_pegawai: parseInt(sharedData.selectedPegawai),
+                    byHunter: form.selectedHunter === 'Tidak' ? 0 : parseInt(form.selectedHunter),
                 };
 
                 const barangRes = await api.post('/barang/addBarang', barangPayload);
@@ -204,13 +239,11 @@ const AddBarangPage = () => {
                     throw new Error(`ID barang tidak ditemukan untuk barang pada tab ${i + 1}.`);
                 }
 
-                // Generate kode_barang
                 const kodeBarang = `${categoryCode}${selectedSubKategori.id}${idBarang}`;
                 const updateBarangPayload = {
                     kode_barang: kodeBarang,
                 };
 
-                // Update barang with kode_barang immediately
                 await api.put(`/barang/${idBarang}`, updateBarangPayload);
 
                 try {
@@ -218,15 +251,12 @@ const AddBarangPage = () => {
                         id_barang: idBarang,
                     });
                 } catch (error) {
-                    console.error(`Gagal membuat forum untuk barang ${idBarang}:`, error.response?.data || error.message);
                     throw new Error(`Gagal membuat forum untuk barang pada tab ${i + 1}: ${error.response?.data?.message || error.message}`);
                 }
 
-                // Upload photos with correct file data
                 const photoUploadPromises = form.files
                     .map((file, fileIndex) => {
                         if (!file) {
-                            console.log(`No file uploaded for photo ${fileIndex + 1} on tab ${i + 1}`);
                             return null;
                         }
                         const fileName = file.name;
@@ -238,7 +268,6 @@ const AddBarangPage = () => {
                         return api.post('/foto/addFoto', fd, {
                             headers: { 'Content-Type': 'multipart/form-data' },
                         }).catch((error) => {
-                            console.error(`Error uploading photo ${fileIndex + 1} for barang ${idBarang}:`, error.response?.data || error.message);
                             throw new Error(`Gagal mengunggah foto ${fileIndex + 1} pada tab ${i + 1}: ${error.response?.data?.message || error.message}`);
                         });
                     })
@@ -249,16 +278,13 @@ const AddBarangPage = () => {
                 }
             }
 
-            // Show success toast and open the modal
             setToastMessage('Semua barang dan foto berhasil ditambahkan.');
             setToastVariant('success');
             setShowToast(true);
 
-            // Set the penitipanId and open the modal
             setCurrentPenitipanId(idPenitipan);
             setShowModal(true);
 
-            // Clear form data
             setFormData(
                 Array.from({ length: numBarangs }, () => ({
                     namaBarang: '',
@@ -266,6 +292,7 @@ const AddBarangPage = () => {
                     kategoriBarang: '',
                     deskripsi: '',
                     harga: '',
+                    berat: '',
                     garansi: '',
                     jumlahFoto: '2',
                     files: new Array(2).fill(null),
@@ -278,7 +305,6 @@ const AddBarangPage = () => {
                 tanggalTitip: '',
             });
         } catch (error) {
-            console.error('Error saat menyimpan data:', error.response?.data || error.message);
             setToastMessage(`Terjadi kesalahan: ${error.response?.data?.message || error.message}`);
             setToastVariant('danger');
             setShowToast(true);
@@ -298,7 +324,6 @@ const AddBarangPage = () => {
             <Container className="mt-5">
                 <h2>Tambah Barang</h2>
 
-                {/* Shared Fields */}
                 <Row className="mb-4">
                     <Col md={6}>
                         <Form.Group controlId="formPenitip">
@@ -321,7 +346,7 @@ const AddBarangPage = () => {
                     </Col>
                     <Col md={6}>
                         <Form.Group controlId="formPegawai">
-                            <Form.Label>Pilih Pegawai *</Form.Label>
+                            <Form.Label>Pilih Pegawai (Input Staff) *</Form.Label>
                             <Form.Select
                                 value={sharedData.selectedPegawai}
                                 onChange={(e) => handleSharedInputChange('selectedPegawai', e.target.value)}
@@ -332,7 +357,7 @@ const AddBarangPage = () => {
                                     .filter((pegawai) => pegawai.id_jabatan === 3)
                                     .map((pegawai) => (
                                         <option key={pegawai.id_pegawai} value={pegawai.id_pegawai}>
-                                            {pegawai.first_name} {pegawai.last_name}
+                                            {pegawai.first_name} {pegawai.last_name} (ID: {pegawai.id_pegawai})
                                         </option>
                                     ))}
                             </Form.Select>
@@ -505,10 +530,23 @@ const AddBarangPage = () => {
                                                     .filter((pegawai) => pegawai.id_jabatan === 5)
                                                     .map((pegawai) => (
                                                         <option key={pegawai.id_pegawai} value={pegawai.id_pegawai}>
-                                                            {pegawai.first_name} {pegawai.last_name}
+                                                            {pegawai.first_name} {pegawai.last_name} (ID: {pegawai.id_pegawai})
                                                         </option>
                                                     ))}
                                             </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                    <Col>
+                                        <Form.Group controlId={`formBerat${index}`}>
+                                            <Form.Label>Berat Barang (kg) *</Form.Label>
+                                            <Form.Control
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={form.berat}
+                                                onChange={(e) => handleInputChange(index, 'berat', e.target.value)}
+                                                required
+                                            />
                                         </Form.Group>
                                     </Col>
                                 </Row>
@@ -537,7 +575,6 @@ const AddBarangPage = () => {
                     </Button>
                 </div>
 
-                {/* Add NotaPenitipan Modal */}
                 <NotaPenitipan
                     show={showModal}
                     onHide={handleCloseModal}
