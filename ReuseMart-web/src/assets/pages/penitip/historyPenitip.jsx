@@ -11,6 +11,8 @@ import {
   Form,
   Carousel,
   Dropdown,
+  Toast, 
+  ToastContainer
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FiCalendar, FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
@@ -38,7 +40,6 @@ const HistoryPenitip = () => {
 
   const expiredPatched = useRef(new Set());
 
-  // state
   const [groupedCats, setGroupedCats] = useState([]);
   const [activeCatIdx, setActiveCatIdx] = useState(0);
   const [showMega, setShowMega] = useState(false);
@@ -58,6 +59,9 @@ const HistoryPenitip = () => {
   const [showAmbilConfirm, setShowAmbilConfirm] = useState(false);
   const [showDonasiConfirm, setShowDonasiConfirm] = useState(false);
   const [actionItem, setActionItem] = useState(null);
+  const [toastShow, setToastShow] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
 
   const statuses = ["Available", "Sold", "Expired", "Donated"];
 
@@ -114,12 +118,30 @@ const HistoryPenitip = () => {
     items.forEach((item) => {
       const due =
         new Date(item.tanggal_titip).getTime() + 30 * 24 * 3600 * 1000;
+
+      if (
+        now >= due &&
+        item.status === "Available" &&
+        item.status_periode === "Periode 1" &&
+        !expiredPatched.current.has(item.id_barang)
+      ) {
+        expiredPatched.current.add(item.id_barang);
+
+        api
+          .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
+            status: "Bisa Perpanjang",
+            status_periode: "Expired",
+          })
+          .then(() => fetchHistory())
+          .catch(console.error);
+      }
       if (
         now >= due &&
         item.status_periode !== "Expired" &&
         !expiredPatched.current.has(item.id_barang)
       ) {
         expiredPatched.current.add(item.id_barang);
+
         api
           .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
             status_periode: "Expired",
@@ -151,11 +173,18 @@ const HistoryPenitip = () => {
       await api.patch(`/transaksi/historyPenitip/${confirmItem.id_barang}`, {
         tanggal_titip: today,
         status_periode: "Periode 2",
+        status: "Available",
       });
+      setToastVariant("success");
+      setToastMessage("Perpanjangan berhasil!");
+      setToastShow(true);
       closeConfirm();
       fetchHistory();
     } catch (err) {
       console.error("Perpanjang error:", err.response ?? err);
+      setToastVariant("danger");
+      setToastMessage("Perpanjangan gagal.");
+      setToastShow(true);
     }
   };
 
@@ -184,10 +213,16 @@ const HistoryPenitip = () => {
         status: "Akan Ambil",
         tanggal_titip: today,
       });
+      setToastVariant("success");
+      setToastMessage("Permintaan ambil berhasil!");
+      setToastShow(true);
       closeAmbilConfirm();
       fetchHistory();
     } catch (err) {
       console.error("Ambil error:", err.response ?? err);
+      setToastVariant("danger");
+      setToastMessage("Ambil gagal.");
+      setToastShow(true);
     }
   };
 
@@ -197,10 +232,15 @@ const HistoryPenitip = () => {
       await api.patch(`/transaksi/historyPenitip/${actionItem.id_barang}`, {
         status: "Untuk Donasi",
       });
+      setToastVariant("success");
+      setToastMessage("Donasi berhasil!");
+      setToastShow(true);
       closeDonasiConfirm();
       fetchHistory();
     } catch (err) {
       console.error("Donasi error:", err.response ?? err);
+      setToastVariant("danger");
+      setToastMessage("Donasi gagal.");
     }
   };
 
@@ -283,6 +323,22 @@ const HistoryPenitip = () => {
   }, [now, items]);
   return (
     <>
+    <ToastContainer
+  position="top-end"
+  className="p-3"
+>
+  <Toast
+    bg={toastVariant}
+    onClose={() => setToastShow(false)}
+    show={toastShow}
+    delay={3000}
+    autohide
+  >
+    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+      {toastMessage}
+    </Toast.Body>
+  </Toast>
+</ToastContainer>
       {/* NAVBAR */}
       <div className="py-3 navbar-penitip">
         <div className="container-fluid">
@@ -585,7 +641,8 @@ const HistoryPenitip = () => {
                         )}
 
                       {item.status_periode === "Expired" &&
-                        item.status === "Available" && (
+                        (item.status === "Available" ||
+                          item.status === "Bisa Perpanjang") && (
                           <small className="d-block">
                             Batas sebelum barang didonasikan:{" "}
                             {(() => {
@@ -629,18 +686,26 @@ const HistoryPenitip = () => {
                       >
                         Lihat Detail
                       </Button>
-                      {item.status === "Available" &&
-                        !expired &&
-                        extendable && (
+                      {item.status === "Bisa Perpanjang" && (
+                        <>
                           <Button
                             size="sm"
-                            variant="success"
+                            variant="warning"
+                            className="ms-2"
+                            onClick={() => openAmbilConfirm(item)}
+                          >
+                            Ambil
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="primary"
                             className="ms-2"
                             onClick={() => openConfirm(item)}
                           >
                             Perpanjang
                           </Button>
-                        )}
+                        </>
+                      )}
                       {item.status === "Available" &&
                         item.status_periode === "Expired" && (
                           <>

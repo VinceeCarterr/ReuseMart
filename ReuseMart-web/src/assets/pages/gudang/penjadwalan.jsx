@@ -10,11 +10,14 @@ import {
   Col,
   Carousel,
   Image,
+  Toast, 
+  ToastContainer
 } from "react-bootstrap";
 import { Truck } from "react-bootstrap-icons";
 import NavbarGudang from "../../components/Navbar/navbarGudang.jsx";
 import api from "../../../api/api.js";
 import "../penitip/historyPenitip.css";
+import NotaKurir from "../../components/gudang/notaKurir.jsx";
 
 const methodOptions = [
   { label: "Pengiriman", value: "Delivery" },
@@ -31,6 +34,11 @@ const Penjadwalan = () => {
   const [dateError, setDateError] = useState("");
   const formatDate = (d) => d.toISOString().slice(0, 10);
   const todayString = formatDate(new Date());
+  const [showNotaKurir, setShowNotaKurir] = useState(false);
+
+  const [toastShow, setToastShow]       = useState(false);
+const [toastMessage, setToastMessage] = useState("");
+const [toastVariant, setToastVariant] = useState("success");
 
   // jadwal modal
   const [showModal, setShowModal] = useState(false);
@@ -308,6 +316,10 @@ const Penjadwalan = () => {
           status_pengambilan: "Belum diambil",
         });
       }
+
+      setToastVariant("success");
+    setToastMessage("Jadwal berhasil disimpan!");
+    setToastShow(true);
       setShowModal(false);
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
@@ -318,6 +330,9 @@ const Penjadwalan = () => {
         data: err.response?.data,
         message: err.message,
       });
+      setToastVariant("danger");
+    setToastMessage("Gagal menyimpan jadwal.");
+    setToastShow(true);
     }
   };
 
@@ -334,12 +349,18 @@ const Penjadwalan = () => {
         status_pengambilan: "Sudah diambil",
       });
       await addKomisi(t);
+      setToastVariant("success");
+    setToastMessage("Pengambilan berhasil dikonfirmasi!");
+    setToastShow(true);
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
       setSchedules(data);
     } catch (err) {
       console.error("Error confirming pickup:", err);
       alert("Gagal menandai pengambilan sebagai Sudah diambil.");
+      setToastVariant("danger");
+    setToastMessage("Gagal konfirmasi pengambilan.");
+    setToastShow(true);
     }
   };
 
@@ -365,8 +386,27 @@ const Penjadwalan = () => {
     }
   }
 
+  const handleCetakNotaKurir = () => {
+    setShowNotaKurir(true);
+  };
+
+  const closeNotaKurir = () => setShowNotaKurir(false);
+
   return (
     <>
+    <ToastContainer position="top-end" className="p-3">
+  <Toast
+    bg={toastVariant}
+    onClose={() => setToastShow(false)}
+    show={toastShow}
+    delay={3000}
+    autohide
+  >
+    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+      {toastMessage}
+    </Toast.Body>
+  </Toast>
+</ToastContainer>
       <NavbarGudang />
 
       <Container className="mt-5">
@@ -895,7 +935,28 @@ const Penjadwalan = () => {
             </>
           )}
         </Modal.Body>
+        <Modal.Footer>
+          {selectedTransaksi?.metode_pengiriman === "Delivery" && (
+            <Button variant="success" onClick={handleCetakNotaKurir}>
+              Cetak Nota Kurir
+            </Button>
+          )}
+
+          {selectedTransaksi?.metode_pengiriman === "Pick Up" && (
+            <Button variant="success" onClick={handleCetakNotaKurir}>
+              Cetak Nota Pembeli
+            </Button>
+          )}
+          <Button variant="secondary" onClick={closeDetail}>
+            Tutup
+          </Button>
+        </Modal.Footer>
       </Modal>
+      <NotaKurir
+        show={showNotaKurir}
+        onHide={closeNotaKurir}
+        transaksiId={selectedTransaksi?.id_transaksi}
+      />
     </>
   );
 };
