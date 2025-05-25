@@ -21,6 +21,7 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastVariant, setToastVariant] = useState('success');
+    const [pendingToast, setPendingToast] = useState(null);
 
     const categoryCodeMap = {
         'Elektronik & Gadget': 'EG',
@@ -49,7 +50,6 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
             const res = await api.get(`/barang/${barangId}`);
             const barang = res.data;
 
-            // Find the main kategori index and sub-kategori name
             const mainKategoriIdx = kategoriList.findIndex(
                 (cat) => cat.nama_kategori === barang.kategori
             );
@@ -71,9 +71,11 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                 existingPhotos: barang.foto || [],
             });
         } catch (error) {
-            setToastMessage('Gagal memuat data barang: ' + (error.response?.data?.message || error.message));
-            setToastVariant('danger');
-            setShowToast(true);
+            console.error('Error fetching barang data:', error);
+            setPendingToast({
+                message: 'Gagal memuat data barang: ' + (error.response?.data?.message || error.message),
+                variant: 'danger',
+            });
         } finally {
             setLoading(false);
         }
@@ -84,9 +86,11 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
             const res = await api.get('/kategori');
             setKategoriList(res.data || []);
         } catch (error) {
-            setToastMessage('Gagal memuat data kategori: ' + (error.response?.data?.message || error.message));
-            setToastVariant('danger');
-            setShowToast(true);
+            console.error('Error fetching kategori data:', error);
+            setPendingToast({
+                message: 'Gagal memuat data kategori: ' + (error.response?.data?.message || error.message),
+                variant: 'danger',
+            });
         }
     };
 
@@ -117,6 +121,16 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
         });
     }, [formData.mainKategoriIdx, kategoriList]);
 
+    // Show pending toast after modal closes
+    useEffect(() => {
+        if (!show && pendingToast) {
+            setToastMessage(pendingToast.message);
+            setToastVariant(pendingToast.variant);
+            setShowToast(true);
+            setPendingToast(null);
+        }
+    }, [show, pendingToast]);
+
     const handleInputChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
@@ -128,36 +142,59 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
     };
 
     const handleSubmit = async () => {
-        // Show confirmation dialog
         const confirmUpdate = window.confirm('Apakah Anda yakin ingin mengupdate data barang ini?');
         if (!confirmUpdate) {
-            return; // Exit if user cancels
+            return;
         }
 
         setLoading(true);
 
         // Validate required fields
         if (
-            !formData.namaBarang ||
-            !formData.harga ||
-            !formData.berat ||
+            !formData.namaBarang.trim() ||
+            !formData.harga.trim() ||
+            !formData.berat.trim() ||
             formData.mainKategoriIdx === '' ||
-            !formData.kategoriBarang
+            !formData.kategoriBarang.trim()
         ) {
-            setToastMessage('Mohon lengkapi semua field wajib.');
-            setToastVariant('danger');
-            setShowToast(true);
+            setPendingToast({
+                message: 'Mohon lengkapi semua field wajib: Nama Barang, Harga, Berat, Kategori Utama, dan Sub Kategori.',
+                variant: 'danger',
+            });
             setLoading(false);
+            onHide();
+            return;
+        }
+
+        if (isNaN(parseFloat(formData.harga)) || parseFloat(formData.harga) <= 0) {
+            setPendingToast({
+                message: 'Harga Barang harus berupa angka positif.',
+                variant: 'danger',
+            });
+            setLoading(false);
+            onHide();
+            return;
+        }
+
+        if (isNaN(parseFloat(formData.berat)) || parseFloat(formData.berat) <= 0) {
+            setPendingToast({
+                message: 'Berat Barang harus berupa angka positif.',
+                variant: 'danger',
+            });
+            setLoading(false);
+            onHide();
             return;
         }
 
         try {
             const selectedMainKategori = kategoriList[formData.mainKategoriIdx];
             if (!selectedMainKategori || !selectedMainKategori.sub_kategori) {
-                setToastMessage('Kategori utama tidak valid atau tidak memiliki subkategori.');
-                setToastVariant('danger');
-                setShowToast(true);
+                setPendingToast({
+                    message: 'Kategori utama tidak valid atau tidak memiliki subkategori.',
+                    variant: 'danger',
+                });
                 setLoading(false);
+                onHide();
                 return;
             }
 
@@ -165,19 +202,23 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                 (sub) => sub.nama === formData.kategoriBarang
             );
             if (!selectedSubKategori) {
-                setToastMessage(`Subkategori ${formData.kategoriBarang} tidak ditemukan.`);
-                setToastVariant('danger');
-                setShowToast(true);
+                setPendingToast({
+                    message: `Subkategori ${formData.kategoriBarang} tidak ditemukan.`,
+                    variant: 'danger',
+                });
                 setLoading(false);
+                onHide();
                 return;
             }
 
             const categoryCode = categoryCodeMap[selectedMainKategori.nama_kategori];
             if (!categoryCode) {
-                setToastMessage(`Kode kategori untuk ${selectedMainKategori.nama_kategori} tidak ditemukan.`);
-                setToastVariant('danger');
-                setShowToast(true);
+                setPendingToast({
+                    message: `Kode kategori untuk ${selectedMainKategori.nama_kategori} tidak ditemukan.`,
+                    variant: 'danger',
+                });
                 setLoading(false);
+                onHide();
                 return;
             }
 
@@ -196,37 +237,58 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
             // Update barang
             await api.put(`/barang/${barangId}`, barangPayload);
 
-            // Handle photo updates
-            const photoUploadPromises = formData.files
-                .map((file, fileIndex) => {
-                    if (!file) return null;
+            // Handle photo updates: Replace specific photos
+            const deletePhotoPromises = [];
+            const photoUploadPromises = [];
+            const newPhotos = [...formData.existingPhotos];
+
+            formData.files.forEach((file, index) => {
+                if (file) {
+                    // If there's an existing photo at this index, mark it for deletion
+                    if (formData.existingPhotos[index]?.id) {
+                        deletePhotoPromises.push(
+                            api.delete(`/deleteFoto/${formData.existingPhotos[index].id}`).then(() => {
+                                console.log(`Foto ${index + 1} berhasil dihapus.`);
+                            }).catch((error) => {
+                                console.error(`Gagal menghapus foto ${formData.existingPhotos[index].id}:`, error);
+                            })
+                        );
+                    }
+                    // Prepare new photo for upload
                     const fileName = file.name;
                     const path = `Foto_Barang/${fileName}`;
                     const fd = new FormData();
                     fd.append('file', file);
                     fd.append('path', path);
                     fd.append('id_barang', barangId);
-                    return api.post('/foto/addFoto', fd, {
-                        headers: { 'Content-Type': 'multipart/form-data' },
-                    }).catch((error) => {
-                        throw new Error(`Gagal mengunggah foto ${fileIndex + 1}: ${error.response?.data?.message || error.message}`);
-                    });
-                })
-                .filter((promise) => promise !== null);
-
-            if (photoUploadPromises.length > 0) {
-                // Delete existing photos if replacing
-                for (const photo of formData.existingPhotos) {
-                    if (photo.id) {
-                        await api.delete(`/foto/${photo.id}`);
-                    }
+                    photoUploadPromises.push(
+                        api.post('/foto/addFoto', fd, {
+                            headers: { 'Content-Type': 'multipart/form-data' },
+                        }).then((response) => {
+                            // Update newPhotos with the actual photo data from backend
+                            newPhotos[index] = response.data.data; // Assuming backend returns { message, data: { id, path, id_barang } }
+                        }).catch((error) => {
+                            console.error(`Gagal mengunggah foto ${index + 1}:`, error);
+                        })
+                    );
                 }
-                await Promise.all(photoUploadPromises);
-            }
+            });
 
-            setToastMessage('Barang berhasil diperbarui.');
-            setToastVariant('success');
-            setShowToast(true);
+            // Execute deletions and uploads
+            await Promise.all(deletePhotoPromises);
+            await Promise.all(photoUploadPromises);
+
+            // Update existingPhotos with new photos
+            setFormData((prev) => ({
+                ...prev,
+                existingPhotos: newPhotos.filter((photo) => photo !== null),
+                files: new Array(parseInt(formData.jumlahFoto)).fill(null),
+            }));
+
+            setPendingToast({
+                message: 'Barang berhasil diperbarui.',
+                variant: 'success',
+            });
 
             // Reset form and close modal
             setFormData({
@@ -242,16 +304,19 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                 files: new Array(2).fill(null),
                 existingPhotos: [],
             });
-            onUpdate(); // Trigger parent refresh
-            onHide(); // Close modal
+            onUpdate();
+            onHide();
         } catch (error) {
-            setToastMessage(`Terjadi kesalahan: ${error.response?.data?.message || error.message}`);
-            setToastVariant('danger');
-            setShowToast(true);
-        } finally {
+            console.error('Error during submit:', error);
+            setPendingToast({
+                message: `Terjadi kesalahan: ${error.response?.data?.message || error.message}`,
+                variant: 'danger',
+            });
             setLoading(false);
+            onHide();
         }
     };
+
 
     return (
         <Modal show={show} onHide={onHide} centered backdrop="static" size="lg">
@@ -468,4 +533,4 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
     );
 };
 
-export default UpdateBarangModal;
+export default UpdateBarangModal;   

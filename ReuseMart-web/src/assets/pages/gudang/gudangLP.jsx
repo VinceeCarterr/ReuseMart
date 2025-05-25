@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Form, Toast, ToastContainer, Image } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Toast, ToastContainer, Image, Modal } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
@@ -72,18 +72,34 @@ const GudangPage = () => {
     const [listPenitipan, setListPenitipan] = useState([]);
     const [listUser, setListUser] = useState([]);
     const [listPegawai, setListPegawai] = useState([]);
+    const [listFotoBarang, setListFotoBarang] = useState([]);
+
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [selectedBarangId, setSelectedBarangId] = useState(null);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [pencarian, setPencarian] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [barangToDelete, setBarangToDelete] = useState(null);
 
     useEffect(() => {
         fetchBarang();
         fetchPenitipan();
         fetchUser();
         fetchPegawai();
+        fetchFotoBarang();
     }, []);
+
+    const fetchFotoBarang = async () => {
+        try {
+            const res = await api.get('/fotoGudang');
+            setListFotoBarang(res.data);
+        } catch (err) {
+            console.error('Failed to fetch Foto Barang:', err);
+            showToastMessage('Failed to fetch foto barang');
+        }
+    };
+
 
     const fetchPegawai = async () => {
         try {
@@ -131,16 +147,34 @@ const GudangPage = () => {
     };
 
     const handleDeleteBarang = async (id) => {
-        if (window.confirm('Are you sure you want to delete this item?')) {
-            try {
-                await api.delete(`/barang/${id}`);
-                fetchBarang();
-                showToastMessage('Item deleted successfully');
-            } catch (err) {
-                console.error('Failed to delete Barang:', err);
-                showToastMessage('Failed to delete item');
+    if (barangToDelete) {
+        try {
+            // Filter foto dengan id_barang yang sesuai
+            const relatedFotos = listFotoBarang.filter(foto => foto.id_barang === id);
+
+            for (const foto of relatedFotos) {
+                await api.delete(`/deleteFoto/${foto.id_foto}`);
             }
+
+            await api.delete(`/deleteBarang/${id}`);
+
+            fetchBarang();
+            showToastMessage('Item and all associated photos deleted successfully');
+        } catch (err) {
+            console.error('Failed to delete Barang:', err);
+            showToastMessage('Failed to delete item');
+        } finally {
+            setShowDeleteModal(false);
+            setBarangToDelete(null);
         }
+    }
+};
+
+
+
+    const confirmDelete = (id) => {
+        setBarangToDelete(id);
+        setShowDeleteModal(true);
     };
 
     const handleEditBarang = (id) => {
@@ -250,7 +284,7 @@ const GudangPage = () => {
                                 penitipanUser={getUserByBarang(barang.id_barang)}
                                 barangPegawai={getPegawaiByBarang(barang.id_barang)}
                                 tanggalSelesai={hitungTanggalSelesai(barang.id_barang)}
-                                onDelete={handleDeleteBarang}
+                                onDelete={confirmDelete}
                                 onEdit={handleEditBarang}
                             />
                         ))
@@ -268,6 +302,23 @@ const GudangPage = () => {
                 barangId={selectedBarangId}
                 onUpdate={handleUpdateSuccess}
             />
+
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Konfirmasi Hapus</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Apakah Anda yakin ingin menghapus barang ini? Tindakan ini tidak dapat dibatalkan.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Batal
+                    </Button>
+                    <Button variant="danger" onClick={() => handleDeleteBarang(barangToDelete)}>
+                        Hapus
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             <ToastContainer position="top-end" className="p-3">
                 <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
