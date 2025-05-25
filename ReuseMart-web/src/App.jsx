@@ -22,6 +22,7 @@ import GudangLandingPage from "./assets/pages/gudang/gudangLP.jsx";
 import Penjadwalan from "./assets/pages/gudang/penjadwalan.jsx";
 import CatatPengambilan from "./assets/pages/gudang/catatPengambilan.jsx";
 import AddBarangPage from "./assets/pages/gudang/addBarangPage.jsx";
+import UploadProofPage from "./assets/pages/pembeli/UploadProofPage.jsx";
 
 function App() {
   return (
@@ -50,8 +51,10 @@ function App() {
           <Route path="/catatPengambilan" element = {<ProtectedRoute allowedRoles={['gudang']}> <CatatPengambilan /></ProtectedRoute>} />
           <Route path="/penjadwalan" element = {<ProtectedRoute allowedRoles={['gudang']}> <Penjadwalan /></ProtectedRoute>} />
           <Route path="/tambahBarang" element = {<ProtectedRoute allowedRoles={['gudang']}> <AddBarangPage /></ProtectedRoute>} />
+          <Route path="/gudangLP" element={<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute allowedRoles={['pembeli']}> <KeranjangPage /> </ProtectedRoute>} />
           <Route path="/checkout-options" element={<ProtectedRoute allowedRoles={['pembeli']}> <CheckoutOptionsPage /> </ProtectedRoute>} />
+          <Route path="/upload-proof" element={<ProtectedRoute allowedRoles={['pembeli']}> <UploadProofPage /> </ProtectedRoute>} />
         </Routes>
       </div>
     </Router>

@@ -38,10 +38,6 @@ const Penjadwalan = () => {
   const [kurirId, setKurirId] = useState("");
   const [tanggalJadwal, setTanggalJadwal] = useState("");
 
-  const [showConfirm, setShowConfirm] = useState(false);
-  const openConfirm = () => setShowConfirm(true);
-  const closeConfirm = () => setShowConfirm(false);
-
   // detail modal
   const [showDetail, setShowDetail] = useState(false);
 
@@ -50,6 +46,56 @@ const Penjadwalan = () => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const [expiredHandled, setExpiredHandled] = useState(false);
+
+  useEffect(() => {
+    if (
+      filter === "Pick Up" &&
+      showDetail &&
+      selectedTransaksi?.pengambilan &&
+      !expiredHandled
+    ) {
+      const pickTs = new Date(
+        selectedTransaksi.pengambilan.tanggal_pengambilan
+      ).getTime();
+      const deadline = pickTs + 44 * 3600 * 1000;
+      if (now >= deadline) {
+        setExpiredHandled(true);
+        api
+          .patch(
+            `/pengambilan/${selectedTransaksi.pengambilan.id_pengambilan}`,
+            { status_pengambilan: "Tidak diambil" }
+          )
+          .then(() =>
+            api.patch(
+              `/barang/${selectedTransaksi.detil_transaksi[0].barang.id_barang}`,
+              { status: "Untuk Donasi" }
+            )
+          )
+          .then(() => addKomisi(selectedTransaksi))
+          .then(() => setShowDetail(false))
+          .catch(console.error);
+      }
+    }
+  }, [now, filter, showDetail, selectedTransaksi, expiredHandled]);
+
+  const handleArrived = async (t) => {
+    try {
+      await api.patch(`/pengiriman/${t.pengiriman.id_pengiriman}`, {
+        status_pengiriman: "Arrived",
+      });
+
+      await addKomisi(t);
+
+      const params = { metode_pengiriman: filter, search };
+      const { data } = await api.get("/transaksi/penjadwalan", { params });
+      setSchedules(data);
+    } catch (err) {
+      console.error("Error marking arrived:", err);
+      alert("Gagal menandai pengiriman Arrived.");
+    }
+  };
 
   const addKomisi = async (t) => {
     const dtItem = t.detil_transaksi[0];
@@ -83,7 +129,7 @@ const Penjadwalan = () => {
     let pctHunter = 0;
     if (byHunter) {
       pctHunter = 0.05;
-      pctCompany = pctCompany - 0.05;
+      pctCompany -= 0.05;
     }
 
     const komisiPerusahaan = Math.round(pctCompany * total);
@@ -96,13 +142,35 @@ const Penjadwalan = () => {
       komisi_perusahaan: komisiPerusahaan,
       komisi_hunter: komisiHunter,
     });
-
     await api.post("/komisi", {
       id_dt: dtItem.id_dt,
       presentase_perusahaan: pctCompany,
       presentase_hunter: pctHunter,
       komisi_perusahaan: komisiPerusahaan,
       komisi_hunter: komisiHunter,
+    });
+
+    let bonusPenitip = 0;
+    if (status_periode === "Periode 1" && soldDays < 7) {
+      bonusPenitip = Math.round(0.1 * komisiPerusahaan);
+    }
+    const penghasilan = total - komisiHunter - komisiPerusahaan + bonusPenitip;
+
+    const penitipUser = dtItem.barang.penitipan.user;
+    const updatedSaldo = penitipUser.saldo + penghasilan;
+    await api.patch(`/user/${penitipUser.id_user}`, {
+      saldo: updatedSaldo,
+    });
+
+    const pembeliUser = t.user;
+    const baseAmount = (t.subtotal || 0) - (t.diskon || 0);
+    let poin = Math.floor(baseAmount / 10000);
+    if (baseAmount > 500000) {
+      poin = Math.round(poin * 1.2);
+    }
+    const updatedPoin = pembeliUser.poin_loyalitas + poin;
+    await api.patch(`/user/${pembeliUser.id_user}`, {
+      poin_loyalitas: updatedPoin,
     });
 
     setSchedules((prev) =>
@@ -116,6 +184,7 @@ const Penjadwalan = () => {
           : row
       )
     );
+
     if (
       selectedTransaksi &&
       selectedTransaksi.id_transaksi === t.id_transaksi
@@ -147,7 +216,6 @@ const Penjadwalan = () => {
         const { data } = await api.get("/transaksi/penjadwalan", { params });
 
         console.log("penjadwalan response:", JSON.stringify(data, null, 2));
-        // scoring & sorting...
         const scored = data.map((item) => {
           let score = 0;
           if (item.metode_pengiriman === "Delivery") {
@@ -195,24 +263,34 @@ const Penjadwalan = () => {
     loadPegawai();
   }, []);
 
-  const isSameDayValid = () => {
-    const raw = selectedTransaksi?.tanggal_transaksi;
-    if (!raw) return false;
-    return new Date(raw).getHours() < 16;
+  const isSameDayValid = (transaksiTs) => {
+    if (!transaksiTs) return false;
+    const tx = new Date(transaksiTs);
+    const cut = new Date(tx);
+    cut.setHours(16, 0, 0, 0);
+    return tx.getTime() <= cut.getTime();
   };
 
   const openJadwalkan = (t) => {
     setSelectedTransaksi(t);
     setKurirId("");
     setDateError("");
-    const today = new Date();
-    const defaultDate = isSameDayValid()
-      ? today
-      : new Date(today.setDate(today.getDate() + 1));
-    setTanggalJadwal(defaultDate.toISOString().slice(0, 10));
+
+    const tx = new Date(t.tanggal_transaksi);
+    const nextDay = new Date(tx);
+    nextDay.setDate(tx.getDate() + 1);
+
+    const sameDayOK = isSameDayValid(t.tanggal_transaksi);
+    const defaultDt = sameDayOK ? tx : nextDay;
+    const minDt = sameDayOK ? tx : nextDay;
+
+    setTanggalJadwal(defaultDt.toISOString().slice(0, 10));
+
+    setMinDate(minDt.toISOString().slice(0, 10));
+
     setShowModal(true);
   };
-
+  const [minDate, setMinDate] = useState("");
   const handleSave = async () => {
     if (!selectedTransaksi) return;
     try {
@@ -244,50 +322,48 @@ const Penjadwalan = () => {
   };
 
   const openDetail = (t) => {
-    console.log("openDetail called:", {
-      id_transaksi: t.id_transaksi,
-      filter,
-      status_pengiriman: t.pengiriman?.status_pengiriman,
-      status_pengambilan: t.pengambilan?.status_pengambilan,
-    });
-
     setSelectedTransaksi(t);
     setShowDetail(true);
-
-    const isArrivedDelivery =
-      filter === "Delivery" && t.pengiriman?.status_pengiriman === "Arrived";
-    const isPickedUp =
-      filter === "Pick Up" &&
-      (t.pengambilan?.status_pengambilan === "Sudah diambil" ||
-        t.pengambilan?.status_pengambilan === "Tidak diambil");
-
-    if (isArrivedDelivery || isPickedUp) {
-      console.log("→ calling addKomisi()", { isArrivedDelivery, isPickedUp });
-      addKomisi(t);
-    }
   };
 
   const closeDetail = () => setShowDetail(false);
 
-  const handleKonfirmasiAmbil = async () => {
+  const handleKonfirmasiAmbil = async (t) => {
     try {
-      // assuming your API accepts a PATCH to /pengambilan/:id_pengambilan
-      await api.patch(
-        `/pengambilan/${selectedTransaksi.pengambilan.id_pengambilan}`,
-        { status_pengambilan: "Sudah diambil" }
-      );
-      // refresh the list to reflect the new status
+      await api.patch(`/pengambilan/${t.pengambilan.id_pengambilan}`, {
+        status_pengambilan: "Sudah diambil",
+      });
+      await addKomisi(t);
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
       setSchedules(data);
-      // close both confirm & detail
-      setShowConfirm(false);
-      setShowDetail(false);
     } catch (err) {
-      console.error("Error konfirmasi ambil:", err);
-      alert("Gagal mengonfirmasi pengambilan. Silakan coba lagi.");
+      console.error("Error confirming pickup:", err);
+      alert("Gagal menandai pengambilan sebagai Sudah diambil.");
     }
   };
+
+  let countdownDisplay = null;
+  if (filter === "Pick Up" && selectedTransaksi?.pengambilan) {
+    const pickTs = new Date(
+      selectedTransaksi.pengambilan.tanggal_pengambilan
+    ).getTime();
+    const deadline = pickTs + 44 * 3600 * 1000;
+    const diff = deadline - now;
+    if (diff <= 0) {
+      countdownDisplay = <strong>Waktu pengambilan habis</strong>;
+    } else {
+      const totalSec = Math.floor(diff / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      countdownDisplay = (
+        <>
+          <strong>{h}</strong>j <strong>{m}</strong>m <strong>{s}</strong>s
+        </>
+      );
+    }
+  }
 
   return (
     <>
@@ -348,6 +424,7 @@ const Penjadwalan = () => {
                 </th>
                 <th>Status</th>
                 <th>Detail</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -415,6 +492,36 @@ const Penjadwalan = () => {
                         Lihat Detail
                       </Button>
                     </td>
+                    {filter === "Delivery" && (
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleArrived(t)}
+                          disabled={
+                            t.pengiriman?.status_pengiriman === "Arrived"
+                          }
+                        >
+                          Mark Arrived
+                        </Button>
+                      </td>
+                    )}
+
+                    {filter === "Pick Up" && (
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="warning"
+                          onClick={() => handleKonfirmasiAmbil(t)}
+                          disabled={
+                            t.pengambilan?.status_pengambilan !==
+                            "Belum diambil"
+                          }
+                        >
+                          Konfirmasi Ambil
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -480,16 +587,23 @@ const Penjadwalan = () => {
                 <Form.Control
                   type="date"
                   value={tanggalJadwal}
+                  min={minDate}
                   onChange={(e) => {
                     const val = e.target.value;
                     setTanggalJadwal(val);
 
-                    if (val === todayString && !isSameDayValid()) {
+                    const txDateStr = formatDate(
+                      new Date(selectedTransaksi.tanggal_transaksi)
+                    );
+
+                    if (
+                      val === txDateStr &&
+                      !isSameDayValid(selectedTransaksi.tanggal_transaksi)
+                    ) {
                       setDateError(
-                        "Transaksi lewat jam 16:00, tidak bisa pilih hari ini."
+                        "Transaksi lewat jam 16:00:00, tidak bisa pilih hari ini."
                       );
                     } else {
-                      // covers both “new valid today” and “any other day”
                       setDateError("");
                     }
                   }}
@@ -528,66 +642,14 @@ const Penjadwalan = () => {
               {/* Header info */}
               <Table borderless className="mb-4">
                 <tbody>
-                  {filter === "Pick Up" &&
-                    selectedTransaksi.pengambilan?.status_pengambilan ===
-                      "Belum diambil" && (
-                      <tr>
-                        <td>
-                          <strong>Batas Waktu Pengambilan</strong>
-                        </td>
-                        <td>
-                          {(() => {
-                            const pickTs = new Date(
-                              selectedTransaksi.pengambilan.tanggal_pengambilan
-                            ).getTime();
-                            const deadline = pickTs + 44 * 3600 * 1000;
-                            const diff = deadline - now;
-
-                            if (diff <= 0) {
-                              api
-                                .patch(
-                                  `/pengambilan/${selectedTransaksi.pengambilan.id_pengambilan}`,
-                                  { status_pengambilan: "Tidak diambil" }
-                                )
-                                .then(() =>
-                                  api.patch(
-                                    `/barang/${selectedTransaksi.detil_transaksi[0].barang.id_barang}`,
-                                    { status: "Untuk Donasi" }
-                                  )
-                                )
-                                .then(() => addKomisi(selectedTransaksi))
-                                .then(() => {
-                                  openDetail(selectedTransaksi);
-                                })
-                                .catch(console.error);
-                              return "Waktu pengambilan habis";
-                            }
-
-                            const totalSec = Math.floor(diff / 1000);
-                            const h = Math.floor(totalSec / 3600);
-                            const m = Math.floor((totalSec % 3600) / 60);
-                            const s = totalSec % 60;
-
-                            if (h < 24) {
-                              return (
-                                <>
-                                  <strong>{h}</strong>j <strong>{m}</strong>m{" "}
-                                  <strong>{s}</strong>s
-                                </>
-                              );
-                            } else {
-                              const days = Math.ceil(h / 24);
-                              return (
-                                <>
-                                  <strong>{days}</strong> hari tersisa
-                                </>
-                              );
-                            }
-                          })()}
-                        </td>
-                      </tr>
-                    )}
-
+                  {filter === "Pick Up" && selectedTransaksi.pengambilan && (
+                    <tr>
+                      <td>
+                        <strong>Batas Waktu Pengambilan</strong>
+                      </td>
+                      <td>{countdownDisplay}</td>
+                    </tr>
+                  )}
                   <tr>
                     <td>
                       <strong>Nama Penitip</strong>
@@ -833,33 +895,6 @@ const Penjadwalan = () => {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          {filter === "Pick Up" &&
-            selectedTransaksi?.pengambilan?.status_pengambilan ===
-              "Belum diambil" && (
-              <Button variant="warning" onClick={openConfirm}>
-                Konfirmasi Ambil
-              </Button>
-            )}
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={showConfirm} onHide={closeConfirm} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Konfirmasi Pengambilan</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Apakah Anda yakin ingin menandai pesanan ini sebagai{" "}
-          <strong>Sudah diambil</strong>?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeConfirm}>
-            Batal
-          </Button>
-          <Button variant="success" onClick={handleKonfirmasiAmbil}>
-            Ya, Konfirmasi
-          </Button>
-        </Modal.Footer>
       </Modal>
     </>
   );

@@ -63,14 +63,15 @@ class PengirimanController extends Controller
 
     public function update(Request $request, $id)
     {
-        try {
-            $pengiriman = Pengiriman::findOrFail($id);
-            $pengiriman->update($request->all());
-            return response()->json($pengiriman);
-        } catch (Exception $e) {
-            Log::error('Error updating pengiriman: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update pengiriman'], 500);
-        }
+        $request->validate([
+            'status_pengiriman' => 'required|string'
+        ]);
+
+        $ambil = Pengiriman::findOrFail($id);
+        $ambil->status_pengiriman = $request->status_pengiriman;
+        $ambil->save();
+
+        return response()->json($ambil);
     }
 
     public function destroy($id)
