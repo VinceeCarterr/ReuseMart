@@ -68,7 +68,7 @@ const ProductPage = () => {
             try {
                 const [barangResponse, penitipanResponse, userResponse] = await Promise.all([
                     api.get(`/barang/${id}`),
-                    api.get('/penitipan'),
+                    api.get('/penitipan/public'),
                     api.get('/user/public')
                 ]);
 
@@ -78,7 +78,7 @@ const ProductPage = () => {
 
                 setBarang({
                     ...barangData,
-                    rating: user ? user.rating : null // Attach user rating to barang
+                    rating: user ? user.rating : null
                 });
                 setUserRating(user ? user.rating : null);
             } catch (error) {

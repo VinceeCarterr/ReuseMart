@@ -148,12 +148,12 @@ const CheckoutOptionsPage = () => {
                 metode_pengiriman: shippingMethod === 'Kurir' ? 'Delivery' : 'Pick Up',
                 alamat:
                     shippingMethod === 'Kurir'
-                        ? `${selectedAddressData.alamat}, ${selectedAddressData.kota}, ${selectedAddressData.kode_pos}`
+                        ? `${selectedAddressData.alamat}, ${selectedAddressData.kecamatan}, ${selectedAddressData.kode_pos}, ${selectedAddressData.kota}`
                         : '',
                 biaya_pengiriman: shippingMethod === 'Kurir' ? calculateShippingCost() : 0,
                 diskon: discountAmount,
                 points_redeemed: parseInt(pointsToRedeem, 10) || 0,
-                selected_items: selectedItems, // Kirim selected_items ke backend
+                selected_items: selectedItems,
             };
 
             const response = await api.post('/checkout', payload);
@@ -182,7 +182,6 @@ const CheckoutOptionsPage = () => {
             );
             setShowToast(true);
 
-            // Jika error karena barang tidak tersedia, arahkan kembali ke KeranjangPage
             if (error.response?.data?.error?.includes('tidak tersedia')) {
                 setTimeout(() => {
                     navigate('/cart');
@@ -318,7 +317,7 @@ const CheckoutOptionsPage = () => {
                                 </div>
                                 <div>
                                     {defaultAddress.alamat}, {defaultAddress.kota},{' '}
-                                    {defaultAddress.kode_pos}
+                                    {defaultAddress.kode_pos}, {defaultAddress.catatan}
                                 </div>
                                 <Button
                                     variant="outline-primary"

@@ -55,17 +55,14 @@ class CancelTransactionJob implements ShouldQueue
             } else {
                 Log::info("Pembayaran ditemukan, status: {$pembayaran->status_pembayaran}");
                 if ($pembayaran->status_pembayaran === 'Menunggu' || $pembayaran->status_pembayaran === 'Tidak Valid') {
-                    Log::info("Kondisi pembatalan terpenuhi, memproses penghapusan...");
                     $this->cancelTransaction($transaksi, $pembayaran);
                 } else {
-                    Log::info("Kondisi pembatalan tidak terpenuhi, status pembayaran: {$pembayaran->status_pembayaran}. Transaksi tidak dibatalkan.");
                     DB::commit();
                     return;
                 }
             }
 
             DB::commit();
-            Log::info("Transaksi berhasil diproses.");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Gagal membatalkan transaksi: " . $e->getMessage());
@@ -79,18 +76,18 @@ class CancelTransactionJob implements ShouldQueue
             Log::warning("Tidak ada detail transaksi untuk transaksi_id: {$this->transaksiId}");
         }
 
-        // Kembalikan status barang ke Available hanya jika statusnya "Sold"
         foreach ($detilTransaksis as $detil) {
             $barang = Barang::find($detil->id_barang);
             if ($barang) {
-                if ($barang->status === 'Sold') {
+                if ($barang->status === 'On Hold') {
                     Log::info("Mengubah status barang ID: {$barang->id_barang} ke Available");
                     $barang->status = 'Available';
+                    $barang->save();
                     if (!$barang->save()) {
                         Log::error("Gagal menyimpan perubahan status untuk barang ID: {$barang->id_barang}");
                     }
                 } else {
-                    Log::info("Status barang ID: {$barang->id_barang} tidak diubah karena bukan Sold: {$barang->status}");
+                    Log::info("Status barang ID: {$barang->id_barang} tidak diubah karena bukan On Hold: {$barang->status}");
                 }
             } else {
                 Log::warning("Barang tidak ditemukan untuk detil ID: {$detil->id_barang}");
@@ -145,7 +142,7 @@ class CancelTransactionJob implements ShouldQueue
             Log::info("Menemukan detail transaksi yang terlantar, memproses...");
             foreach ($detilTransaksis as $detil) {
                 $barang = Barang::find($detil->id_barang);
-                if ($barang && $barang->status === 'Sold') {
+                if ($barang && $barang->status === 'On Hold') {
                     Log::info("Mengubah status barang ID: {$barang->id_barang} ke Available");
                     $barang->status = 'Available';
                     $barang->save();

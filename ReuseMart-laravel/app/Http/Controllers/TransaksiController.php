@@ -365,7 +365,6 @@ class TransaksiController extends Controller
         try {
             $user = $request->user();
 
-            // Ambil transaksi yang belum selesai (belum ada pembayaran)
             $transaksi = Transaksi::with(['detilTransaksi.Barang.foto'])
                 ->where('id_user', $user->id_user)
                 ->whereNull('id_pembayaran')
@@ -378,13 +377,11 @@ class TransaksiController extends Controller
                 ], 200);
             }
 
-            // Filter barang yang belum "sold"
             $items = $transaksi->detilTransaksi->map(function ($detil) use ($user) {
                 if (!$detil->Barang) {
                     return null;
                 }
 
-                // Cek apakah barang sudah "sold" dengan status atau transaksi lain
                 $isSold = $detil->Barang->status === 'sold' ||
                     Transaksi::where('id_transaksi', '!=', $detil->id_transaksi)
                     ->whereNotNull('id_pembayaran')
@@ -394,7 +391,6 @@ class TransaksiController extends Controller
                     ->exists();
 
                 if ($isSold) {
-                    // Jika barang sudah "sold", hapus dari transaksi ini
                     $detil->delete();
                     return null;
                 }
@@ -404,11 +400,10 @@ class TransaksiController extends Controller
                     'nama_barang' => $detil->Barang->nama_barang,
                     'harga' => $detil->Barang->harga,
                     'foto' => $detil->Barang->foto->isNotEmpty() ? url('storage/' . $detil->Barang->foto->first()->path) : null,
-                    'status' => $detil->Barang->status, // Tambahkan status untuk frontend
+                    'status' => $detil->Barang->status,
                 ];
             })->filter()->values();
 
-            // Jika tidak ada item yang valid setelah filter, hapus transaksi
             if ($items->isEmpty()) {
                 $transaksi->delete();
                 return response()->json([
@@ -478,17 +473,19 @@ class TransaksiController extends Controller
         ]);
 
         $query = Transaksi::with([
-            'user',                                 
-            'pembayaran',                           
-            'pengiriman.pegawai',                   
-            'pengambilan',       
-            'detilTransaksi.Komisi',                   
+            'user',
+            'pembayaran',
+            'pengiriman.pegawai',
+            'pengambilan',
+            'detilTransaksi.Komisi',
             'detilTransaksi.Barang.foto',
             'detilTransaksi.Barang.penitipan.user',
         ])
-        ->whereHas('pembayaran', fn($q) =>
-            $q->where('status_pembayaran', 'Berhasil')
-        );
+            ->whereHas(
+                'pembayaran',
+                fn($q) =>
+                $q->where('status_pembayaran', 'Berhasil')
+            );
 
         if ($request->filled('metode_pengiriman')) {
             $query->where('metode_pengiriman', $request->metode_pengiriman);
@@ -496,20 +493,22 @@ class TransaksiController extends Controller
 
         if ($request->filled('search')) {
             $term = $request->search;
-            $query->where(function($q) use($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('id_transaksi', 'like', "%{$term}%")
-                ->orWhereHas('user', fn($u) =>
-                    $u->where('first_name','like',"%{$term}%")
-                        ->orWhere('last_name', 'like',"%{$term}%")
-                );
+                    ->orWhereHas(
+                        'user',
+                        fn($u) =>
+                        $u->where('first_name', 'like', "%{$term}%")
+                            ->orWhere('last_name', 'like', "%{$term}%")
+                    );
             });
         }
 
         $schedules = $query
-            ->orderBy('tanggal_transaksi','desc')
+            ->orderBy('tanggal_transaksi', 'desc')
             ->get();
 
-    return response()->json($schedules);
+        return response()->json($schedules);
     }
 
     public function checkout(Request $request)
@@ -555,7 +554,8 @@ class TransaksiController extends Controller
                     $subtotal += $barang->harga;
                 }
 
-                $total = $subtotal + $request->biaya_pengiriman - ($request->diskon ?? 0);
+                $total_step1 = $subtotal + $request->biaya_pengiriman;
+                $total = $total_step1 - ($request->diskon ?? 0);
                 $pointsRedeemed = $request->points_redeemed ?? 0;
                 if ($pointsRedeemed > 0) {
                     if ($pointsRedeemed > $user->poin_loyalitas) {
@@ -578,6 +578,12 @@ class TransaksiController extends Controller
                     'total' => $total,
                     'status' => 'Menunggu',
                 ]);
+
+                $year = now()->year;
+                $month = now()->format('m');
+                $no_nota = "{$year}.{$month}.{$transaksiBaru->id_transaksi}";
+
+                $transaksiBaru->update(['no_nota' => $no_nota]);
 
                 foreach ($detilTransaksis as $detil) {
                     DetilTransaksi::create([
@@ -613,6 +619,7 @@ class TransaksiController extends Controller
                     'message' => 'Checkout berhasil. Silakan upload bukti pembayaran dalam 1 menit.',
                     'transaksi_id' => $transaksiBaru->id_transaksi,
                     'pembayaran_id' => $pembayaran->id_pembayaran,
+                    'no_nota' => $no_nota,
                 ], 200);
             });
         } catch (Exception $e) {
