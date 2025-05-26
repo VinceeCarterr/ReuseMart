@@ -80,8 +80,12 @@ const HistoryPembeli = () => {
   useEffect(() => {
     api
       .get("transaksi/history")
-      .then(({ data }) => setOrders(data))
-      .catch(console.error);
+
+      .then(({ data }) => {
+      console.log("🔍 transaksi/history response:", data);
+      setOrders(data);
+    })
+    .catch(console.error);
   }, []);
 
   const openDetail = (tx) => {
@@ -105,7 +109,6 @@ const HistoryPembeli = () => {
     setShowRatingModal(false);
     setSelectedItem(null);
     setRating(0);
-    
   };
 
   const updateRatingAllUser = async () => {
@@ -140,7 +143,7 @@ const HistoryPembeli = () => {
       );
 
       await updateRatingAllUser();
-      
+
       closeRatingModal(); // Close modal after successful submission
     } catch (error) {
       console.error(
@@ -227,7 +230,9 @@ const HistoryPembeli = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""}`}
+                          className={`mega-menu-item ${
+                            idx === activeCatIdx ? "active" : ""
+                          }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -340,7 +345,6 @@ const HistoryPembeli = () => {
                 variant="success"
                 onClick={handleRatingSubmit}
                 disabled={rating < 1 || rating > 5}
-                
               >
                 Kirim
               </Button>
@@ -391,7 +395,7 @@ const HistoryPembeli = () => {
               tx.pengiriman?.status_pengiriman ||
               tx.pengambilan?.status_pengambilan ||
               "—";
-
+            const alreadyRated = (br.rating ?? 0) > 0 || (dt.rating ?? 0) > 0;
             return (
               <Col md={6} key={tx.id_transaksi} className="mb-4">
                 <Card className="history-card h-100">
@@ -421,7 +425,9 @@ const HistoryPembeli = () => {
                   </Card.Body>
                   <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                     <small className="tanggal-text">
-                      {new Date(tx.tanggal_transaksi).toLocaleDateString("id-ID")}
+                      {new Date(tx.tanggal_transaksi).toLocaleDateString(
+                        "id-ID"
+                      )}
                     </small>
                     <div className="d-flex align-items-center">
                       <Button
@@ -437,9 +443,13 @@ const HistoryPembeli = () => {
                         variant="success"
                         className="me-3"
                         onClick={() => openRatingModal(dt)}
-                        disabled={dt.barang.rating > 0 || dt.rating > 0}
+                        disabled={
+                          (dt.barang?.rating ?? 0) > 0 || (dt.rating ?? 0) > 0
+                        }
                       >
-                        {dt.barang.rating > 0 ? `Rated: ${dt.barang.rating}` : "Beri Rating" }
+                        {(br.rating ?? 0) > 0
+                          ? `Rated: ${br.rating}`
+                          : "Beri Rating"}
                       </Button>
                       <div className="fw-bold">
                         Total: Rp{(tx.total || 0).toLocaleString("id-ID")}
@@ -519,8 +529,11 @@ const HistoryPembeli = () => {
                 </thead>
                 <tbody>
                   {selectedTx.detil_transaksi?.map((dt) => {
-                    const fp =
-                      dt.barang.foto?.[0]?.path || "defaults/no-image.png";
+                    const br = dt.barang || {}
+                     const fp = br.foto?.[0]?.path || "defaults/no-image.png"
+                      const currentRating = dt.rating ?? br.rating ?? 0
+                      const hasRated     = currentRating > 0
+                    
                     return (
                       <tr key={dt.id_dt}>
                         <td>
@@ -530,22 +543,21 @@ const HistoryPembeli = () => {
                             style={{ width: 150 }}
                           />
                         </td>
-                        <td>{dt.barang.nama_barang}</td>
+                        <td>{br.nama_barang ?? "–"}</td>
                         <td className="text-end">
-                          Rp{(dt.barang.harga || 0).toLocaleString("id-ID")}
+                          Rp{(br.harga || 0).toLocaleString("id-ID")}
                         </td>
                         <td className="text-end">
-                          {dt.rating > 0 ? (
+                          {hasRated ? (
                             <span>
-                              {dt.rating} <FiStar fill="gold" stroke="gold" />
+                              {currentRating}{" "}
+                              <FiStar fill="gold" stroke="gold" />
                             </span>
                           ) : (
                             <Button
                               size="sm"
-                              
                               variant="success"
                               onClick={() => openRatingModal(dt)}
-                              disabled={dt.rating > 0}
                             >
                               Nilai
                             </Button>
@@ -598,7 +610,10 @@ const HistoryPembeli = () => {
                   <tr>
                     <td>Biaya Pengiriman</td>
                     <td className="text-end">
-                      Rp{(selectedTx.biaya_pengiriman || 0).toLocaleString("id-ID")}
+                      Rp
+                      {(selectedTx.biaya_pengiriman || 0).toLocaleString(
+                        "id-ID"
+                      )}
                     </td>
                   </tr>
                   <tr>

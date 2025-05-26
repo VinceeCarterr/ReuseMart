@@ -19,7 +19,7 @@ class DetilTransaksi extends Model
 
     public function Transaksi()
     {
-        return $this->belongsTo(Transaksi::class, 'id_transaksi');
+        return $this->belongsTo(Transaksi::class, 'id_transaksi','id_transaksi');
     }
 
     public function Barang()

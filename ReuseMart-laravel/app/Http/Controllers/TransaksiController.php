@@ -77,7 +77,8 @@ class TransaksiController extends Controller
     public function history(Request $request)
     {
         $transaksis = Transaksi::with([
-            'detilTransaksi.Barang.Penitipan.user',
+            'detilTransaksi.Barang.penitipan.user',
+            'detilTransaksi.Barang.foto',
             'pengiriman',
             'pengambilan',
         ])
