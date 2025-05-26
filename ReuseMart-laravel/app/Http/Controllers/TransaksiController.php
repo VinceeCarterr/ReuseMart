@@ -627,47 +627,4 @@ class TransaksiController extends Controller
             return response()->json(['error' => 'Gagal melakukan checkout: ' . $e->getMessage()], 500);
         }
     }
-
-    public function uploadProof(Request $request)
-    {
-        $request->validate([
-            'transaksi_id' => 'required|exists:transaksi,id_transaksi',
-            'pembayaran_id' => 'required|exists:pembayaran,id_pembayaran',
-            'proof' => 'required|image|mimes:jpeg,png,jpg|max:20480',
-        ]);
-
-        try {
-            return DB::transaction(function () use ($request) {
-                $transaksi = Transaksi::findOrFail($request->transaksi_id);
-                $pembayaran = Pembayaran::findOrFail($request->pembayaran_id);
-
-                if ($transaksi->id_pembayaran !== $pembayaran->id_pembayaran) {
-                    return response()->json(['error' => 'Transaksi dan pembayaran tidak sesuai'], 400);
-                }
-
-                $createdAt = $transaksi->created_at;
-                if (now()->diffInSeconds($createdAt) > 10) {
-                    return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
-                }
-
-                $file = $request->file('proof');
-                $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs($filename);
-
-                $pembayaran->update([
-                    'ss_pembayaran' => $filename,
-                    'status_pembayaran' => 'Menunggu Verifikasi',
-                ]);
-
-                return response()->json([
-                    'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
-                    'pembayaran_id' => $pembayaran->id_pembayaran,
-                    'proof_path' => $filename,
-                ], 200);
-            });
-        } catch (Exception $e) {
-            Log::error('Gagal mengunggah bukti pembayaran: ' . $e->getMessage());
-            return response()->json(['error' => 'Gagal mengunggah bukti pembayaran'], 500);
-        }
-    }
 }
