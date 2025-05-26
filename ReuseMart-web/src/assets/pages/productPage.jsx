@@ -68,7 +68,7 @@ const ProductPage = () => {
             try {
                 const [barangResponse, penitipanResponse, userResponse] = await Promise.all([
                     api.get(`/barang/${id}`),
-                    api.get('/penitipan'),
+                    api.get('/penitipan/public'),
                     api.get('/user/public')
                 ]);
 

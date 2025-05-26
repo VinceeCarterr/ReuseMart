@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Foto_Barang;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -68,16 +69,23 @@ class Foto_BarangController extends Controller
     }
 
     public function destroy($id)
-    {
-        try {
-            $foto_barang = Foto_Barang::findOrFail($id);
-            $foto_barang->delete();
-            return response()->json(['message' => 'Photo deleted successfully']);
-        } catch (Exception $e) {
-            Log::error('Error deleting photo: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to delete photo'], 500);
+{
+    try {
+        $foto_barang = Foto_Barang::findOrFail($id);
+        if (Storage::disk('public')->exists($foto_barang->path)) {
+            Storage::disk('public')->delete($foto_barang->path);
+        } else {
+            Log::warning('File not found in storage: ' . $foto_barang->path);
         }
+        $foto_barang->delete();
+        return response()->json(['message' => 'Photo deleted successfully']);
+    } catch (Exception $e) {
+        Log::error('Error deleting photo: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to delete photo'], 500);
     }
+}
+
+
 
     public function getByBarangId($id_barang)
     {

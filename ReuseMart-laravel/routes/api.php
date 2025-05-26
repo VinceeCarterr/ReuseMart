@@ -144,10 +144,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
+        Route::get('/fotoGudang', [Foto_BarangController::class, 'index']);
         Route::put('/barang/{id}', [BarangController::class, 'update']);
         Route::get('/barangGudang', [BarangController::class, 'index']);
         Route::get('/alamat/gudang', [AlamatController::class, 'index']);
         Route::post('/foto/addFoto', [Foto_BarangController::class, 'store']);
+        Route::delete('/deleteBarang/{id}', [BarangController::class, 'destroy']);
+        Route::delete('/deleteFoto/{id}', [Foto_BarangController::class, 'destroy']);
         Route::post('/forum/addForum', [ForumController::class, 'store']);
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
         Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
