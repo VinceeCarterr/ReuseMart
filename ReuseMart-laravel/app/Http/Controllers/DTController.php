@@ -77,4 +77,20 @@ class DTController extends Controller
             return response()->json(['error' => 'Failed to search data'], 500);
         }
     }
+
+    public function getByTransaksi($transaksiId)
+    {
+        try {
+            $items = DetilTransaksi::with('Barang', 'barang.pegawai')
+                ->where('id_transaksi', $transaksiId)
+                ->get();
+
+            return response()->json($items);
+        } catch (\Throwable $e) {
+            Log::error("getByTransaksi failed for transaksi {$transaksiId}: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error fetching detail transaksi',
+            ], 500);
+        }
+    }
 }

@@ -8,6 +8,7 @@ use App\Models\Transaksi;
 use App\Models\Barang;
 use App\Models\DetilTransaksi;
 use App\Models\Pembayaran;
+use App\Models\Penitipan;
 use App\Jobs\CancelTransactionJob;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -76,7 +77,8 @@ class TransaksiController extends Controller
     public function history(Request $request)
     {
         $transaksis = Transaksi::with([
-            'detilTransaksi.Barang.Penitipan.user',
+            'detilTransaksi.Barang.penitipan.user',
+            'detilTransaksi.Barang.foto',
             'pengiriman',
             'pengambilan',
         ])
@@ -108,21 +110,17 @@ class TransaksiController extends Controller
 
     public function historyPenitip(Request $request)
     {
-        // 1) Normalize incoming status to Title Case
         if ($request->filled('status')) {
             $request->merge([
                 'status' => ucwords(strtolower($request->input('status')))
             ]);
         }
-
-        // 1b) Normalize incoming status_periode to Title Case (e.g. "periode 1" → "Periode 1")
         if ($request->filled('status_periode')) {
             $request->merge([
                 'status_periode' => ucwords(strtolower($request->input('status_periode')))
             ]);
         }
 
-        // 2) Validate filters
         $request->validate([
             'start_date'     => 'nullable|date',
             'end_date'       => 'nullable|date|after_or_equal:start_date',
@@ -167,7 +165,6 @@ class TransaksiController extends Controller
                     'garansi',
                 ]);
 
-            // Apply your optional filters…
             if ($request->filled('start_date')) {
                 $query->whereDate('tanggal_titip', '>=', $request->start_date);
             }
@@ -188,12 +185,24 @@ class TransaksiController extends Controller
                         ->orWhere('sub_kategori',  'like', "%{$request->category}%")
                 );
             }
+            
             if ($request->filled('search')) {
-                $query->where(
-                    fn($q) =>
-                    $q->where('nama_barang', 'like', "%{$request->search}%")
-                        ->orWhere('kode_barang', 'like', "%{$request->search}%")
-                );
+                $search = $request->search;
+
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_barang', 'like', "%{$search}%")
+                        ->orWhere('kode_barang', 'like', "%{$search}%")
+                        ->orWhere('deskripsi', 'like', "%{$search}%")
+                        ->orWhere('garansi', 'like', "%{$search}%")
+                        ->orWhereHas('kategori', function ($sub) use ($search) {
+                            $sub->where('nama_kategori', 'like', "%{$search}%")
+                                ->orWhere('sub_kategori', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('detilTransaksi.transaksi', function ($sub) use ($search) {
+                            $sub->where('alamat', 'like', "%{$search}%")
+                                ->orWhere('metode_pengiriman', 'like', "%{$search}%");
+                        });
+                });
             }
 
             $barangs = $query
@@ -295,13 +304,13 @@ class TransaksiController extends Controller
         $request->validate([
             'tanggal_titip'   => 'sometimes|date',
             'status_periode'  => 'sometimes|in:Periode 1,Periode 2,Expired',
-            'status'          => 'sometimes|in:Available,Sold,Donated,On Hold,Untuk Donasi,Akan Ambil',
+            'status'          => 'sometimes|in:Available,Sold,Donated,On Hold,Untuk Donasi,Akan Ambil,Bisa Perpanjang',
         ]);
 
-        $barang = Barang::findOrFail($id_barang);
+        $barang = Barang::with('penitipan')->findOrFail($id_barang);
 
-        if ($request->user()->id_user !== $barang->penitipan->id_user) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($request->user()->id_user !== optional($barang->penitipan)->id_user) {
+            return response()->json(['error' => 'Unauthorized or no penitipan'], 403);
         }
 
         if ($request->has('tanggal_titip')) {
@@ -315,7 +324,7 @@ class TransaksiController extends Controller
         }
 
         $barang->save();
-
+        \Log::error('Barang update error', ['request' => $request->all()]);
         return response()->json(['message' => 'Updated successfully']);
     }
 
@@ -662,5 +671,17 @@ class TransaksiController extends Controller
             Log::error('Gagal mengunggah bukti pembayaran: ' . $e->getMessage());
             return response()->json(['error' => 'Gagal mengunggah bukti pembayaran'], 500);
         }
+    }
+
+    public function showOne($id)
+    {
+        $t = Transaksi::with([
+            'user',
+            'detilTransaksi.Barang.foto',
+            'pengiriman.pegawai',
+            'pengambilan',
+        ])->findOrFail($id);
+
+        return response()->json($t);
     }
 }

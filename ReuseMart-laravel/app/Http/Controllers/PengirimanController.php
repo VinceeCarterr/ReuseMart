@@ -85,4 +85,13 @@ class PengirimanController extends Controller
             return response()->json(['error' => 'Failed to delete pengiriman'], 500);
         }
     }
+
+    public function getByTransaksi($transaksiId)
+    {
+        $ship = Pengiriman::where('id_transaksi', $transaksiId)
+            ->with('pegawai')
+            ->get();
+
+        return response()->json($ship);
+    }
 }

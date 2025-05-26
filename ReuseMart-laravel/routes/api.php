@@ -15,6 +15,7 @@ use App\Http\Controllers\PenitipanController;
 use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\PengambilanController;
 use App\Http\Controllers\KomisiController;
+use App\Http\Controllers\DTController;
 
 use Illuminate\Http\Request;
 
@@ -36,13 +37,22 @@ Route::get('/penitipan/public', [PenitipanController::class, 'index']);
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
 Route::put('/barang/updateExpired', [BarangController::class, 'updateStatusExpired']);
 
-Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+Route::get('/transaksi/getOne/{id}', [TransaksiController::class, 'showOne']);
+
+// 2) fetch all detilTransaksi for a given transaksi
+Route::get('/detilTransaksi/getByTransaksi/{id}', [DTController::class, 'getByTransaksi']);
+
+// 3) fetch pengiriman record(s) for a given transaksi
+Route::get('/pengiriman/getByTransaksi/{id}', [PengirimanController::class, 'getByTransaksi']);
+
+// 4) fetch public list of couriers (pegawai with jabatan = 4)
+Route::get('/kurir/public', [PegawaiController::class, 'publicKurir']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    
+    Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
 
     
 

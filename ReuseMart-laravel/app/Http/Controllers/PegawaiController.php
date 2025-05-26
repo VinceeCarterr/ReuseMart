@@ -191,4 +191,10 @@ class PegawaiController extends Controller
 
         return response()->json(['message' => 'Password berhasil direset ke tanggal lahir (ddmmyyyy)']);
     }
+
+    public function publicKurir()
+    {
+        $kurirs = Pegawai::where('id_jabatan', 4)->get();
+        return response()->json($kurirs);
+    }
 }
