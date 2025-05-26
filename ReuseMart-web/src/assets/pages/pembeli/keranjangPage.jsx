@@ -139,7 +139,7 @@ const KeranjangPage = () => {
                             <h4 className="mb-3 text-muted">Keranjang Anda Kosong</h4>
                             <p className="text-muted mb-4">Tambahkan barang ke keranjang untuk memulai belanja!</p>
                             <Button
-                                variant="primary"
+                                variant="success"
                                 size="lg"
                                 className="w-100"
                                 onClick={() => navigate('/pembeliLP')}

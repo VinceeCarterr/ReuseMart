@@ -28,9 +28,9 @@ const UploadProofPage = () => {
                 if (prev <= 1) {
                     clearInterval(timer);
                     setToastVariant('danger');
-                    setToastMessage('Waktu habis! Transaksi dibatalkan, barang tersedia kembali.');
+                    setToastMessage('Waktu habis! Transaksi dibatalkan.');
                     setShowToast(true);
-                    setTimeout(() => navigate('/cart'), 2000);
+                    setTimeout(() => navigate('/cart'), 1500);
                     return 0;
                 }
                 return prev - 1;

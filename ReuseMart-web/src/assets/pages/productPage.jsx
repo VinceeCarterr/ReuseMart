@@ -78,7 +78,7 @@ const ProductPage = () => {
 
                 setBarang({
                     ...barangData,
-                    rating: user ? user.rating : null // Attach user rating to barang
+                    rating: user ? user.rating : null
                 });
                 setUserRating(user ? user.rating : null);
             } catch (error) {
