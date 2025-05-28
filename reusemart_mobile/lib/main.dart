@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,6 +6,7 @@ import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/home_screen.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// 1️⃣ Background handler must be a top‐level function:
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -32,7 +31,6 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   final UserService _userService = UserService();
   String? _fcmToken;
-  UserModel? _currentUser; // if you want to auto‐login later
 
   @override
   void initState() {
@@ -78,32 +76,61 @@ class _MainAppState extends State<MainApp> {
     });
   }
 
+  /// 4️⃣ Check for stored token and remember_me preference
+  Future<Widget> _getInitialScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final rememberMe = prefs.getBool('remember_me') ?? false;
+
+    if (token != null && rememberMe) {
+      try {
+        final user = await _userService.validateToken();
+        if (user != null) {
+          return HomeScreen(user: user);
+        }
+      } catch (e) {
+        debugPrint('❌ Token validation failed: $e');
+        await prefs.remove('access_token');
+        await prefs.remove('remember_me');
+      }
+    }
+    return const LoginScreen();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Reusemart',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Stack(
-        children: [
-          // Your real entrypoint:
-          _currentUser == null
-              ? const LoginScreen()
-              : HomeScreen(user: _currentUser!),
-          // Overlay the raw FCM token for debugging:
-          if (_fcmToken != null)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                color: Colors.black87,
-                padding: const EdgeInsets.all(8),
-                child: SelectableText(
-                  'FCM Token:\n$_fcmToken',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                  textAlign: TextAlign.center,
+      home: FutureBuilder<Widget>(
+        future: _getInitialScreen(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return Stack(
+            children: [
+              // Your real entrypoint:
+              snapshot.data ?? const LoginScreen(),
+              // Overlay the raw FCM token for debugging:
+              if (_fcmToken != null)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    color: Colors.black87,
+                    padding: const EdgeInsets.all(8),
+                    child: SelectableText(
+                      'FCM Token:\n$_fcmToken',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
