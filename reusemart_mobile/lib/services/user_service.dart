@@ -53,10 +53,10 @@ class UserService {
     return prefs.getString('access_token');
   }
 
-  Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
-  }
+  // Future<void> logout() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('access_token');
+  // }
 
   Future<void> registerFcmToken(String fcmToken) async {
     final apiToken = await getToken();

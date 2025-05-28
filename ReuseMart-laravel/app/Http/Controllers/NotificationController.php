@@ -24,9 +24,15 @@ class NotificationController extends Controller
         $request->validate([
             'title' => 'required|string',
             'body'  => 'required|string',
+            'user_id' => 'required|integer|exists:user,id_user',
         ]);
 
-        $tokens = FcmToken::pluck('token')->all();
+        $userId = $request->input('user_id');
+
+        $tokens = FcmToken::where('id_user', $userId)
+          ->pluck('token')
+          ->toArray();
+
         if (empty($tokens)) {
             return response()->json(['error' => 'No device tokens registered'], 400);
         }
