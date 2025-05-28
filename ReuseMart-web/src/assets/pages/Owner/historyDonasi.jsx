@@ -30,7 +30,8 @@ const DonasiCard = ({ donasi, getBarangById, getUserById, getReqDonasiById, getP
                                 <h5 className="mb-2">{barang?.nama_barang || "Barang Tidak Ditemukan"}</h5>
                             </div>
                             <div>
-                                <strong>Nama Request:</strong> {reqDonasi?.nama_barangreq || "Tidak Diketahui"}
+                                <strong>Nama Request:</strong> {reqDonasi?.nama_barangreq || "Tidak Diketahui"} <br />
+                                <strong>Nama Penerima: </strong>{donasi.nama_penerima}
                             </div>
                             <div>
                                 <strong>Penjual:</strong> {penjual?.first_name || "Tidak Diketahui"}

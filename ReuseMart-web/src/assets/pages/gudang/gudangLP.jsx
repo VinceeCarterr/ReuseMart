@@ -1,71 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Form, Toast, ToastContainer, Image, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Form, Toast, ToastContainer, Modal } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
 import NavbarGudang from "../../components/Navbar/navbarGudang.jsx";
 import UpdateBarangModal from "../../components/gudang/updateBarangModal.jsx";
-
-const BarangCard = ({ barang, penitipanUser, barangPegawai, tanggalSelesai, onDelete, onEdit }) => {
-    return (
-        <Col md={6} className="mx-auto mb-4">
-            <Card className="req-card h-100">
-                <Card.Body>
-                    <Row>
-                        <Col xs={4}>
-                            <Image
-                                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`}
-                                thumbnail
-                            />
-                        </Col>
-                        <Col xs={8}>
-                            <div>
-                                <h5 className="mb-2"> {barang.nama_barang}</h5>
-                            </div>
-                            <div>
-                                <strong>Harga:</strong> Rp {barang.harga.toLocaleString()}
-                            </div>
-                            <div>
-                                <strong>Status:</strong> {barang.status}
-                            </div>
-                            <div>
-                                <strong>Status Periode:</strong> {barang.status_periode}
-                            </div>
-                            <div>
-                                <strong>Nama Penitip:</strong> {penitipanUser
-                                    ? `${penitipanUser.first_name} ${penitipanUser.last_name}`.trim()
-                                    : 'Unknown User'}
-                            </div>
-                            <div>
-                                <strong>Nama Pegawai:</strong> {barangPegawai
-                                    ? `${barangPegawai.first_name} ${barangPegawai.last_name}`.trim()
-                                    : 'Unknown User'}
-                            </div>
-                            <div>
-                                <strong>Tanggal Titip:</strong> {new Date(barang.tanggal_titip).toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                })}
-                            </div>
-                            <div>
-                                <strong>Tanggal Selesai:</strong> {tanggalSelesai ? tanggalSelesai : 'Unknown Date'}
-                            </div>
-                        </Col>
-                    </Row>
-                </Card.Body>
-                <Card.Footer className="text-end">
-                    <Button variant="outline-primary" className="me-2" onClick={() => onEdit(barang.id_barang)}>
-                        <Pencil size={18} /> Edit
-                    </Button>
-                    <Button variant="outline-danger" onClick={() => onDelete(barang.id_barang)}>
-                        <Trash size={18} /> Delete
-                    </Button>
-                </Card.Footer>
-            </Card>
-        </Col>
-    );
-};
+import DetailBarangModal from "../../components/gudang/detailBarangModal.jsx";
 
 const GudangPage = () => {
     const [listBarang, setListBarang] = useState([]);
@@ -73,7 +13,7 @@ const GudangPage = () => {
     const [listUser, setListUser] = useState([]);
     const [listPegawai, setListPegawai] = useState([]);
     const [listFotoBarang, setListFotoBarang] = useState([]);
-
+    const [kategori, setKategori] = useState([]); // New state for categories
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [selectedBarangId, setSelectedBarangId] = useState(null);
     const [showToast, setShowToast] = useState(false);
@@ -81,6 +21,8 @@ const GudangPage = () => {
     const [pencarian, setPencarian] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [barangToDelete, setBarangToDelete] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedBarang, setSelectedBarang] = useState(null);
 
     useEffect(() => {
         fetchBarang();
@@ -88,6 +30,7 @@ const GudangPage = () => {
         fetchUser();
         fetchPegawai();
         fetchFotoBarang();
+        fetchKategori(); // Fetch categories
     }, []);
 
     const fetchFotoBarang = async () => {
@@ -99,7 +42,6 @@ const GudangPage = () => {
             showToastMessage('Failed to fetch foto barang');
         }
     };
-
 
     const fetchPegawai = async () => {
         try {
@@ -141,36 +83,43 @@ const GudangPage = () => {
         }
     };
 
+    const fetchKategori = async () => {
+        try {
+            const response = await api.get('/kategoriGudang');
+            if (response.status === 200) {
+                setKategori(response.data);
+            } else {
+                console.error("Failed to fetch categories: Status", response.status);
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error.message);
+        }
+    };
+
     const showToastMessage = (message) => {
         setToastMessage(message);
         setShowToast(true);
     };
 
     const handleDeleteBarang = async (id) => {
-    if (barangToDelete) {
-        try {
-            // Filter foto dengan id_barang yang sesuai
-            const relatedFotos = listFotoBarang.filter(foto => foto.id_barang === id);
-
-            for (const foto of relatedFotos) {
-                await api.delete(`/deleteFoto/${foto.id_foto}`);
+        if (barangToDelete) {
+            try {
+                const relatedFotos = listFotoBarang.filter(foto => foto.id_barang === id);
+                for (const foto of relatedFotos) {
+                    await api.delete(`/deleteFoto/${foto.id_foto}`);
+                }
+                await api.delete(`/deleteBarang/${id}`);
+                fetchBarang();
+                showToastMessage('Item and all associated photos deleted successfully');
+            } catch (err) {
+                console.error('Failed to delete Barang:', err);
+                showToastMessage('Failed to delete item');
+            } finally {
+                setShowDeleteModal(false);
+                setBarangToDelete(null);
             }
-
-            await api.delete(`/deleteBarang/${id}`);
-
-            fetchBarang();
-            showToastMessage('Item and all associated photos deleted successfully');
-        } catch (err) {
-            console.error('Failed to delete Barang:', err);
-            showToastMessage('Failed to delete item');
-        } finally {
-            setShowDeleteModal(false);
-            setBarangToDelete(null);
         }
-    }
-};
-
-
+    };
 
     const confirmDelete = (id) => {
         setBarangToDelete(id);
@@ -188,7 +137,17 @@ const GudangPage = () => {
     };
 
     const handleUpdateSuccess = () => {
-        fetchBarang(); // Refresh barang list
+        fetchBarang();
+    };
+
+    const handleShowDetail = (barang) => {
+        setSelectedBarang(barang);
+        setShowDetailModal(true);
+    };
+
+    const handleCloseDetailModal = () => {
+        setShowDetailModal(false);
+        setSelectedBarang(null);
     };
 
     const getPegawaiByBarang = (barangId) => {
@@ -223,10 +182,22 @@ const GudangPage = () => {
         });
     };
 
+    const getKategoriName = (id) => {
+        for (const categoryGroup of kategori) {
+            const subKategoriMatch = categoryGroup.sub_kategori.find(sub => sub.id === id);
+            if (subKategoriMatch) {
+                return categoryGroup.nama_kategori || 'N/A';
+            }
+        }
+        return 'N/A';
+    };
+
     const filteredList = listBarang.filter(barang => {
         const namabarang = barang.nama_barang.toLowerCase().includes(pencarian.toLowerCase());
         const status = barang.status.toLowerCase().includes(pencarian.toLowerCase());
         const status_periode = barang.status_periode.toLowerCase().includes(pencarian.toLowerCase());
+        const kategori = getKategoriName(barang.id_kategori)?.toLowerCase().includes(pencarian.toLowerCase()) || false;
+        const sub_kategori = barang.sub_kategori?.toLowerCase().includes(pencarian.toLowerCase()) || false;
 
         const penitip = getUserByBarang(barang.id_barang);
         const pegawai = getPegawaiByBarang(barang.id_barang);
@@ -241,13 +212,13 @@ const GudangPage = () => {
         const cocokPenitip = namaLengkapPenitip.includes(pencarian.toLowerCase());
         const cocokPegawai = namaLengkapPegawai.includes(pencarian.toLowerCase());
 
-        return namabarang || status || status_periode || cocokPenitip || cocokPegawai;
+        return namabarang || status || status_periode || kategori || sub_kategori || cocokPenitip || cocokPegawai;
     });
 
     return (
         <div>
             <NavbarGudang />
-            <Container className="mt-5">
+            <Container className="mt-5" style={{ background: 'none' }}>
                 <Row>
                     <Col md={10} className="mx-auto">
                         <Row>
@@ -257,7 +228,7 @@ const GudangPage = () => {
                             <Col md={4}>
                                 <Form.Control
                                     type="search"
-                                    placeholder="Nama Barang, Nama Pegawai, Nama Penitip . . ."
+                                    placeholder="Nama Barang, Nama Pegawai, Nama Penitip, Kategori..."
                                     className="me-2"
                                     value={pencarian}
                                     onChange={(e) => setPencarian(e.target.value)}
@@ -274,25 +245,79 @@ const GudangPage = () => {
                 </Row>
             </Container>
 
-            <Container className="mt-4">
+            <Container className="mt-4" style={{ background: 'none' }}>
                 <Row>
-                    {filteredList.length > 0 ? (
-                        filteredList.map(barang => (
-                            <BarangCard
-                                key={barang.id_barang}
-                                barang={barang}
-                                penitipanUser={getUserByBarang(barang.id_barang)}
-                                barangPegawai={getPegawaiByBarang(barang.id_barang)}
-                                tanggalSelesai={hitungTanggalSelesai(barang.id_barang)}
-                                onDelete={confirmDelete}
-                                onEdit={handleEditBarang}
-                            />
-                        ))
-                    ) : (
-                        <Col className="text-center text-muted mt-4">
-                            <p>Tidak ada barang ditemukan.</p>
-                        </Col>
-                    )}
+                    <Col md={12} className="mx-auto">
+                        {filteredList.length > 0 ? (
+                            <Table striped bordered hover responsive>
+                                <thead>
+                                    <tr>
+                                        <th>Nama Barang</th>
+                                        <th>Kode Barang</th>
+                                        <th>Harga</th>
+                                        <th>Status</th>
+                                        <th>Status Periode</th>
+                                        <th>Kategori</th>
+                                        <th>Tanggal Titip</th>
+                                        <th>Tanggal Selesai</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredList.map(barang => (
+                                        <tr 
+                                            key={barang.id_barang} 
+                                            onClick={() => handleShowDetail(barang)} 
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <td>{barang.nama_barang}</td>
+                                            <td>{barang.kode_barang}</td>
+                                            <td>Rp {barang.harga.toLocaleString()}</td>
+                                            <td>{barang.status}</td>
+                                            <td>{barang.status_periode}</td>
+                                            <td>{getKategoriName(barang.id_kategori)}</td>
+                                            <td>
+                                                {barang.tanggal_titip
+                                                    ? new Date(barang.tanggal_titip).toLocaleDateString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                    })
+                                                    : 'Unknown Date'}
+                                            </td>
+                                            <td>{hitungTanggalSelesai(barang.id_barang)}</td>
+                                            <td onClick={(e) => e.stopPropagation()}>
+                                                <Button
+                                                    variant="outline-primary"
+                                                    className="me-2"
+                                                    onClick={() => handleShowDetail(barang)}
+                                                >
+                                                    Detail
+                                                </Button>
+                                                <Button
+                                                    variant="outline-primary"
+                                                    className="me-2"
+                                                    onClick={() => handleEditBarang(barang.id_barang)}
+                                                >
+                                                    <Pencil size={18} />
+                                                </Button>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    onClick={() => confirmDelete(barang.id_barang)}
+                                                >
+                                                    <Trash size={18} />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        ) : (
+                            <div className="text-center text-muted mt-4">
+                                <p>Tidak ada barang ditemukan.</p>
+                            </div>
+                        )}
+                    </Col>
                 </Row>
             </Container>
 
@@ -301,6 +326,16 @@ const GudangPage = () => {
                 onHide={handleCloseUpdateModal}
                 barangId={selectedBarangId}
                 onUpdate={handleUpdateSuccess}
+            />
+
+            <DetailBarangModal
+                show={showDetailModal}
+                onHide={handleCloseDetailModal}
+                barang={selectedBarang}
+                penitipanUser={selectedBarang ? getUserByBarang(selectedBarang.id_barang) : null}
+                barangPegawai={selectedBarang ? getPegawaiByBarang(selectedBarang.id_barang) : null}
+                tanggalSelesai={selectedBarang ? hitungTanggalSelesai(selectedBarang.id_barang) : null}
+                listFotoBarang={listFotoBarang}
             />
 
             <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>

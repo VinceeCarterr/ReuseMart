@@ -15,6 +15,7 @@ class Donasi extends Model
         'id_reqdonasi',
         'id_barang',
         'tanggal_donasi',
+        'nama_penerima',
     ];
 
     public function requestDonasi()
