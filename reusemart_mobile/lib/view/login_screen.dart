@@ -1,5 +1,3 @@
-// lib/view/login_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
@@ -18,8 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiService = UserService();
-
-  final _userService = UserService();
   bool _isLoading = false;
   String? _errorMessage;
   bool _rememberMe = false;
@@ -33,64 +29,65 @@ class _LoginScreenState extends State<LoginScreen> {
   void _checkRememberMe() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
-    if (token != null) {
+    final rememberMe = prefs.getBool('remember_me') ?? false;
+
+    if (token != null && rememberMe) {
       try {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              user: UserModel(
-                id: '',
-                name: 'User',
-                email: '',
-                type: '',
-                accessToken: token,
-                tokenType: 'Bearer',
-              ),
+        // Validate the token using UserService
+        final user = await _apiService.validateToken();
+        if (user != null && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(user: user),
             ),
-          ),
-        );
+          );
+        } else {
+          await prefs.remove('access_token');
+          await prefs.remove('remember_me');
+        }
       } catch (e) {
         await prefs.remove('access_token');
+        await prefs.remove('remember_me');
       }
     }
   }
 
   Future<void> _login() async {
-  setState(() {
-    _isLoading = true;
-    _errorMessage = null;
-  });
-
-  try {
-    // 1️⃣ Perform the login and save access_token
-    final UserModel user = await _apiService.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    // 2️⃣ Now that we're authenticated, grab the FCM token
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    if (fcmToken != null) {
-      // 3️⃣ And register it with your back end
-      await _apiService.registerFcmToken(fcmToken);
-      debugPrint('✅ FCM token auto-registered');
-    }
-
-    // 4️⃣ Finally navigate to the home screen
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
-    );
-  } catch (e) {
     setState(() {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = true;
+      _errorMessage = null;
     });
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
+
+    try {
+      final UserModel user = await _apiService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Save remember_me preference
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', _rememberMe);
+
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await _apiService.registerFcmToken(fcmToken);
+        debugPrint('✅ FCM token auto-registered');
+      }
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
+      );
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
 
   @override
   void dispose() {
@@ -127,7 +124,22 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               obscureText: true,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            // Remember Me Checkbox
+            Row(
+              children: [
+                Checkbox(
+                  value: _rememberMe,
+                  onChanged: (value) {
+                    setState(() {
+                      _rememberMe = value ?? false;
+                    });
+                  },
+                ),
+                const Text('Remember Me'),
+              ],
+            ),
+            const SizedBox(height: 8),
             // Error message
             if (_errorMessage != null)
               Padding(
