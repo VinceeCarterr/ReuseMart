@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('kategori', [KategoriController::class, 'index']);
     Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
     Route::post('/register-token', [FcmTokenController::class, 'store']);
+    Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
 
 

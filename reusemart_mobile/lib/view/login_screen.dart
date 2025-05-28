@@ -5,6 +5,7 @@ import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/home_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +19,42 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _apiService = UserService();
 
+  final _userService = UserService();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkRememberMe();
+  }
+
+  void _checkRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    if (token != null) {
+      try {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              user: UserModel(
+                id: '',
+                name: 'User',
+                email: '',
+                type: '',
+                accessToken: token,
+                tokenType: 'Bearer',
+              ),
+            ),
+          ),
+        );
+      } catch (e) {
+        await prefs.remove('access_token');
+      }
+    }
+  }
 
   Future<void> _login() async {
   setState(() {
