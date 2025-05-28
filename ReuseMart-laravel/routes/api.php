@@ -52,8 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
-
+    Route::patch('transaksi/historyPenitip/{id_barang}', [TransaksiController::class, 'updateHistoryPenitip']);
+    Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
 
 

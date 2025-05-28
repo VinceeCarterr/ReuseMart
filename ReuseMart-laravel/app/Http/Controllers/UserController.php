@@ -38,6 +38,37 @@ class UserController extends Controller
         }
     }
 
+    public function getUserPegawai(Request $request)
+    {
+        $user = $request->user();
+        if ($user instanceof \App\Models\User) {
+            return response()->json([
+                'type' => 'user',
+                'user' => [
+                    'id' => $user->id_user,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'email' => $user->email,
+                    'role' => $user->role->nama_role ?? null,
+                ],
+                'access_token' => $request->bearerToken(),
+                'token_type' => 'Bearer',
+            ]);
+        } elseif ($user instanceof \App\Models\Pegawai) {
+            return response()->json([
+                'type' => 'pegawai',
+                'pegawai' => [
+                    'id' => $user->id_pegawai,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'email' => $user->email,
+                    'jabatan' => $user->jabatan->nama_jabatan ?? null,
+                ],
+                'access_token' => $request->bearerToken(),
+                'token_type' => 'Bearer',
+            ]);
+        }
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
     public function publicList()
     {
         $users = User::select('id_user', 'first_name', 'last_name', 'no_telp', 'rating', 'email', 'poin_loyalitas')->get();
@@ -47,7 +78,7 @@ class UserController extends Controller
 
     public function gudangList()
     {
-        $users = User::select('id_user','id_role', 'first_name', 'last_name', 'no_telp', 'rating')->get();
+        $users = User::select('id_user', 'id_role', 'first_name', 'last_name', 'no_telp', 'rating')->get();
 
         return response()->json($users);
     }
@@ -552,5 +583,4 @@ class UserController extends Controller
             ], 500);
         }
     }
-
 }

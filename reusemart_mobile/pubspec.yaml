@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^2.6.1
   http: ^1.4.0
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:
