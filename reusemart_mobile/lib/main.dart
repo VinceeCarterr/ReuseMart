@@ -1,19 +1,136 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:reusemart_mobile/services/user_service.dart';
+import 'package:reusemart_mobile/view/login_screen.dart';
+import 'package:reusemart_mobile/view/home_screen.dart';
+import 'package:reusemart_mobile/model/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+/// 1️⃣ Background handler must be a top‐level function:
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('📨 BG message: ${message.messageId}');
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  // Register the background handler:
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  final UserService _userService = UserService();
+  String? _fcmToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFcm();
+    _listenForegroundMessages();
+  }
+
+  /// 2️⃣ Set up FCM: request permission, grab token, register it.
+  Future<void> _initFcm() async {
+    // Request (iOS) permission – no‐op on Android
+    await FirebaseMessaging.instance.requestPermission();
+
+    // Grab the FCM device token
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token == null) return;
+
+    setState(() => _fcmToken = token);
+    debugPrint('🔑 FCM Token: $token');
+
+    // Fetch your saved API token from SharedPreferences
+    final apiToken = await _userService.getToken();
+    if (apiToken != null) {
+      try {
+        await _userService.registerFcmToken(token);
+        debugPrint('✅ Token registered with server');
+      } catch (e) {
+        debugPrint('❌ Failed to register token: $e');
+      }
+    } else {
+      debugPrint('⚠️ No API token yet – user not logged in');
+    }
+  }
+
+  /// 3️⃣ Show a SnackBar for messages when app is in the foreground
+  void _listenForegroundMessages() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage msg) {
+      print('🍊 onMessage got a notification: ${msg.notification?.title}');
+      // you’ll need to surface it manually:
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text('${msg.notification!.title}: ${msg.notification!.body}')));
+    });
+  }
+
+  /// 4️⃣ Check for stored token and remember_me preference
+  Future<Widget> _getInitialScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final rememberMe = prefs.getBool('remember_me') ?? false;
+
+    if (token != null && rememberMe) {
+      try {
+        final user = await _userService.validateToken();
+        if (user != null) {
+          return HomeScreen(user: user);
+        }
+      } catch (e) {
+        debugPrint('❌ Token validation failed: $e');
+        await prefs.remove('access_token');
+        await prefs.remove('remember_me');
+      }
+    }
+    return const LoginScreen();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Reusemart',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: FutureBuilder<Widget>(
+        future: _getInitialScreen(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return Stack(
+            children: [
+              // Your real entrypoint:
+              snapshot.data ?? const LoginScreen(),
+              // Overlay the raw FCM token for debugging:
+              if (_fcmToken != null)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    color: Colors.black87,
+                    padding: const EdgeInsets.all(8),
+                    child: SelectableText(
+                      'FCM Token:\n$_fcmToken',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

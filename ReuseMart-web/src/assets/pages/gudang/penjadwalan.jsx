@@ -10,8 +10,8 @@ import {
   Col,
   Carousel,
   Image,
-  Toast, 
-  ToastContainer
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { Truck } from "react-bootstrap-icons";
 import NavbarGudang from "../../components/Navbar/navbarGudang.jsx";
@@ -36,9 +36,9 @@ const Penjadwalan = () => {
   const todayString = formatDate(new Date());
   const [showNotaKurir, setShowNotaKurir] = useState(false);
 
-  const [toastShow, setToastShow]       = useState(false);
-const [toastMessage, setToastMessage] = useState("");
-const [toastVariant, setToastVariant] = useState("success");
+  const [toastShow, setToastShow] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
 
   // jadwal modal
   const [showModal, setShowModal] = useState(false);
@@ -298,6 +298,7 @@ const [toastVariant, setToastVariant] = useState("success");
 
     setShowModal(true);
   };
+
   const [minDate, setMinDate] = useState("");
   const handleSave = async () => {
     if (!selectedTransaksi) return;
@@ -318,9 +319,10 @@ const [toastVariant, setToastVariant] = useState("success");
       }
 
       setToastVariant("success");
-    setToastMessage("Jadwal berhasil disimpan!");
-    setToastShow(true);
+      setToastMessage("Jadwal berhasil disimpan!");
+      setToastShow(true);
       setShowModal(false);
+
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
       setSchedules(data);
@@ -331,9 +333,48 @@ const [toastVariant, setToastVariant] = useState("success");
         message: err.message,
       });
       setToastVariant("danger");
-    setToastMessage("Gagal menyimpan jadwal.");
-    setToastShow(true);
+      setToastMessage("Gagal menyimpan jadwal.");
+      setToastShow(true);
+      return;
     }
+
+    const nota = selectedTransaksi.no_nota ?? selectedTransaksi.id_transaksi;
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const timePart = `${hours}:${minutes}`;
+
+    let title, body;
+    if (filter === "Delivery") {
+      title = "Pesanan Anda sudah dijadwalkan!";
+      body = `Pesanan dengan no nota (${nota}) akan dikirimkan pada tanggal ${tanggalJadwal}`;
+    } else {
+      title = "Pesanan Anda sudah dijadwalkan";
+      body = `Pesanan dengan no nota (${nota}) dapat diambil pada tanggal ${tanggalJadwal}`;
+    }
+
+    (async () => {
+      const buyerId = selectedTransaksi.user?.id_user;
+      const penitipUser =
+        selectedTransaksi.detil_transaksi?.[0]?.barang?.penitipan?.user;
+      const penitipId = penitipUser?.id_user;
+
+      const recipients = [];
+      if (buyerId) recipients.push(buyerId);
+      if (penitipId && penitipId !== buyerId) recipients.push(penitipId);
+
+      for (const user_id of recipients) {
+        try {
+          await api.post("/send-notification", { user_id, title, body });
+          console.log(`✅ Push sent to user ${user_id}`);
+        } catch (pushErr) {
+          console.warn(
+            `⚠️ Push to ${user_id} failed (ignored):`,
+            pushErr.response?.data || pushErr.message
+          );
+        }
+      }
+    })();
   };
 
   const openDetail = (t) => {
@@ -344,14 +385,17 @@ const [toastVariant, setToastVariant] = useState("success");
   const closeDetail = () => setShowDetail(false);
 
   const handleKonfirmasiAmbil = async (t) => {
+    // 1️⃣ First: Mark as taken & add commission
     try {
       await api.patch(`/pengambilan/${t.pengambilan.id_pengambilan}`, {
         status_pengambilan: "Sudah diambil",
       });
       await addKomisi(t);
+
       setToastVariant("success");
-    setToastMessage("Pengambilan berhasil dikonfirmasi!");
-    setToastShow(true);
+      setToastMessage("Pengambilan berhasil dikonfirmasi!");
+      setToastShow(true);
+
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
       setSchedules(data);
@@ -359,8 +403,53 @@ const [toastVariant, setToastVariant] = useState("success");
       console.error("Error confirming pickup:", err);
       alert("Gagal menandai pengambilan sebagai Sudah diambil.");
       setToastVariant("danger");
-    setToastMessage("Gagal konfirmasi pengambilan.");
-    setToastShow(true);
+      setToastMessage("Gagal konfirmasi pengambilan.");
+      setToastShow(true);
+      return;
+    }
+
+    // 2️⃣ Build both notification bodies
+    const productNames = t.detil_transaksi
+      .map((dt) => dt.barang.nama_barang)
+      .join(", ");
+
+    const buyerTitle = "Terima Kasih Sudah Berbelanja di ReuseMart!";
+    const buyerBody = `${productNames} sudah diterima oleh Anda!`;
+
+    const penitipTitle = "Pesanan Anda telah diambil!";
+    const penitipBody = `${productNames} sudah diterima oleh pembeli.Cek saldo Anda sekarang, CUAAAAANNN!`;
+
+    // 3️⃣ Determine both recipients
+    const buyerId = t.user.id_user;
+    const penitipUser = t.detil_transaksi?.[0]?.barang?.penitipan?.user;
+    const penitipId = penitipUser?.id_user;
+
+    const recipients = [];
+    if (buyerId)
+      recipients.push({ id: buyerId, title: buyerTitle, body: buyerBody });
+    if (penitipId && penitipId !== buyerId) {
+      recipients.push({
+        id: penitipId,
+        title: penitipTitle,
+        body: penitipBody,
+      });
+    }
+
+    // 4️⃣ Send to each, silently catching errors
+    for (const { id, title, body } of recipients) {
+      try {
+        await api.post("/send-notification", {
+          user_id: id,
+          title,
+          body,
+        });
+        console.log(`✅ Notification sent to user ${id}`);
+      } catch (pushErr) {
+        console.warn(
+          `⚠️ Notification to ${id} failed (ignored):`,
+          pushErr.response?.data || pushErr.message
+        );
+      }
     }
   };
 
@@ -394,19 +483,19 @@ const [toastVariant, setToastVariant] = useState("success");
 
   return (
     <>
-    <ToastContainer position="top-end" className="p-3">
-  <Toast
-    bg={toastVariant}
-    onClose={() => setToastShow(false)}
-    show={toastShow}
-    delay={3000}
-    autohide
-  >
-    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
-      {toastMessage}
-    </Toast.Body>
-  </Toast>
-</ToastContainer>
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg={toastVariant}
+          onClose={() => setToastShow(false)}
+          show={toastShow}
+          delay={3000}
+          autohide
+        >
+          <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+            {toastMessage}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
       <NavbarGudang />
 
       <Container className="mt-5">

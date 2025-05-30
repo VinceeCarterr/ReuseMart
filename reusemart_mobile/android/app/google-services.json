@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "896742287099",
+    "project_id": "reusemart-d9524",
+    "storage_bucket": "reusemart-d9524.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896742287099:android:e113899c196023df2af25e",
+        "android_client_info": {
+          "package_name": "com.example.reusemart_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbjkryX5shBgy8h5Emcps0r_dHRL3DGdU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

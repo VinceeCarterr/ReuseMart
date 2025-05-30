@@ -16,7 +16,9 @@ use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\PengambilanController;
 use App\Http\Controllers\KomisiController;
 use App\Http\Controllers\DTController;
-
+use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\FcmTokenController;
 use Illuminate\Http\Request;
 
 //public no auth
@@ -48,13 +50,17 @@ Route::get('/pengiriman/getByTransaksi/{id}', [PengirimanController::class, 'get
 // 4) fetch public list of couriers (pegawai with jabatan = 4)
 Route::get('/kurir/public', [PegawaiController::class, 'publicKurir']);
 
+Route::post('/send-notification', [NotificationController::class, 'sendNotification']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
     Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+    Route::post('/register-token', [FcmTokenController::class, 'store']);
+    Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
-    
+
 
     //authentifikasi | mengelola data pegawai
     Route::middleware('role:admin')->group(function () {
@@ -90,7 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
         Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
         Route::post('/checkout', [TransaksiController::class, 'checkout']);
-        Route::post('/upload-proof', [TransaksiController::class, 'uploadProof']);
+        Route::post('/upload-proof', [PembayaranController::class, 'uploadProof']);
     });
 
     Route::middleware('role:penitip')->group(function () {
@@ -108,12 +114,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-    //mengelola data penitip
     Route::middleware('role:cs')->group(function () {
         Route::get('/penitip', [UserController::class, 'penitip']);
         Route::put('/penitip/{id}', [UserController::class, 'updatePenitip']);
         Route::delete('/penitip/{id}', [UserController::class, 'destroyPenitip']);
         Route::post('/user/check-nik', [UserController::class, 'checkNIK']);
+        Route::get('/pembayaran', [PembayaranController::class, 'index']);
+        Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
+        Route::post('/pembayaran/verify/{id}', [PembayaranController::class, 'verify']);
     });
 
     Route::middleware('role:pembeli,cs')->group(function () {
