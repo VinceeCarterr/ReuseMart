@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Donasi;
-use Exception;
-
-
 use Illuminate\Support\Facades\Log;
+use App\Models\Donasi;
+use App\Models\Barang;
+use App\Models\Penitipan;
+use App\Models\FcmToken;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FcmNotification;
 
 class DonasiController extends Controller
 {
@@ -35,10 +38,40 @@ class DonasiController extends Controller
 
     public function store(Request $request)
     {
+        $data = $request->validate([
+                'id_reqdonasi'   => 'required|exists:req_donasi,id_reqdonasi',
+                'id_barang'      => 'required|exists:barang,id_barang',
+                'nama_penerima'  => 'required|string',
+                'tanggal_donasi' => 'required|date',
+            ]);
+
         try {
-            $donasi = Donasi::create($request->all());
+            $donasi = Donasi::create($data);
+            $barang = Barang::findOrFail($data['id_barang']);
+            $penitipan = Penitipan::findOrFail($barang->id_penitipan);
+            $penitipId = $penitipan->id_user;
+
+            // Fetch that user’s FCM tokens
+            $tokens = FcmToken::where('id_user', $penitipId)
+                    ->pluck('token')
+                    ->toArray();
+
+            if (!empty($tokens)) {
+                //Build & send the notification
+                $messaging = (new Factory)
+                    ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+                    ->createMessaging();
+
+                $title = 'Barang Anda Telah Didonasikan!';
+                $body  = "Donasi untuk “{$barang->nama_barang}” telah dibuat. Terima kasih!";
+
+                $message = CloudMessage::new()
+                    ->withNotification(FcmNotification::create($title, $body));
+
+                $report = $messaging->sendMulticast($message, $tokens);
+            }
             return response()->json($donasi, 201);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error creating donasi: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to create donasi'], 500);
         }
