@@ -185,7 +185,7 @@ const LandingPage = () => {
         onSwitch={setAuthMode}
       />
 
-      <Container className="my-5 text-center">
+      <Container className="my-5 text-center" style={{ background: "none" }}>
         <h2 className="text-success fw-bold welcome-heading">
           Selamat Datang di ReuseMart!
         </h2>

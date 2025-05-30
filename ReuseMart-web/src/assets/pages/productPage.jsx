@@ -212,7 +212,7 @@ const ProductPage = () => {
     return (
         <div>
             {renderNavbar()}
-            <Container className="mt-1">
+            <Container className="mt-1" style={{ background:'none'}}>
                 <Row>
                     <Col md={6} className="my-5 d-flex flex-column align-items-center">
                         <div className="main-image-container mb-3">

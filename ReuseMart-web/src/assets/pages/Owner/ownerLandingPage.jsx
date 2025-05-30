@@ -6,7 +6,6 @@ import "../../components/Navbar/navbarOwner.css";
 import "aos/dist/aos.css";
 import KelolaDonasiModal from "../../components/Owner/kelolaDonasiModal.jsx"; 
 
-
 const ReqDonasiCard = ({ reqDonasi, getUserNameById }) => (
     <Col md={6} className="mx-auto mb-4">
         <Card className="req-card h-100">
@@ -47,9 +46,6 @@ const OwnerLandingPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [donasiList, setDonasiList] = useState([]);
 
-    const handleShow = () => setShowModal(true);
-    const handleClose = () => setShowModal(false);
-
     const fetchDonasi = async () => {
         try {
             const response = await api.get('/donasi');
@@ -58,7 +54,6 @@ const OwnerLandingPage = () => {
             console.error('Failed to fetch Donasi:', error);
         }
     };
-
 
     const fetchReqDonasi = async () => {
         try {
@@ -78,17 +73,28 @@ const OwnerLandingPage = () => {
         }
     };
 
+    // Fetch all data
+    const fetchAllData = async () => {
+        try {
+            await Promise.all([fetchReqDonasi(), fetchUser(), fetchDonasi()]);
+        } catch (error) {
+            console.error('Failed to fetch all data:', error);
+        }
+    };
+
     const getUserNameById = (id) => {
         const user = userList.find(u => u.id_user === id);
         return user ? user.first_name : 'Unknown User';
     };
 
     useEffect(() => {
-        fetchReqDonasi();  
-        fetchUser();
-        fetchDonasi();
+        fetchAllData();
     }, []);
 
+    const handleShow = () => setShowModal(true);
+    const handleClose = () => {
+        setShowModal(false);
+    };
 
     const isReqDonasiDone = (idReq) => {
         return donasiList.some(donasi => donasi.id_reqdonasi === idReq);
@@ -96,13 +102,15 @@ const OwnerLandingPage = () => {
 
     const filteredReqDonasiList = reqDonasiList.filter(req => !isReqDonasiDone(req.id_reqdonasi));
 
-
     return (
-
         <div>
             <NavbarOwner />
-            <KelolaDonasiModal  show={showModal} onHide={handleClose} />
-            <Container className="mt-5">
+            <KelolaDonasiModal 
+                show={showModal} 
+                onHide={handleClose} 
+                onDonasiSuccess={fetchAllData} // Pass fetchAllData to modal
+            />
+            <Container className="mt-5" style={{ background: "none" }}>
                 <Row>
                     <Col md={6}>
                         <h2 className="text-success fw-bold welcome-heading">Daftar Request Donasi</h2>
@@ -125,4 +133,5 @@ const OwnerLandingPage = () => {
         </div>
     );
 };
+
 export default OwnerLandingPage;

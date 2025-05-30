@@ -19,6 +19,8 @@ use App\Http\Controllers\DTController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FcmTokenController;
+use App\Http\Controllers\MerchController;
+use App\Http\Controllers\RedeemController;
 use Illuminate\Http\Request;
 
 //public no auth
@@ -122,6 +124,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pembayaran', [PembayaranController::class, 'index']);
         Route::get('/pembayaran/{id}', [PembayaranController::class, 'show']);
         Route::post('/pembayaran/verify/{id}', [PembayaranController::class, 'verify']);
+
+        Route::get('/userCS', [UserController::class, 'publicList']);
+        Route::get('/pegawaiCS', [PegawaiController::class, 'index']);
+        Route::get('/merchCS', [MerchController::class, 'index']);
+        Route::get('/redeemCS', [RedeemController::class, 'index']);
+        Route::put('/redeemCS/{id}', [RedeemController::class, 'update']);
     });
 
     Route::middleware('role:pembeli,cs')->group(function () {
@@ -170,7 +178,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('akan-ambil', [BarangController::class, 'akanAmbilAll']);
         Route::patch('/barang/{id}/ambil', [BarangController::class, 'markAsTaken']);
         Route::get('/transaksi/penjadwalan', [TransaksiController::class, 'penjadwalan']);
-        Route::post('/pengiriman',   [PengirimanController::class,   'store']);
+        Route::post('/pengiriman',   [Controller::class,   'store']);
         Route::post('/pengambilan',  [PengambilanController::class,  'store']);
         Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
         Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
