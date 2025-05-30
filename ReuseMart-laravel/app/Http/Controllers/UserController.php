@@ -514,25 +514,38 @@ class UserController extends Controller
     }
 
     public function tambahPoinPenitip($id_barang)
-    {
+{
+    try {
+        // Fetch the barang to get id_penitip
         $barang = Barang::findOrFail($id_barang);
-        $penitip = Penitipan::where('id_barang', $id_barang)->first();
-
-        if ($penitip) {
-            $user = User::findOrFail($penitip->id_user);
-            $poin = floor($barang->harga / 10000);
-            $user->poin_loyalitas += $poin;
-            $user->save();
+        
+        // Fetch the penitipan record using id_penitip from barang
+        $penitipan = Penitipan::where('id_penitipan', $barang->id_penitipan)->first();
+        
+        if (!$penitipan) {
             return response()->json([
-                'message' => 'Poin penitip berhasil ditambahkan',
-                'poin'    => $user->poin_loyalitas,
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'Barang tidak ditemukan atau tidak ada penitip',
+                'message' => 'Penitipan tidak ditemukan untuk barang ini',
             ], 404);
         }
+
+        // Fetch the user using id_user from penitipan
+        $user = User::findOrFail($penitipan->id_user);
+        
+        // Calculate points based on barang price
+        $poin = floor($barang->harga / 10000);
+        $user->poin_loyalitas += $poin;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Poin penitip berhasil ditambahkan',
+            'poin' => $user->poin_loyalitas,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Gagal menambahkan poin: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     public function updateAllUserRatings()
     {

@@ -152,6 +152,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
+        Route::get('/kategoriGudang', [KategoriController::class, 'index']);
         Route::get('/fotoGudang', [Foto_BarangController::class, 'index']);
         Route::put('/barang/{id}', [BarangController::class, 'update']);
         Route::get('/barangGudang', [BarangController::class, 'index']);

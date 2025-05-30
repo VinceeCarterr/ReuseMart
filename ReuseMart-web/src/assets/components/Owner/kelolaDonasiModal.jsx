@@ -8,6 +8,7 @@ const KelolaDonasiModal = ({ show, onHide }) => {
     const [donasiList, setDonasiList] = useState([]);
     const [selectedReqId, setSelectedReqId] = useState('');
     const [selectedBarangId, setSelectedBarangId] = useState('');
+    const [namaPenerima, setNamaPenerima] = useState(''); // New state for nama penerima
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [toastVariant, setToastVariant] = useState("success");
@@ -34,6 +35,7 @@ const KelolaDonasiModal = ({ show, onHide }) => {
             await api.post('/donasi/tambah', {
                 id_reqdonasi: selectedReqId,
                 id_barang: selectedBarangId,
+                nama_penerima: namaPenerima, // Include nama penerima in the payload
                 tanggal_donasi: new Date().toISOString().slice(0, 10)
             });
 
@@ -43,10 +45,11 @@ const KelolaDonasiModal = ({ show, onHide }) => {
             onHide();
             setSelectedReqId('');
             setSelectedBarangId('');
+            setNamaPenerima(''); // Reset nama penerima
             showToast("Berhasil Melakukan Donasi");
         } catch (error) {
             console.error("Gagal daftar transaksi:", error);
-            alert("Gagal membuat transaksi.");
+            showToast("Gagal membuat transaksi.", "danger");
         }
     };
 
@@ -105,8 +108,23 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                                 </Form.Group>
                             </Col>
                         </Row>
+                        <Row>
+                            <Form.Group className="mt-3">
+                                <Form.Label>Nama Penerima</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Masukkan nama penerima"
+                                    value={namaPenerima}
+                                    onChange={(e) => setNamaPenerima(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Row>
                         <br />
-                        <Button variant="success" onClick={handleSubmit}>
+                        <Button 
+                            variant="success" 
+                            onClick={handleSubmit}
+                            disabled={!selectedReqId || !selectedBarangId || !namaPenerima} // Disable button if fields are empty
+                        >
                             Daftarkan Donasi
                         </Button>
                     </Form>

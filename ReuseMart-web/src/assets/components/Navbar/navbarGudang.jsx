@@ -56,6 +56,14 @@ export default function NavbarGudang() {
                                 Barang
                             </NavLink>
                             <NavLink
+                                to="/penitipanBarang"
+                                className={({ isActive }) =>
+                                    `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
+                                }
+                            >
+                                Penitipan
+                            </NavLink>
+                            <NavLink
                                 to="/catatPengambilan"
                                 className={({ isActive }) =>
                                     `text-decoration-none fs-5 me-3 nav-link ${isActive ? 'active' : ''}`
