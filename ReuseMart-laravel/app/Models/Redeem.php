@@ -10,11 +10,13 @@ class Redeem extends Model
     use HasFactory;
     protected $table = 'redeem';
     protected $primaryKey = 'id_redeem';
+    public $timestamps = false;
     protected $fillable = [
         'id_merch',
         'id_pegawai',
         'id_user',
         'tanggal_redeem',
+        'tanggal_ambil',
     ];
 
     public function merch()

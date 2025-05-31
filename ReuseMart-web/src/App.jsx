@@ -23,6 +23,7 @@ import Penjadwalan from "./assets/pages/gudang/penjadwalan.jsx";
 import CatatPengambilan from "./assets/pages/gudang/catatPengambilan.jsx";
 import AddBarangPage from "./assets/pages/gudang/addBarangPage.jsx";
 import UploadProofPage from "./assets/pages/pembeli/UploadProofPage.jsx";
+import KlaimMerch from './assets/pages/pegawai/klaimMerch.jsx';
 
 import VerifPembayaranPage from "./assets/pages/pegawai/VerifPembayaranPage.jsx";
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/pembeliLP" element={<ProtectedRoute allowedRoles={['pembeli']}> <PembeliLandingPage /> </ProtectedRoute>} />
           <Route path="/historyPembeli" element={<ProtectedRoute allowedRoles={['pembeli']}> <HistoryPembeli /> </ProtectedRoute>} />
           <Route path="/CSLP" element={<ProtectedRoute allowedRoles={['cs']}> <CSLandingPage /> </ProtectedRoute>} />
+          <Route path="/klaimMerch" element={<ProtectedRoute allowedRoles={['cs']}> <KlaimMerch /> </ProtectedRoute>} />
           <Route path="/organisasi" element={<ProtectedRoute allowedRoles={['admin']}> <OrganisasiPage /> </ProtectedRoute>} />
           <Route path="/organisasiLP" element={<ProtectedRoute allowedRoles={['organisasi']}> <OrganisasiLandingPage /> </ProtectedRoute>} />
           <Route path="/request-donasi" element={<ProtectedRoute allowedRoles={['organisasi']}> <ReqDonasi /> </ProtectedRoute>} />

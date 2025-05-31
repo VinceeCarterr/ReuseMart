@@ -124,7 +124,7 @@ const AdminPage = () => {
             <NavbarAdmin />
             <UpdatePegawaiModal show={showUpdateModal} onHide={() => setShowUpdateModal(false)} pegawai = {pegawaiToUpdate} fetchPegawai={fetchPegawai}/>
             <PegawaiModal show={showModal} onHide={() => setShowModal(false)} fetchPegawai={fetchPegawai}/>
-            <Container className="mt-5" >
+            <Container className="mt-5" style={{background:'none'}} >
                 <Row >
                     <Col md={10} className="mx-auto">
                         <Row>
@@ -149,7 +149,7 @@ const AdminPage = () => {
                 </Row>
             </Container>
             <br />
-            <Container className="mt-4">
+            <Container className="mt-4" style={{background:'none'}}>
                 <Row>
                     {filteredPegawai.filter(pegawai => pegawai.id_jabatan === 6)
                         .map((pegawai, index) => (
@@ -159,7 +159,7 @@ const AdminPage = () => {
                         ))}
                 </Row>
             </Container>
-            <Container className="mt-4"> 
+            <Container className="mt-4" style={{background:'none'}}> 
                 <Row>
                     {filteredPegawai.filter(pegawai => pegawai.id_jabatan === 2)
                         .map((pegawai, index) => (
@@ -170,7 +170,7 @@ const AdminPage = () => {
                 </Row>
             </Container>
 
-            <Container className="mt-4">
+            <Container className="mt-4" style={{background:'none'}}>
                 <Row>
                     {filteredPegawai.filter(pegawai => pegawai.id_jabatan === 3)
                         .map((pegawai, index) => (
@@ -180,7 +180,7 @@ const AdminPage = () => {
                         ))}
                 </Row>
             </Container>
-            <Container className="mt-4">
+            <Container className="mt-4" style={{background:'none'}}>
                 <Row>
                     {filteredPegawai.filter(pegawai => pegawai.id_jabatan === 4)
                         .map((pegawai, index) => (
@@ -190,7 +190,7 @@ const AdminPage = () => {
                         ))}
                 </Row>
             </Container>
-            <Container className="mt-4 mb-4">
+            <Container className="mt-4 mb-4" style={{background:'none'}}>
                 <Row>
                     {filteredPegawai.filter(pegawai => pegawai.id_jabatan === 5)
                         .map((pegawai, index) => (

@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import api from "../../../api/api.js";
 import { Modal, Button, Form, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
 
-const KelolaDonasiModal = ({ show, onHide }) => {
+const KelolaDonasiModal = ({ show, onHide, onDonasiSuccess }) => {
     const [reqDonasiList, setReqDonasiList] = useState([]);
     const [barangList, setBarangList] = useState([]);
     const [donasiList, setDonasiList] = useState([]);
     const [selectedReqId, setSelectedReqId] = useState('');
     const [selectedBarangId, setSelectedBarangId] = useState('');
-    const [namaPenerima, setNamaPenerima] = useState(''); // New state for nama penerima
+    const [namaPenerima, setNamaPenerima] = useState('');
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [toastVariant, setToastVariant] = useState("success");
@@ -35,18 +35,19 @@ const KelolaDonasiModal = ({ show, onHide }) => {
             await api.post('/donasi/tambah', {
                 id_reqdonasi: selectedReqId,
                 id_barang: selectedBarangId,
-                nama_penerima: namaPenerima, // Include nama penerima in the payload
+                nama_penerima: namaPenerima,
                 tanggal_donasi: new Date().toISOString().slice(0, 10)
             });
 
             await api.put(`/barang/${selectedBarangId}/updateStatus`);
             await api.put(`/user/add-point-by-barang/${selectedBarangId}`);
 
-            onHide();
             setSelectedReqId('');
             setSelectedBarangId('');
-            setNamaPenerima(''); // Reset nama penerima
+            setNamaPenerima('');
             showToast("Berhasil Melakukan Donasi");
+            onDonasiSuccess(); // Trigger data refresh in parent component
+            onHide(); // Close modal after success
         } catch (error) {
             console.error("Gagal daftar transaksi:", error);
             showToast("Gagal membuat transaksi.", "danger");
@@ -123,7 +124,7 @@ const KelolaDonasiModal = ({ show, onHide }) => {
                         <Button 
                             variant="success" 
                             onClick={handleSubmit}
-                            disabled={!selectedReqId || !selectedBarangId || !namaPenerima} // Disable button if fields are empty
+                            disabled={!selectedReqId || !selectedBarangId || !namaPenerima}
                         >
                             Daftarkan Donasi
                         </Button>

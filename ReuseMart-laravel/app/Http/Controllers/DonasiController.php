@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Donasi;
 use App\Models\Barang;
 use App\Models\Penitipan;
+use App\Models\User;
 use App\Models\FcmToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -14,6 +15,13 @@ use Kreait\Firebase\Messaging\Notification as FcmNotification;
 
 class DonasiController extends Controller
 {
+    protected $notificationController;
+
+    public function __construct(NotificationController $notificationController)
+    {
+        $this->notificationController = $notificationController;
+    }
+
     public function index()
     {
         try {
@@ -70,10 +78,11 @@ class DonasiController extends Controller
 
                 $report = $messaging->sendMulticast($message, $tokens);
             }
+
             return response()->json($donasi, 201);
         } catch (\Exception $e) {
             Log::error('Error creating donasi: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create donasi'], 500);
+            return response()->json(['error' => 'Failed to create donasi: ' . $e->getMessage()], 500);
         }
     }
 

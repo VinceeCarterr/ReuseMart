@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import "./navbarCS.css";
 
 export default function NavbarCS() {
@@ -33,20 +33,49 @@ export default function NavbarCS() {
     <>
       <div className="py-3 navbar-CS">
         <div className="container-fluid">
-          <div className="row align-items-center justify-content-center">
+          <div className="row align-items-center">
             <div className="col-auto mx-3 logo-container">
-              <Link to="/" className="d-flex align-items-center text-decoration-none logo-link">
-                <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+              <NavLink
+                to="/CSLP"
+                className="d-flex align-items-center text-decoration-none logo-link"
+              >
+                <img
+                  src="/logo_ReuseMart.png"
+                  alt="ReuseMart"
+                  className="logo-img"
+                />
                 <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
-              </Link>
+              </NavLink>
             </div>
 
-            <div className="col-auto text-center mx-3">
+            <div className="col text-center">
               <span className="fw-bold fs-4">{userName}</span>
-              {jabatan && <span className="ms-2 fs-5 text-success">: {jabatan}</span>}
+              {jabatan && (
+                <span className="ms-2 fs-5 text-success">: {jabatan}</span>
+              )}
             </div>
 
-            <div className="col-auto mx-1">
+            <div className="col-auto mx-3 d-flex align-items-center">
+              <NavLink
+                to="/CSLP"
+                className={({ isActive }) =>
+                  `text-decoration-none fs-5 me-3 nav-link ${
+                    isActive ? "active" : ""
+                  }`
+                }
+              >
+                Penitip
+              </NavLink>
+              <NavLink
+                to="/klaimMerch"
+                className={({ isActive }) =>
+                  `text-decoration-none fs-5 me-3 nav-link ${
+                    isActive ? "active" : ""
+                  }`
+                }
+              >
+                Klaim Merchandise
+              </NavLink>
               <Button variant="outline-danger" onClick={openLogoutModal}>
                 Logout
               </Button>

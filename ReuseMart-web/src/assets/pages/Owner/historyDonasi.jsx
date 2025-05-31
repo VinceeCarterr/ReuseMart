@@ -106,7 +106,7 @@ const HistoryDonasi = () => {
     return (
         <>
             <NavbarOwner />
-            <Container className="mt-5">
+            <Container className="mt-5" style={{ background: "none" }}>
                 <Row>
                 <Col md={10} className="mx-auto">
                     <Row>
