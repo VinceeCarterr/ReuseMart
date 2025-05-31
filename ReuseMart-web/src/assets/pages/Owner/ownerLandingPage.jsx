@@ -58,6 +58,7 @@ const OwnerLandingPage = () => {
     const fetchReqDonasi = async () => {
         try {
             const response = await api.get('/reqDonasi/all');
+            console.log(response.data);
             setReqDonasiList(response.data);
         } catch (error) {
             console.error('Failed to fetch ReqDonasi:', error);

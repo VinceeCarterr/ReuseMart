@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\Donasi;
 use App\Models\Barang;
 use App\Models\Penitipan;
 use App\Models\User;
-use App\Models\Req_Donasi;
-use Exception;
-
-
-use Illuminate\Support\Facades\Log;
+use App\Models\FcmToken;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FcmNotification;
 
 class DonasiController extends Controller
 {
@@ -46,71 +46,41 @@ class DonasiController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            // Validate request data
-            $validated = $request->validate([
-                'id_reqdonasi' => 'required|exists:req_donasi,id_reqdonasi',
-                'id_barang' => 'required|exists:barang,id_barang',
-                'nama_penerima' => 'required|string|max:255',
+        $data = $request->validate([
+                'id_reqdonasi'   => 'required|exists:req_donasi,id_reqdonasi',
+                'id_barang'      => 'required|exists:barang,id_barang',
+                'nama_penerima'  => 'required|string',
                 'tanggal_donasi' => 'required|date',
             ]);
 
-            // Create donasi record
-            $donasi = Donasi::create($validated);
-
-            // Fetch barang
-            $barang = Barang::findOrFail($validated['id_barang']);
-            if (!$barang->id_penitipan) {
-                throw new Exception('Barang tidak terkait dengan penitipan.');
-            }
-
-            // Fetch penitipan
+        try {
+            $donasi = Donasi::create($data);
+            $barang = Barang::findOrFail($data['id_barang']);
             $penitipan = Penitipan::findOrFail($barang->id_penitipan);
-            if (!$penitipan->id_user) {
-                throw new Exception('Penitipan tidak terkait dengan user.');
-            }
+            $penitipId = $penitipan->id_user;
 
-            // Fetch donor user (from penitipan)
-            $donorUser = User::findOrFail($penitipan->id_user);
+            // Fetch that user’s FCM tokens
+            $tokens = FcmToken::where('id_user', $penitipId)
+                    ->pluck('token')
+                    ->toArray();
 
-            // Fetch req_donasi
-            $reqDonasi = Req_Donasi::findOrFail($validated['id_reqdonasi']);
-            if (!$reqDonasi->id_user) {
-                throw new Exception('Request donasi tidak terkait dengan user.');
-            }
+            if (!empty($tokens)) {
+                //Build & send the notification
+                $messaging = (new Factory)
+                    ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+                    ->createMessaging();
 
-            // Fetch organization user (from req_donasi)
-            $orgUser = User::findOrFail($reqDonasi->id_user);
-            $orgName = trim("{$orgUser->first_name} {$orgUser->last_name}");
-            
-            // Send notification to donor
-            if ($donorUser->id_user) {
-                $this->notificationController->sendNotification(
-                    new Request([
-                        'user_id' => $donorUser->id_user,
-                        'title' => 'Donasi Berhasil',
-                        'body' => "Barang {$barang->nama_barang} telah didonasikan kepada {$validated['nama_penerima']} melalui organisasi {$orgName} pada tanggal {$validated['tanggal_donasi']}."
-                    ])
-                );
-            } else {
-                Log::warning('Donor User ID ' . $donorUser->id_user . ' does not have a device token.');
-            }
+                $title = 'Barang Anda Telah Didonasikan!';
+                $body  = "Donasi untuk “{$barang->nama_barang}” telah dibuat. Terima kasih!";
 
-            // Send notification to organization
-            if ($orgUser->id_user) {
-                $this->notificationController->sendNotification(
-                    new Request([
-                        'user_id' => $orgUser->id_user,
-                        'title' => 'Donasi Diterima',
-                        'body' => "Organisasi Anda menerima donasi barang {$barang->nama_barang} untuk {$validated['nama_penerima']} pada tanggal {$validated['tanggal_donasi']}."
-                    ])
-                );
-            } else {
-                Log::warning('Organization User ID ' . $orgUser->id_user . ' does not have a device token.');
+                $message = CloudMessage::new()
+                    ->withNotification(FcmNotification::create($title, $body));
+
+                $report = $messaging->sendMulticast($message, $tokens);
             }
 
             return response()->json($donasi, 201);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error creating donasi: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to create donasi: ' . $e->getMessage()], 500);
         }
