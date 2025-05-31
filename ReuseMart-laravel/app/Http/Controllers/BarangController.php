@@ -6,10 +6,25 @@ use Illuminate\Http\Request;
 use App\Models\Barang;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use App\Models\Penitipan;
+use App\Models\User;
+use App\Models\FcmToken;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FcmNotification;
+
 
 
 class BarangController extends Controller
 {
+
+    protected $notificationController;
+
+    public function __construct(NotificationController $notificationController)
+    {
+        $this->notificationController = $notificationController;
+    }
+
     public function index()
     {
         $barangs = Barang::with('foto')->get();
@@ -130,12 +145,12 @@ class BarangController extends Controller
         $items = Barang::with([
                 'foto', 
                 'kategori', 
-                'Penitipan.user'  // eager-load the user who titip
+                'Penitipan.user' 
             ])
             ->where('status', 'Akan Ambil')
             ->get();
 
-        // if you want to follow your other APIs returning { data: [...] }
+
         return response()->json(['data' => $items]);
     }
 
@@ -184,5 +199,94 @@ class BarangController extends Controller
             'message'       => 'Successfully updated expired statuses for Available Barang',
             'updated_count' => $updatedCount,
         ], 200);
+    }
+
+public function sendNotifBarangPenitip()
+    {
+        $today = now()->startOfDay();
+        $thirtyDaysAgo = now()->subDays(30)->startOfDay(); // tanggal_titip + 30 days = today
+        $twentySevenDaysAgo = now()->subDays(27)->startOfDay(); // tanggal_titip + 27 days = today
+        $notificationCount = 0;
+
+        try {
+            // Query for items expiring today (tanggal_titip + 30 days = today)
+            $expiringTodayItems = Barang::query()
+                ->where('status', 'Available')
+                ->whereDate('tanggal_titip', '=', $thirtyDaysAgo)
+                ->get();
+
+            // Query for items expiring in 3 days (tanggal_titip + 27 days = today)
+            $expiringSoonItems = Barang::query()
+                ->where('status', 'Available')
+                ->whereDate('tanggal_titip', '=', $twentySevenDaysAgo)
+                ->get();
+
+            $messaging = (new Factory)
+                ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+                ->createMessaging();
+
+            // Process items expiring today
+            foreach ($expiringTodayItems as $item) {
+                try {
+                    $penitipan = Penitipan::findOrFail($item->id_penitipan);
+                    $penitipId = $penitipan->id_user;
+
+                    $tokens = FcmToken::where('id_user', $penitipId)
+                        ->pluck('token')
+                        ->toArray();
+
+                    if (!empty($tokens)) {
+                        $title = 'Masa Titip Barang Anda Berakhir Hari Ini!';
+                        $body = "Masa penitipan untuk “{$item->nama_barang}” berakhir hari ini " . $today->format('d-m-Y') . ".";
+
+                        $message = CloudMessage::new()
+                            ->withNotification(FcmNotification::create($title, $body));
+
+                        $report = $messaging->sendMulticast($message, $tokens);
+                        $notificationCount++;
+                    }
+                } catch (Exception $e) {
+                    Log::error("Failed to send notification for barang #{$item->id_barang} (expiring today): " . $e->getMessage());
+                    continue;
+                }
+            }
+
+            // Process items expiring in 3 days
+            foreach ($expiringSoonItems as $item) {
+                try {
+                    $penitipan = Penitipan::findOrFail($item->id_penitipan);
+                    $penitipId = $penitipan->id_user;
+
+                    $tokens = FcmToken::where('id_user', $penitipId)
+                        ->pluck('token')
+                        ->toArray();
+
+                    if (!empty($tokens)) {
+                        $title = 'Masa Titip Barang Anda Akan Berakhir!';
+                        $body = "Masa penitipan “{$item->nama_barang}” akan berakhir dalam 3 hari pada " . now()->addDays(3)->format('d-m-Y') . ".";
+
+                        $message = CloudMessage::new()
+                            ->withNotification(FcmNotification::create($title, $body));
+
+                        $report = $messaging->sendMulticast($message, $tokens);
+                        $notificationCount++;
+                    }
+                } catch (Exception $e) {
+                    Log::error("Failed to send notification for barang #{$item->id_barang} (expiring in 3 days): " . $e->getMessage());
+                    continue;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Successfully sent notifications for items expiring today and items expiring in 3 days',
+                'notification_count' => $notificationCount,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error in sendNotifBarangPenitip: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to send notifications',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

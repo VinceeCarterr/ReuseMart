@@ -59,13 +59,11 @@ class DonasiController extends Controller
             $penitipan = Penitipan::findOrFail($barang->id_penitipan);
             $penitipId = $penitipan->id_user;
 
-            // Fetch that user’s FCM tokens
             $tokens = FcmToken::where('id_user', $penitipId)
                     ->pluck('token')
                     ->toArray();
 
             if (!empty($tokens)) {
-                //Build & send the notification
                 $messaging = (new Factory)
                     ->withServiceAccount(storage_path('app/firebase_credentials.json'))
                     ->createMessaging();
