@@ -185,7 +185,7 @@ class TransaksiController extends Controller
                         ->orWhere('sub_kategori',  'like', "%{$request->category}%")
                 );
             }
-            
+
             if ($request->filled('search')) {
                 $search = $request->search;
 
@@ -324,7 +324,7 @@ class TransaksiController extends Controller
         }
 
         $barang->save();
-        \Log::error('Barang update error', ['request' => $request->all()]);
+        Log::error('Barang update error', ['request' => $request->all()]);
         return response()->json(['message' => 'Updated successfully']);
     }
 
