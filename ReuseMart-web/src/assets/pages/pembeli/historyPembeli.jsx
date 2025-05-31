@@ -31,7 +31,7 @@ const HistoryPembeli = () => {
   let profile = {};
   try {
     profile = JSON.parse(localStorage.getItem("profile") || "{}");
-  } catch {}
+  } catch { }
   const first = profile.first_name ?? profile.firstName ?? profile.name;
   const last = profile.last_name ?? profile.lastName;
   const userName = first && last ? `${first} ${last}` : first ? first : "User";
@@ -82,10 +82,10 @@ const HistoryPembeli = () => {
       .get("transaksi/history")
 
       .then(({ data }) => {
-      console.log("🔍 transaksi/history response:", data);
-      setOrders(data);
-    })
-    .catch(console.error);
+        console.log("🔍 transaksi/history response:", data);
+        setOrders(data);
+      })
+      .catch(console.error);
   }, []);
 
   const openDetail = (tx) => {
@@ -230,9 +230,8 @@ const HistoryPembeli = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
+                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
+                            }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -530,10 +529,10 @@ const HistoryPembeli = () => {
                 <tbody>
                   {selectedTx.detil_transaksi?.map((dt) => {
                     const br = dt.barang || {}
-                     const fp = br.foto?.[0]?.path || "defaults/no-image.png"
-                      const currentRating = dt.rating ?? br.rating ?? 0
-                      const hasRated     = currentRating > 0
-                    
+                    const fp = br.foto?.[0]?.path || "defaults/no-image.png"
+                    const currentRating = dt.rating ?? br.rating ?? 0
+                    const hasRated = currentRating > 0
+
                     return (
                       <tr key={dt.id_dt}>
                         <td>
