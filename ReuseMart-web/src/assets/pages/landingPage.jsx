@@ -99,6 +99,19 @@ const LandingPage = () => {
     }
   };
 
+  useEffect(() => {
+    const sendNotifications = async () => {
+      try {
+        const response = await api.post("/barang/notifPenitip");
+        console.log("Notifications sent:", response.data);
+      } catch (error) {
+        console.error("Failed to send notifications:", error.response?.data || error.message);
+      }
+    };
+
+    sendNotifications();
+  }, []);
+
   const expiredPatched = useRef(new Set());
   useEffect(() => {
     barangList.forEach(item => {
