@@ -5,7 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/home_screen.dart';
-import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 1️⃣ Background handler must be a top‐level function:
