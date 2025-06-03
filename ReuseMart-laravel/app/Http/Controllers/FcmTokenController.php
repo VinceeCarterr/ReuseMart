@@ -4,34 +4,39 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\FcmToken;
+use App\Models\User;
+use App\Models\Pegawai;
 
 class FcmTokenController extends Controller
-{
-    public function store(Request $req)
+{   
+     public function store(Request $req)
     {
         $req->validate([
           'device_token' => 'required|string',
         ]);
 
+        // Laravel’s built‐in user() will return whichever guard is authenticated:
+        // It could be an instance of App\Models\User or App\Models\Pegawai.
         $actor = $req->user(); 
-
-        if ($actor instanceof \App\Models\User) {
-          $ownerColumn = 'id_user';
-          $ownerId     = $actor->id_user;
-        }
-        elseif ($actor instanceof \App\Models\Pegawai) {
-          $ownerColumn = 'id_pegawai';
-          $ownerId     = $actor->id_pegawai;
-        }
-        else {
-          abort(403, 'Unauthenticated');
+        if (! $actor) {
+            abort(403, 'Unauthenticated');
         }
 
-        \App\Models\FcmToken::updateOrCreate(
+        // Grab the primary key and class name automatically:
+        $ownerId   = $actor->getKey();
+        $ownerType = get_class($actor);
+        
+        // updateOrCreate will either find an existing row by token, or create a new one.
+        // On update, it will set both owner_id + owner_type so that any previous owner 
+        // is overwritten by the current actor.
+        FcmToken::updateOrCreate(
           ['token' => $req->device_token],
-          [ $ownerColumn => $ownerId ]
+          [
+            'owner_id'   => $ownerId,
+            'owner_type' => $ownerType,
+          ]
         );
 
         return response()->json(['message' => 'Token registered']);
-  }
+    }
 }

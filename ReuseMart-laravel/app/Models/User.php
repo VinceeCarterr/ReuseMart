@@ -67,6 +67,6 @@ class User extends Authenticatable
 
     public function fcmTokens()
     {
-        return $this->hasMany(FcmToken::class, 'id_user', 'id_user');
+        return $this->morphMany(FcmToken::class, 'owner');
     }
 }
