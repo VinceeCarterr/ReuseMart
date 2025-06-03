@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Tabs, Tab, Button, Form, Row, Col, Toast, ToastContainer, Container } from 'react-bootstrap';
+import { Tabs, Tab, Button, Form, Row, Col, Toast, Container } from 'react-bootstrap';
 import api from '../../../api/api.js';
 import NavbarGudang from '../../components/Navbar/navbarGudang.jsx';
 import NotaPenitipan from '../../components/gudang/notaPenitipan.jsx';
@@ -104,6 +104,7 @@ const AddBarangPage = () => {
         setLoading(true);
         let hasError = false;
 
+        // Validate shared fields
         if (!sharedData.selectedUser || !sharedData.selectedPegawai) {
             setToastMessage('Mohon lengkapi semua field wajib: Nama Penitip dan Pilih Pegawai.');
             setToastVariant('danger');
@@ -123,8 +124,10 @@ const AddBarangPage = () => {
             return;
         }
 
+        // Validate each item's required fields and photos
         for (let i = 0; i < formData.length; i++) {
             const form = formData[i];
+            // Check required fields
             if (
                 !form.namaBarang ||
                 !form.harga ||
@@ -140,6 +143,17 @@ const AddBarangPage = () => {
                 break;
             }
 
+            // Validate minimum 2 photos
+            const uploadedPhotos = form.files.filter((file) => file !== null).length;
+            if (uploadedPhotos < 2) {
+                setToastMessage(`Minimal 2 foto harus diunggah untuk barang pada tab ${i + 1}.`);
+                setToastVariant('danger');
+                setShowToast(true);
+                hasError = true;
+                break;
+            }
+
+            // Validate hunter if selected
             if (form.selectedHunter !== 'Tidak') {
                 const hunter = pegawaiList.find(
                     (pegawai) => pegawai.id_pegawai === parseInt(form.selectedHunter) && pegawai.id_jabatan === 5
@@ -278,12 +292,16 @@ const AddBarangPage = () => {
                 }
             }
 
+            // Show toast before opening modal
             setToastMessage('Semua barang dan foto berhasil ditambahkan.');
             setToastVariant('success');
             setShowToast(true);
 
-            setCurrentPenitipanId(idPenitipan);
-            setShowModal(true);
+            // Delay modal opening to ensure toast is visible
+            setTimeout(() => {
+                setCurrentPenitipanId(idPenitipan);
+                setShowModal(true);
+            }, 1000); // 1-second delay to allow toast to be seen
 
             setFormData(
                 Array.from({ length: numBarangs }, () => ({
@@ -319,9 +337,9 @@ const AddBarangPage = () => {
     };
 
     return (
-        <div>
+        <div className="mb-4" style={{ background: 'none' }}>
             <NavbarGudang />
-            <Container className="mt-5" style={{background: 'none'}}>
+            <Container className="mt-5" style={{ background: 'none' }}>
                 <h2>Tambah Barang</h2>
 
                 <Row className="mb-4">
@@ -504,11 +522,12 @@ const AddBarangPage = () => {
                                             md={Math.floor(12 / parseInt(form.jumlahFoto))}
                                         >
                                             <Form.Group controlId={`formFile${index}${fileIndex}`} className="mb-3">
-                                                <Form.Label>Foto {fileIndex + 1}</Form.Label>
+                                                <Form.Label>Foto {fileIndex + 1} *</Form.Label>
                                                 <Form.Control
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={(e) => handleFileChange(index, fileIndex, e)}
+                                                    required
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -581,20 +600,26 @@ const AddBarangPage = () => {
                     penitipanId={currentPenitipanId}
                 />
 
-                <ToastContainer position="top-end" className="p-3">
-                    <Toast
-                        show={showToast}
-                        onClose={() => setShowToast(false)}
-                        delay={3000}
-                        autohide
-                        bg={toastVariant}
-                    >
-                        <Toast.Header>
-                            <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
-                        </Toast.Header>
-                        <Toast.Body>{toastMessage}</Toast.Body>
-                    </Toast>
-                </ToastContainer>
+                <Toast
+                    show={showToast}
+                    onClose={() => setShowToast(false)}
+                    delay={3000}
+                    autohide
+                    bg={toastVariant}
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        minWidth: '300px',
+                        zIndex: 2000 // Higher zIndex to appear above modal
+                    }}
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
+                    </Toast.Header>
+                    <Toast.Body>{toastMessage}</Toast.Body>
+                </Toast>
             </Container>
         </div>
     );

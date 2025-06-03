@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col, Toast } from 'react-bootstrap';
 import api from '../../../api/api.js';
+import {  Trash } from 'lucide-react';
 
 const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
     const [formData, setFormData] = useState({
@@ -47,13 +48,10 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
         try {
             const res = await api.get(`/barangShow/${barangId}`);
             const barang = res.data;
-            console.log('Barang data:', barang);
-            console.log('Foto data:', barang.foto);
+            console.log('Raw API response:', res.data);
 
-            if (!barang.foto) {
-                console.warn(`Tidak ada data foto untuk barang dengan id ${barangId}. Menggunakan fallback.`);
-                barang.foto = [];
-            }
+            const fotos = Array.isArray(barang.foto) ? barang.foto : [];
+            console.log('Foto data:', fotos);
 
             const mainKategoriIdx = kategoriList.findIndex(
                 (cat) => cat.nama_kategori === barang.kategori
@@ -71,17 +69,17 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                 harga: barang.harga ? barang.harga.toString() : '',
                 garansi: barang.garansi || '',
                 berat: barang.berat ? barang.berat.toString() : '',
-                jumlahFoto: barang.foto.length.toString() || '2',
-                files: new Array(barang.foto.length || 2).fill(null),
-                existingPhotos: barang.foto.map(photo => ({
+                jumlahFoto: Math.max(2, fotos.length).toString(),
+                files: new Array(Math.max(2, fotos.length)).fill(null),
+                existingPhotos: fotos.map(photo => ({
                     id: photo.id_foto,
                     path: photo.path,
                     id_barang: photo.id_barang
-                })) || [],
+                })),
             });
         } catch (error) {
-            console.error('Error fetching barang data:', error);
-            setToastMessage('Gagal memuat data barang: ' + (error.response?.data?.message || error.message));
+            console.error('Error fetching barang data:', error, error.response?.data);
+            setToastMessage(`Gagal memuat data barang: ${error.message || 'Unknown error'}`);
             setToastVariant('danger');
             setShowToast(true);
         }
@@ -139,9 +137,9 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
     const handleJumlahFotoChange = (jumlah) => {
         setFormData((prev) => ({
             ...prev,
-            jumlahFoto: jumlah.toString(),
-            files: new Array(jumlah).fill(null),
-            existingPhotos: prev.existingPhotos.slice(0, jumlah),
+            jumlahFoto: Math.max(2, jumlah).toString(),
+            files: new Array(Math.max(2, jumlah)).fill(null),
+            existingPhotos: prev.existingPhotos.slice(0, Math.max(2, jumlah)),
         }));
     };
 
@@ -154,14 +152,17 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
             setLoading(true);
             await api.delete(`/deleteFoto/${photoId}`);
             setFormData((prev) => {
-                const newPhotos = [...prev.existingPhotos];
-                newPhotos[fileIndex] = null;
-                return { ...prev, existingPhotos: newPhotos.filter(Boolean) };
+                const newPhotos = prev.existingPhotos.filter((_, idx) => idx !== fileIndex);
+                return {
+                    ...prev,
+                    existingPhotos: newPhotos,
+                    jumlahFoto: Math.max(2, newPhotos.length).toString(),
+                    files: new Array(Math.max(2, newPhotos.length)).fill(null),
+                };
             });
             setToastMessage('Foto berhasil dihapus.');
             setToastVariant('success');
             setShowToast(true);
-            await fetchBarangData();
         } catch (error) {
             console.error('Error deleting photo:', error);
             setToastMessage('Gagal menghapus foto: ' + (error.response?.data?.message || error.message));
@@ -302,10 +303,9 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
             await Promise.all(photoPromises);
             await fetchBarangData();
             onUpdate({ success: true, message: 'Barang berhasil diperbarui.' });
-            // Delay closing the modal to ensure the parent toast is triggered
             setTimeout(() => {
                 onHide();
-            }, 500); // 500ms delay
+            }, 500);
         } catch (error) {
             console.error('Error during submit:', error.response ? error.response.data : error);
             setToastMessage(`Terjadi kesalahan: ${error.response?.data?.message || error.message}`);
@@ -364,6 +364,14 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                     }
                     .form-control-file {
                         padding: 6px;
+                    }
+                    .centered-toast {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        min-width: 300px;
+                        z-index: 1050;
                     }
                 `}
             </style>
@@ -558,7 +566,7 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                                                         onClick={() => handleDeletePhoto(fileIndex, formData.existingPhotos[fileIndex].id)}
                                                         disabled={loading}
                                                     >
-                                                        Hapus Foto
+                                                        <Trash/>
                                                     </Button>
                                                 )}
                                             </div>
@@ -569,6 +577,19 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                         </Row>
                     </Form>
                 )}
+                <Toast
+                    show={showToast}
+                    onClose={() => setShowToast(false)}
+                    delay={3000}
+                    autohide
+                    bg={toastVariant}
+                    className="centered-toast"
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
+                    </Toast.Header>
+                    <Toast.Body>{toastMessage}</Toast.Body>
+                </Toast>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose} disabled={loading}>
@@ -578,21 +599,6 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                     Simpan Perubahan
                 </Button>
             </Modal.Footer>
-
-            <ToastContainer position="top-end" className="p-3">
-                <Toast
-                    show={showToast}
-                    onClose={() => setShowToast(false)}
-                    delay={3000}
-                    autohide
-                    bg={toastVariant}
-                >
-                    <Toast.Header>
-                        <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
-                    </Toast.Header>
-                    <Toast.Body>{toastMessage}</Toast.Body>
-                </Toast>
-            </ToastContainer>
         </Modal>
     );
 };

@@ -42,16 +42,16 @@ class BarangController extends Controller
         }
     }
 
-    public function show($id)
-    {
-        try {
-            $barang = Barang::findOrFail($id);
-            return response()->json($barang);
-        } catch (Exception $e) {
-            Log::error('Error fetching barang: ' . $e->getMessage());
-            return response()->json(['error' => 'Barang not found'], 404);
-        }
+public function show($id)
+{
+    try {
+        $barang = Barang::with('foto')->findOrFail($id);
+        return response()->json($barang);
+    } catch (Exception $e) {
+        Log::error('Error fetching barang: ' . $e->getMessage());
+        return response()->json(['error' => 'Barang not found'], 404);
     }
+}
 
     public function update(Request $request, $id)
     {
