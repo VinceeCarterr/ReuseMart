@@ -1,19 +1,7 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-    Container,
-    Row,
-    Col,
-    Button,
-    Spinner,
-    Table,
-    Modal,
-    Toast,
-    ToastContainer,
-} from "react-bootstrap";
-import { FiHash, FiUser, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Table, Modal, Button } from 'react-bootstrap';
 import api from "../../../api/api.js";
-import NavbarCS from "../../components/Navbar/navbarCS.jsx";
 
 const VerifPembayaranPage = () => {
     const { id } = useParams();
@@ -21,27 +9,11 @@ const VerifPembayaranPage = () => {
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [toastShow, setToastShow] = useState(false);
-    const [toastMessage, setToastMessage] = useState("");
-    const [toastVariant, setToastVariant] = useState("success");
-    const navigate = useNavigate();
-
-    const profile = JSON.parse(localStorage.getItem("profile") || "{}");
-    const type = localStorage.getItem("type");
-    const currentPegawaiId = type === "pegawai" ? profile.id : null;
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
-        if (!currentPegawaiId || type !== "pegawai") {
-            setError("Anda harus login sebagai pegawai terlebih dahulu.");
-            setLoading(false);
-            navigate("/login");
-            return;
-        }
-
         const fetchPayments = async () => {
             try {
-                setLoading(true);
                 const response = await api.get('/pembayaran');
                 setPayments(response.data);
                 setLoading(false);
@@ -49,22 +21,20 @@ const VerifPembayaranPage = () => {
                     fetchPaymentDetails(id);
                 }
             } catch (err) {
-                setError('Gagal memuat data pembayaran. Silakan coba lagi nanti.');
+                setError('Failed to fetch pending payments');
                 setLoading(false);
             }
         };
         fetchPayments();
-    }, [id, navigate, currentPegawaiId]);
+    }, [id]);
 
     const fetchPaymentDetails = async (paymentId) => {
         try {
             const response = await api.get(`/pembayaran/${paymentId}`);
             setSelectedPayment(response.data);
-            setShowModal(true);
+            setModalOpen(true);
         } catch (err) {
-            setToastMessage('Gagal memuat detail pembayaran.');
-            setToastVariant("danger");
-            setToastShow(true);
+            setError('Failed to fetch payment details');
         }
     };
 
@@ -72,165 +42,127 @@ const VerifPembayaranPage = () => {
         try {
             const newStatus = status === 'Berhasil' ? 'Berhasil' : 'Tidak Valid';
             await api.post(`/pembayaran/verify/${selectedPayment.id_pembayaran}`, { status: newStatus });
+            setSelectedPayment({ ...selectedPayment, status_pembayaran: newStatus });
+            // Remove the payment from the list since it's no longer "Menunggu Verifikasi"
             setPayments(payments.filter(p => p.id_pembayaran !== selectedPayment.id_pembayaran));
-            setShowModal(false);
-            setToastMessage(`Pembayaran ditandai sebagai ${newStatus}`);
-            setToastVariant("success");
-            setToastShow(true);
+            setModalOpen(false);
+            alert(`Payment marked as ${newStatus}`);
         } catch (err) {
-            setToastMessage('Gagal memperbarui status pembayaran.');
-            setToastVariant("danger");
-            setToastShow(true);
+            setError('Failed to update payment status');
         }
     };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
+    const closeModal = () => {
+        setModalOpen(false);
         setSelectedPayment(null);
     };
 
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
+
     return (
-        <>
-            <NavbarCS />
-            <Container className="mt-5" style={{ background: 'none' }}>
-                <Row className="align-items-center mb-2">
-                    <Col md={6}>
-                        <h2 className="text-success fw-bold">Verifikasi Pembayaran</h2>
-                    </Col>
-                </Row>
-                <hr />
-                {loading ? (
-                    <div className="text-center">
-                        <Spinner animation="border" variant="success" />
-                        <p>Memuat data...</p>
-                    </div>
-                ) : error ? (
-                    <p className="text-danger text-center">{error}</p>
-                ) : (
-                    <Container className="mt-4 text-center" style={{ background: 'none' }}>
-                        <Col md={12} className="mx-auto">
-                            {payments.length > 0 ? (
-                                <Table striped bordered hover responsive>
-                                    <thead>
-                                        <tr>
-                                            <th><FiHash /> ID Pembayaran</th>
-                                            <th><FiUser /> Nama Pengguna</th>
-                                            <th><FiCheckCircle /> Status</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payments.map((payment) => (
-                                            <tr key={payment.id_pembayaran} style={{ cursor: 'pointer' }}>
-                                                <td>{payment.id_pembayaran}</td>
-                                                <td>
-                                                    {payment.transaksi?.user?.first_name} {payment.transaksi?.user?.last_name}
-                                                </td>
-                                                <td>{payment.status_pembayaran}</td>
-                                                <td>
-                                                    <Button
-                                                        variant="outline-success"
-                                                        onClick={() => fetchPaymentDetails(payment.id_pembayaran)}
-                                                    >
-                                                        Lihat Detail
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            ) : (
-                                <div className="text-center text-muted mt-4">
-                                    <p>Tidak ada pembayaran yang ditemukan.</p>
-                                </div>
-                            )}
-                        </Col>
-                    </Container>
-                )}
+        <div className="container my-4">
+            <h1 className="mb-4 fs-2 fw-bold">Payment Verification</h1>
 
-                {/* Modal for Payment Details */}
-                <Modal show={showModal} onHide={handleCloseModal} centered backdrop="static">
-                    <Modal.Header closeButton>
-                        <Modal.Title>Detail Pembayaran</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        {selectedPayment && (
-                            <>
-                                <div className="mb-4">
-                                    <p><strong><FiUser /> Pengguna:</strong> {selectedPayment.transaksi?.user?.first_name} {selectedPayment.transaksi?.user?.last_name}</p>
-                                    <p><strong><FiCheckCircle /> Status Pembayaran:</strong> {selectedPayment.status_pembayaran}</p>
-                                </div>
+            {payments.length === 0 ? (
+                <div className="alert alert-info">No pending payments found</div>
+            ) : (
+                <Table striped bordered hover>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {payments.map((payment) => (
+                            <tr key={payment.id_pembayaran}>
+                                <td>{payment.id_pembayaran}</td>
+                                <td>
+                                    {payment.transaksi?.user?.first_name} {payment.transaksi?.user?.last_name}
+                                </td>
+                                <td>{payment.status_pembayaran}</td>
+                                <td>
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => fetchPaymentDetails(payment.id_pembayaran)}
+                                    >
+                                        View Details
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            )}
 
-                                <div className="mb-4">
-                                    <h3 className="fs-5 fw-semibold">Bukti Pembayaran</h3>
-                                    {selectedPayment.ss_pembayaran ? (
-                                        <img
-                                            src={`/storage/${selectedPayment.ss_pembayaran}`}
-                                            alt="Bukti Pembayaran"
-                                            className="img-fluid rounded"
-                                            style={{ maxWidth: '100%' }}
-                                        />
-                                    ) : (
-                                        <p>Tidak ada bukti yang diunggah</p>
-                                    )}
-                                </div>
+            <Modal show={modalOpen} onHide={closeModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Payment Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedPayment && (
+                        <>
+                            <div className="mb-4">
+                                <p><strong>User:</strong> {selectedPayment.transaksi?.user?.first_name} {selectedPayment.transaksi?.user?.last_name}</p>
+                                <p><strong>Payment Status:</strong> {selectedPayment.status_pembayaran}</p>
+                            </div>
 
-                                <div className="mb-4">
-                                    <h3 className="fs-5 fw-semibold">Item</h3>
-                                    {selectedPayment.transaksi?.detiltransaksi?.length > 0 ? (
-                                        selectedPayment.transaksi.detiltransaksi.map((detail) => (
-                                            <div key={detail.id_dt} className="border-bottom py-2">
-                                                <p><strong>Nama Item:</strong> {detail.barang?.nama_barang}</p>
-                                                <p><strong>Kode Item:</strong> {detail.barang?.kode_barang || 'N/A'}</p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>Tidak ada item yang terkait dengan pembayaran ini</p>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            variant="success"
-                            onClick={() => handleVerify('Berhasil')}
-                            disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
-                        >
-                            <FiCheckCircle /> Tandai Berhasil
-                        </Button>
-                        <Button
-                            variant="outline-danger"
-                            onClick={() => handleVerify('Tidak Valid')}
-                            disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
-                        >
-                            <FiXCircle /> Tandai Tidak Valid
-                        </Button>
-                        <Button variant="secondary" onClick={handleCloseModal}>
-                            Tutup
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
+                            <div className="mb-4">
+                                <h3 className="fs-5 fw-semibold">Proof of Payment</h3>
+                                {selectedPayment.ss_pembayaran ? (
+                                    <img
+                                        src={`/storage/${selectedPayment.ss_pembayaran}`}
+                                        alt="Payment Proof"
+                                        className="img-fluid rounded"
+                                        style={{ maxWidth: '100%' }}
+                                    />
+                                ) : (
+                                    <p>No proof uploaded</p>
+                                )}
+                            </div>
 
-                {/* Toast for Feedback */}
-                <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
-                    <Toast
-                        show={toastShow}
-                        onClose={() => setToastShow(false)}
-                        delay={3000}
-                        autohide
-                        bg={toastVariant}
+                            <div className="mb-4">
+                                <h3 className="fs-5 fw-semibold">Items</h3>
+                                {selectedPayment.transaksi?.detiltransaksi?.length > 0 ? (
+                                    selectedPayment.transaksi.detiltransaksi.map((detail) => (
+                                        <div key={detail.id_dt} className="border-bottom py-2">
+                                            <p><strong>Item Name:</strong> {detail.barang?.nama_barang}</p>
+                                            <p><strong>Item Code:</strong> {detail.barang?.kode_barang || 'N/A'}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No items associated with this payment</p>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="success"
+                        className="text-black"
+                        onClick={() => handleVerify('Berhasil')}
+                        disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
                     >
-                        <Toast.Header>
-                            <strong className="me-auto">{toastVariant === "success" ? "Sukses" : "Error"}</strong>
-                        </Toast.Header>
-                        <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
-                            {toastMessage}
-                        </Toast.Body>
-                    </Toast>
-                </ToastContainer>
-            </Container>
-        </>
+                        Mark as Berhasil
+                    </Button>
+                    <Button
+                        variant="success"
+                        className="text-black"
+                        onClick={() => handleVerify('Tidak Valid')}
+                        disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
+                    >
+                        Mark as Tidak Valid
+                    </Button>
+                    <Button variant="secondary" onClick={closeModal}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </div>
     );
 };
 

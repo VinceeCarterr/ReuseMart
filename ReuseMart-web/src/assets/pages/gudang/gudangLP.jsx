@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Button, Form, Toast, ToastContainer, Modal, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Form, Toast, Modal, Spinner } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
@@ -54,7 +54,7 @@ const GudangPage = () => {
             const res = await api.get('/fotoGudang');
             setListFotoBarang(res.data);
         } catch (err) {
-            console.error('Failed Thats all for today! Failed to fetch Foto Barang:', err);
+            console.error('Failed to fetch Foto Barang:', err);
             showToastMessage('Failed to fetch foto barang', 'danger');
         }
     };
@@ -155,8 +155,11 @@ const GudangPage = () => {
 
     const handleUpdateSuccess = ({ success, message }) => {
         if (success) {
-            fetchBarang();
-            showToastMessage(message);
+            Promise.all([fetchBarang(), fetchFotoBarang()]).then(() => {
+                showToastMessage(message);
+            });
+        } else {
+            showToastMessage(message, 'danger');
         }
     };
 
@@ -213,26 +216,49 @@ const GudangPage = () => {
     };
 
     const filteredList = listBarang.filter(barang => {
-        const namabarang = barang.nama_barang.toLowerCase().includes(pencarian.toLowerCase());
-        const status = barang.status.toLowerCase().includes(pencarian.toLowerCase());
-        const status_periode = barang.status_periode.toLowerCase().includes(pencarian.toLowerCase());
-        const kategori = getKategoriName(barang.id_kategori)?.toLowerCase().includes(pencarian.toLowerCase()) || false;
-        const sub_kategori = barang.sub_kategori?.toLowerCase().includes(pencarian.toLowerCase()) || false;
+        const searchTerm = pencarian.toLowerCase();
 
+        // Barang fields
+        const namaBarang = barang.nama_barang?.toLowerCase().includes(searchTerm) || false;
+        const kodeBarang = barang.kode_barang?.toLowerCase().includes(searchTerm) || false;
+        const harga = barang.harga?.toString().includes(searchTerm) || false;
+        const status = barang.status?.toLowerCase().includes(searchTerm) || false;
+        const statusPeriode = barang.status_periode?.toLowerCase().includes(searchTerm) || false;
+        const subKategori = barang.sub_kategori?.toLowerCase().includes(searchTerm) || false;
+        const tanggalTitip = barang.tanggal_titip
+            ? new Date(barang.tanggal_titip).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            }).toLowerCase().includes(searchTerm)
+            : false;
+
+        // Related data
+        const kategori = getKategoriName(barang.id_kategori)?.toLowerCase().includes(searchTerm) || false;
         const penitip = getUserByBarang(barang.id_barang);
-        const pegawai = getPegawaiByBarang(barang.id_barang);
-
         const namaLengkapPenitip = penitip
-            ? `${penitip.first_name} ${penitip.last_name}`.toLowerCase()
-            : '';
+            ? `${penitip.first_name} ${penitip.last_name}`.toLowerCase().includes(searchTerm)
+            : false;
+        const pegawai = getPegawaiByBarang(barang.id_barang);
         const namaLengkapPegawai = pegawai
-            ? `${pegawai.first_name} ${pegawai.last_name}`.toLowerCase()
-            : '';
+            ? `${pegawai.first_name} ${pegawai.last_name}`.toLowerCase().includes(searchTerm)
+            : false;
+        const tanggalSelesai = hitungTanggalSelesai(barang.id_barang)?.toLowerCase().includes(searchTerm) || false;
 
-        const cocokPenitip = namaLengkapPenitip.includes(pencarian.toLowerCase());
-        const cocokPegawai = namaLengkapPegawai.includes(pencarian.toLowerCase());
-
-        return namabarang || status || status_periode || kategori || sub_kategori || cocokPenitip || cocokPegawai;
+        // Return true if any field matches
+        return (
+            namaBarang ||
+            kodeBarang ||
+            harga ||
+            status ||
+            statusPeriode ||
+            subKategori ||
+            tanggalTitip ||
+            kategori ||
+            namaLengkapPenitip ||
+            namaLengkapPegawai ||
+            tanggalSelesai
+        );
     });
 
     return (
@@ -290,9 +316,9 @@ const GudangPage = () => {
                                 </thead>
                                 <tbody>
                                     {filteredList.map(barang => (
-                                        <tr 
-                                            key={barang.id_barang} 
-                                            onClick={() => handleShowDetail(barang)} 
+                                        <tr
+                                            key={barang.id_barang}
+                                            onClick={() => handleShowDetail(barang)}
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <td>{barang.nama_barang}</td>
@@ -380,16 +406,28 @@ const GudangPage = () => {
                 </Modal.Footer>
             </Modal>
 
-            <ToastContainer position="top-end" className="p-3">
-                <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg={toastVariant}>
-                    <Toast.Header>
-                        <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
-                    </Toast.Header>
-                    <Toast.Body>{toastMessage}</Toast.Body>
-                </Toast>
-            </ToastContainer>
+            <Toast
+                show={showToast}
+                onClose={() => setShowToast(false)}
+                delay={3000}
+                autohide
+                bg={toastVariant}
+                style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    minWidth: '300px',
+                    zIndex: 1050
+                }}
+            >
+                <Toast.Header>
+                    <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
+                </Toast.Header>
+                <Toast.Body>{toastMessage}</Toast.Body>
+            </Toast>
         </div>
     );
 };
 
-export default GudangPage;
+export default GudangPage;  
