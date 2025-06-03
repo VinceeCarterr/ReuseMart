@@ -25,7 +25,7 @@ const VerifPembayaranPage = () => {
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [toastVariant, setToastVariant] = useState("success");
-    const navigate = useNavigate(); // Fixed typo
+    const navigate = useNavigate();
 
     const profile = JSON.parse(localStorage.getItem("profile") || "{}");
     const type = localStorage.getItem("type");
@@ -42,7 +42,7 @@ const VerifPembayaranPage = () => {
         const fetchPayments = async () => {
             try {
                 setLoading(true);
-                const response = await api.get("/pembayaran");
+                const response = await api.get('/pembayaran');
                 setPayments(response.data);
                 setLoading(false);
                 if (id) {
