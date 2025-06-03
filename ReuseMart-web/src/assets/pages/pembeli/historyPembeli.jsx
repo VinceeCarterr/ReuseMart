@@ -80,7 +80,6 @@ const HistoryPembeli = () => {
   useEffect(() => {
     api
       .get("transaksi/history")
-
       .then(({ data }) => {
         console.log("🔍 transaksi/history response:", data);
         setOrders(data);
@@ -144,7 +143,7 @@ const HistoryPembeli = () => {
 
       await updateRatingAllUser();
 
-      closeRatingModal(); // Close modal after successful submission
+      closeRatingModal();
     } catch (error) {
       console.error(
         "Failed to submit rating:",
@@ -154,8 +153,11 @@ const HistoryPembeli = () => {
     }
   };
 
-  // base filter by delivery/pickup
-  let filtered = orders.filter((tx) => tx.metode_pengiriman === filter);
+  let filtered = orders.filter((tx) => {
+    const statusPengiriman = tx.pengiriman?.status_pengiriman || tx.pengambilan?.status_pengambilan || "—";
+    const hasOnHoldItem = tx.detil_transaksi?.some((dt) => dt.barang?.status === "On Hold") || false;
+    return tx.metode_pengiriman === filter && statusPengiriman !== "On Hold" && !hasOnHoldItem;
+  });
 
   // search by product name
   if (searchTerm) {
@@ -393,7 +395,7 @@ const HistoryPembeli = () => {
             const status =
               tx.pengiriman?.status_pengiriman ||
               tx.pengambilan?.status_pengambilan ||
-              "-";
+              "Disiapkan";
             const alreadyRated = (br.rating ?? 0) > 0 || (dt.rating ?? 0) > 0;
             return (
               <Col md={6} key={tx.id_transaksi} className="mb-4">
