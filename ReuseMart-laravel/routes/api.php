@@ -59,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+    Route::patch('transaksi/historyPenitip/{id_barang}', [TransaksiController::class, 'updateHistoryPenitip']);
     Route::post('/register-token', [FcmTokenController::class, 'store']);
     Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
@@ -158,7 +158,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
     });
 
-Route::middleware('role:gudang')->group(function () {
+    Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
         Route::get('/barangShow/{id}', [BarangController::class, 'show']);
@@ -184,7 +184,7 @@ Route::middleware('role:gudang')->group(function () {
         Route::get('/transaksi/penjadwalan', [TransaksiController::class, 'penjadwalan']);
         Route::post('/pengiriman', [PengirimanController::class, 'store']);
         Route::post('/pengambilan', [PengambilanController::class, 'store']);
-        Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
+        Route::patch('updateStatusPengambilan/{id}', [PengambilanController::class, 'updateStatusPengambilan']);
         Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
         Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
         Route::post('/komisi', [KomisiController::class, 'store']);

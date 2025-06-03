@@ -93,6 +93,7 @@ const NotaKurir = ({ show, onHide, transaksiId }) => {
   const handleDownloadPDF = async () => {
     const element = document.querySelector(".notaKurir-printable");
     if (!element) return showToast("Konten nota tidak ditemukan.", "danger");
+
     try {
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -102,13 +103,26 @@ const NotaKurir = ({ show, onHide, transaksiId }) => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         unit: "mm",
-        format: "a4",
+        format: [105, 148.5],
         orientation: "portrait",
       });
       const margin = 10;
-      const pageWidth = 210 - margin * 2;
-      const pageHeight = (canvas.height * pageWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", margin, margin, pageWidth, pageHeight);
+      const pageWidth = 105;
+      const pageHeight = 148.5;
+
+      const canvasWidthPx = canvas.width;
+      const canvasHeightPx = canvas.height;
+
+      let imgWidthMm = pageWidth;
+      let imgHeightMm = (canvasHeightPx * imgWidthMm) / canvasWidthPx;
+
+      if (imgHeightMm > pageHeight) {
+        imgHeightMm = pageHeight;
+        imgWidthMm = (canvasWidthPx * imgHeightMm) / canvasHeightPx;
+      }
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidthMm, imgHeightMm);
+
       pdf.save(`nota_kurir_${transaksi?.no_nota || ""}.pdf`);
     } catch (err) {
       showToast("Gagal menghasilkan PDF: " + err.message, "danger");
