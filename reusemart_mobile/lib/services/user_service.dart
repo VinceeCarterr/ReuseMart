@@ -17,7 +17,6 @@ class UserService {
       body: jsonEncode({'email': email, 'password': password}),
     );
 
-    // 👇 Print the raw JSON so we see exactly what keys we have
     print('🔍 login response → ${response.body}');
 
     if (response.statusCode != 200) {
@@ -27,15 +26,21 @@ class UserService {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-    // 👇 Extract the correct sub-map
+    // Extract the correct sub-map
     final payload = (data['user'] ?? data['pegawai']) as Map<String, dynamic>?;
     if (payload == null) {
-      // If this hits, we'll see exactly which keys existed:
       throw Exception(
           'No user/pegawai key in response, only found: ${data.keys.toList()}');
     }
 
-    // 👇 Double-check what’s going into your model
+    // Check if the role is one of the allowed roles
+    final role = payload['role'] as String?;
+    const allowedRoles = ['Pembeli', 'Penitip', 'Kurir', 'Hunter'];
+    if (role == null || !allowedRoles.contains(role)) {
+      throw Exception('Access denied: Role is not allowed to login.');
+    }
+
+    // Print payload for debugging
     print('⚙️ Payload before fromJson → $payload');
 
     // Save the token
@@ -47,6 +52,7 @@ class UserService {
     return UserModel.fromJson(data);
   }
 
+  // Rest of the UserService class remains unchanged
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('access_token');
