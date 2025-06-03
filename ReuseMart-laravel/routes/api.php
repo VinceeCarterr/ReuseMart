@@ -21,6 +21,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\MerchController;
 use App\Http\Controllers\RedeemController;
+use App\Models\Pengiriman;
 use Illuminate\Http\Request;
 
 //public no auth
@@ -59,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    Route::patch('transaksi/historyPenitip/{id_barang}',[TransaksiController::class, 'updateHistoryPenitip']);
+    Route::patch('transaksi/historyPenitip/{id_barang}', [TransaksiController::class, 'updateHistoryPenitip']);
     Route::post('/register-token', [FcmTokenController::class, 'store']);
     Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
