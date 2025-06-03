@@ -336,7 +336,6 @@ class TransaksiController extends Controller
 
         try {
             $user = $request->user();
-
             $barang = Barang::findOrFail($request->id_barang);
 
             if ($barang->status !== 'Available') {
@@ -356,6 +355,14 @@ class TransaksiController extends Controller
                     'total' => 0,
                 ]
             );
+
+            $existingItem = DetilTransaksi::where('id_transaksi', $transaksi->id_transaksi)
+                ->where('id_barang', $request->id_barang)
+                ->exists();
+
+            if ($existingItem) {
+                return response()->json(['error' => 'Barang sudah terdapat di keranjang'], 400);
+            }
 
             DetilTransaksi::create([
                 'id_transaksi' => $transaksi->id_transaksi,
