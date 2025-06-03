@@ -566,7 +566,8 @@ const HistoryPenitip = () => {
                             )}
                           </strong>
                         </small>
-                      ) : item.status_periode === "Expired" ? (
+                      ) : item.status_periode === "Expired" &&
+                      item.status === "Sudah Ambil" ? (
                         (() => {
                           const titipTs = new Date(
                             item.tanggal_titip
@@ -577,8 +578,7 @@ const HistoryPenitip = () => {
                           return (
                             <small className="d-block mb-1">
                               <strong>
-                                Akhir Penitipan:{" "}
-                                {akhirDate.toLocaleDateString("id-ID")}
+                                Diambil Pada Tanggal:{" "+ item.tanggal_titip}
                               </strong>
                             </small>
                           );
@@ -650,16 +650,7 @@ const HistoryPenitip = () => {
                                 new Date(item.tanggal_titip).getTime() +
                                 (30 + 7) * 24 * 3600 * 1000;
                               const diff = donateDeadline - now;
-                              if (diff <= 0) {
-                                api
-                                  .patch(
-                                    `/transaksi/historyPenitip/${item.id_barang}`,
-                                    { status: "Untuk Donasi" }
-                                  )
-                                  .then(fetchHistory)
-                                  .catch(console.error);
-                                return "Waktu pengambilan habis";
-                              }
+                              if (diff <= 0) return "Sudah didonasikan";
 
                               const sec = Math.floor(diff / 1000);
                               const h = Math.floor(sec / 3600);
