@@ -1,8 +1,8 @@
 import NavbarGudang from '../../components/Navbar/navbarGudang.jsx';
 import { useEffect, useState, Component } from 'react';
-import { Container, Row, Col, Form, Button, Table } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Table, Spinner } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
-import NotaPenitipan from '../../components/gudang/notaPenitipan.jsx'; // Adjust the import path as needed
+import NotaPenitipan from '../../components/gudang/notaPenitipan.jsx';
 import api from '../../../api/api.js';
 
 // Error Boundary to catch rendering errors
@@ -33,8 +33,8 @@ const PenitipanBarang = () => {
     const [pencarian, setPencarian] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showNota, setShowNota] = useState(false); // State for modal visibility
-    const [selectedPenitipanId, setSelectedPenitipanId] = useState(null); // State for selected penitipan
+    const [showNota, setShowNota] = useState(false);
+    const [selectedPenitipanId, setSelectedPenitipanId] = useState(null);
 
     const showToastMessage = (message) => {
         alert(message); // Replace with react-toastify or similar
@@ -166,7 +166,7 @@ const PenitipanBarang = () => {
                     fetchPegawai(),
                     fetchKategori(),
                 ]);
-                console.log('Data fetched:', { listBarang, listPenitipan, listUser, listPegawai, kategori });
+                
             } catch (err) {
                 setError('Failed to load data');
                 console.error('Fetch error:', err);
@@ -252,8 +252,9 @@ const PenitipanBarang = () => {
                     <Row>
                         <Col md={12} className="mx-auto">
                             {loading ? (
-                                <div className="text-center">
-                                    <p>Loading...</p>
+                                <div className="text-center mt-4">
+                                    <Spinner animation="border" variant="success" />
+                                    <p className="mt-2">Loading data...</p>
                                 </div>
                             ) : error ? (
                                 <div className="text-center text-danger">

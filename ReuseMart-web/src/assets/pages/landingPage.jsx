@@ -62,6 +62,10 @@ const LandingPage = () => {
   const scrollRef = useRef(null);
 
   const [now, setNow] = useState(Date.now());
+  const hasSentNotifications = useRef(false);
+  const expiredPatched = useRef(new Set());
+  const donatedPatched = useRef(new Set()); // Define donatedPatched
+
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -100,19 +104,23 @@ const LandingPage = () => {
   };
 
   useEffect(() => {
-    const sendNotifications = async () => {
-      try {
-        const response = await api.post("/barang/notifPenitip");
-        console.log("Notifications sent:", response.data);
-      } catch (error) {
-        console.error("Failed to send notifications:", error.response?.data || error.message);
-      }
-    };
+      const sendNotifications = async () => {
+          if (hasSentNotifications.current) {
+              return; // Skip if notifications have already been sent
+          }
+          hasSentNotifications.current = true;
 
-    sendNotifications();
+          try {
+              const response = await api.post("/barang/notifPenitip");
+              console.log("Notifications sent:", response.data);
+          } catch (error) {
+              console.error("Failed to send notifications:", error.response?.data || error.message);
+          }
+      };
+
+      sendNotifications();
   }, []);
 
-  const expiredPatched = useRef(new Set());
   useEffect(() => {
     barangList.forEach(item => {
       if (item.status === "Available") {
@@ -178,7 +186,6 @@ const LandingPage = () => {
   };
   const handleAuthClose = () => setShowAuthModal(false);
 
-  // Filtered list by search query
   const filteredList = barangList.filter((barang) =>
     barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
   );

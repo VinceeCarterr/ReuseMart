@@ -321,7 +321,7 @@ const AddBarangPage = () => {
     return (
         <div>
             <NavbarGudang />
-            <Container className="mt-5">
+            <Container className="mt-5" style={{background: 'none'}}>
                 <h2>Tambah Barang</h2>
 
                 <Row className="mb-4">

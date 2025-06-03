@@ -110,7 +110,7 @@ const CatatPengambilan = () => {
         </Toast>
       </ToastContainer>
       <NavbarGudang />
-      <Container className="mt-5">
+      <Container className="mt-5 " style={{background:'none'}}>
         <Row className="align-items-center mb-2">
           <Col md={4}>
             <h2 className="text-success fw-bold">Daftar Barang Akan Diambil</h2>
@@ -155,7 +155,7 @@ const CatatPengambilan = () => {
               : "/placeholder.jpg";
 
             return (
-              <Col md={6} key={item.id_barang} className="mb-4">
+              <Col md={6} key={item.id_barang} className="mb-4" >
                 <Card className="history-card h-100 d-flex flex-column">
                   <Card.Header className="d-flex justify-content-between align-items-center py-3 px-4 fw-bold">
                     <strong>{item.nama_barang}</strong>
