@@ -26,15 +26,28 @@ class UserService {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-    // Extract the correct sub-map
     final payload = (data['user'] ?? data['pegawai']) as Map<String, dynamic>?;
     if (payload == null) {
       throw Exception(
           'No user/pegawai key in response, only found: ${data.keys.toList()}');
     }
 
+    String? role = payload['role'] as String?;
+    if (role == null && data.containsKey('pegawai')) {
+      final jabatan = payload['jabatan'] as String?;
+      switch (jabatan?.toLowerCase()) {
+        case 'kurir':
+          role = 'Kurir';
+          break;
+        case 'hunter':
+          role = 'Hunter';
+          break;
+        default:
+          role = null;
+      }
+    }
+
     // Check if the role is one of the allowed roles
-    final role = payload['role'] as String?;
     const allowedRoles = ['Pembeli', 'Penitip', 'Kurir', 'Hunter'];
     if (role == null || !allowedRoles.contains(role)) {
       throw Exception('Access denied: Role is not allowed to login.');

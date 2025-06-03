@@ -7,6 +7,10 @@ use App\Models\Pembayaran;
 use App\Models\Transaksi;
 use App\Models\Detiltransaksi;
 use App\Models\Barang;
+use App\Models\FcmToken;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FcmNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Exception;
@@ -14,6 +18,15 @@ use Illuminate\Support\Facades\DB;
 
 class PembayaranController extends Controller
 {
+    protected $messaging;
+
+    public function __construct()
+    {
+        $this->messaging = (new Factory)
+            ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+            ->createMessaging();
+    }
+
     public function index()
     {
         try {
@@ -88,22 +101,44 @@ class PembayaranController extends Controller
                     return response()->json(['error' => 'Payment is not in pending verification status'], 400);
                 }
 
-                // Find the associated transaction and its items
                 $transaksi = Transaksi::where('id_pembayaran', $pembayaran->id_pembayaran)->firstOrFail();
                 $detilTransaksis = Detiltransaksi::where('id_transaksi', $transaksi->id_transaksi)->get();
 
-                // Update payment status
                 $pembayaran->update([
                     'status_pembayaran' => $request->status,
                     'verified_at' => now(),
                 ]);
 
-                // Update item statuses
                 foreach ($detilTransaksis as $detil) {
                     $barang = Barang::findOrFail($detil->id_barang);
                     $barang->update([
                         'status' => $request->status === 'Berhasil' ? 'Sold' : 'Available',
                     ]);
+
+                    if ($request->status === 'Berhasil') {
+                        $penitipId = $barang->penitipan->id_user;
+                        $tokens = FcmToken::where('id_user', $penitipId)
+                            ->pluck('token')
+                            ->toArray();
+
+                        if (!empty($tokens)) {
+                            $title = "Selamat! Barang Anda Laku!";
+                            $body = "Barang \"{$barang->nama_barang}\" telah terjual. Cek saldo Anda segera!";
+
+                            $message = CloudMessage::new()
+                                ->withNotification(FcmNotification::create($title, $body));
+
+                            try {
+                                $report = $this->messaging->sendMulticast($message, $tokens);
+                                Log::info("Notification sent to penitip ID {$penitipId} for barang {$barang->nama_barang}", [
+                                    'success_count' => $report->successes()->count(),
+                                    'failure_count' => $report->failures()->count(),
+                                ]);
+                            } catch (Exception $e) {
+                                Log::warning("Failed to send notification to penitip ID {$penitipId}: " . $e->getMessage());
+                            }
+                        }
+                    }
                 }
 
                 return response()->json([
@@ -130,29 +165,43 @@ class PembayaranController extends Controller
             return DB::transaction(function () use ($request) {
                 $transaksi = Transaksi::findOrFail($request->transaksi_id);
                 $pembayaran = Pembayaran::findOrFail($request->pembayaran_id);
+                $user = $transaksi->user;
 
                 if ($transaksi->id_pembayaran !== $pembayaran->id_pembayaran) {
                     return response()->json(['error' => 'Transaksi dan pembayaran tidak sesuai'], 400);
                 }
 
                 $createdAt = $transaksi->created_at;
-                if (now()->diffInSeconds($createdAt) > 10) {
+                if (now()->diffInSeconds($createdAt) > 60) {
                     return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
                 }
 
                 $file = $request->file('proof');
                 $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs($filename);
+                $path = $file->storeAs('pembayaran', $filename);
 
                 $pembayaran->update([
                     'ss_pembayaran' => $filename,
                     'status_pembayaran' => 'Menunggu Verifikasi',
                 ]);
 
+                $total = $transaksi->total;
+                $earnedPoints = floor($total / 10000);
+                if ($total > 500000) {
+                    $earnedPoints *= 1.2;
+                }
+                $earnedPoints = floor($earnedPoints);
+
+                $user->poin_loyalitas += $earnedPoints;
+                $user->save();
+
+                Log::info("Menambahkan $earnedPoints poin untuk user ID {$user->id_user} pada transaksi ID {$transaksi->id_transaksi}");
+
                 return response()->json([
                     'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
                     'pembayaran_id' => $pembayaran->id_pembayaran,
                     'proof_path' => $filename,
+                    'earned_points' => $earnedPoints,
                 ], 200);
             });
         } catch (Exception $e) {
