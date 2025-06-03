@@ -650,7 +650,16 @@ const HistoryPenitip = () => {
                                 new Date(item.tanggal_titip).getTime() +
                                 (30 + 7) * 24 * 3600 * 1000;
                               const diff = donateDeadline - now;
-                              if (diff <= 0) return "Sudah didonasikan";
+                              if (diff <= 0) {
+                                api
+                                  .patch(
+                                    `/transaksi/historyPenitip/${item.id_barang}`,
+                                    { status: "Untuk Donasi" }
+                                  )
+                                  .then(fetchHistory)
+                                  .catch(console.error);
+                                return "Waktu pengambilan habis";
+                              }
 
                               const sec = Math.floor(diff / 1000);
                               const h = Math.floor(sec / 3600);

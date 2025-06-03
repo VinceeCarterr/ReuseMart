@@ -393,7 +393,7 @@ const HistoryPembeli = () => {
             const status =
               tx.pengiriman?.status_pengiriman ||
               tx.pengambilan?.status_pengambilan ||
-              "—";
+              "-";
             const alreadyRated = (br.rating ?? 0) > 0 || (dt.rating ?? 0) > 0;
             return (
               <Col md={6} key={tx.id_transaksi} className="mb-4">
