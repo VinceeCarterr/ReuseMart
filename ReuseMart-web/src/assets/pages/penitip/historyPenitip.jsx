@@ -566,7 +566,8 @@ const HistoryPenitip = () => {
                             )}
                           </strong>
                         </small>
-                      ) : item.status_periode === "Expired" ? (
+                      ) : item.status_periode === "Expired" &&
+                      item.status === "Sudah Ambil" ? (
                         (() => {
                           const titipTs = new Date(
                             item.tanggal_titip
@@ -577,8 +578,7 @@ const HistoryPenitip = () => {
                           return (
                             <small className="d-block mb-1">
                               <strong>
-                                Akhir Penitipan:{" "}
-                                {akhirDate.toLocaleDateString("id-ID")}
+                                Diambil Pada Tanggal:{" "+ item.tanggal_titip}
                               </strong>
                             </small>
                           );

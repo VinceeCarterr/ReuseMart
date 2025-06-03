@@ -74,7 +74,7 @@ const UploadProofPage = () => {
             setToastMessage(response.data.message);
             setShowToast(true);
 
-            setTimeout(() => navigate('/historyPembeli'), 2000);
+            setTimeout(() => navigate('/pembeliLP'), 2000);
         } catch (error) {
             setToastVariant('danger');
             setToastMessage(

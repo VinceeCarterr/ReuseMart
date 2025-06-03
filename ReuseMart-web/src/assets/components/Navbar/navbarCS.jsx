@@ -59,8 +59,7 @@ export default function NavbarCS() {
               <NavLink
                 to="/CSLP"
                 className={({ isActive }) =>
-                  `text-decoration-none fs-5 me-3 nav-link ${
-                    isActive ? "active" : ""
+                  `text-decoration-none fs-5 me-3 nav-link ${isActive ? "active" : ""
                   }`
                 }
               >
@@ -69,12 +68,20 @@ export default function NavbarCS() {
               <NavLink
                 to="/klaimMerch"
                 className={({ isActive }) =>
-                  `text-decoration-none fs-5 me-3 nav-link ${
-                    isActive ? "active" : ""
+                  `text-decoration-none fs-5 me-3 nav-link ${isActive ? "active" : ""
                   }`
                 }
               >
                 Klaim Merchandise
+              </NavLink>
+              <NavLink
+                to="/verif-pembayaran"
+                className={({ isActive }) =>
+                  `text-decoration-none fs-5 me-3 nav-link ${isActive ? "active" : ""
+                  }`
+                }
+              >
+                Verifikasi Pembayaran
               </NavLink>
               <Button variant="outline-danger" onClick={openLogoutModal}>
                 Logout
@@ -88,7 +95,7 @@ export default function NavbarCS() {
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
+        <Modal.Body>Apakah Anda yakin ingin keluar ?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeLogoutModal}>
             Batal

@@ -161,10 +161,10 @@ public function show($id)
         try {
             $barang->update([
                 'status'        => 'Sudah Ambil',
-                'tanggal_titip' => '1111-11-11 11:11:11',
+                'tanggal_titip' => now(),
             ]);
         } catch (\Exception $e) {
-            \Log::error("markAsTaken failed for barang #{$id}: ".$e->getMessage());
+            Log::error("markAsTaken failed for barang #{$id}: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memperbarui status.',

@@ -336,7 +336,6 @@ class TransaksiController extends Controller
 
         try {
             $user = $request->user();
-
             $barang = Barang::findOrFail($request->id_barang);
 
             if ($barang->status !== 'Available') {
@@ -356,6 +355,14 @@ class TransaksiController extends Controller
                     'total' => 0,
                 ]
             );
+
+            $existingItem = DetilTransaksi::where('id_transaksi', $transaksi->id_transaksi)
+                ->where('id_barang', $request->id_barang)
+                ->exists();
+
+            if ($existingItem) {
+                return response()->json(['error' => 'Barang sudah terdapat di keranjang'], 400);
+            }
 
             DetilTransaksi::create([
                 'id_transaksi' => $transaksi->id_transaksi,
@@ -566,6 +573,8 @@ class TransaksiController extends Controller
                 $total_step1 = $subtotal + $request->biaya_pengiriman;
                 $total = $total_step1 - ($request->diskon ?? 0);
                 $pointsRedeemed = $request->points_redeemed ?? 0;
+
+                // Kurangi poin loyalitas jika ada poin yang ditebus
                 if ($pointsRedeemed > 0) {
                     if ($pointsRedeemed > $user->poin_loyalitas) {
                         return response()->json(['error' => 'Poin loyalitas tidak cukup'], 400);
@@ -649,29 +658,43 @@ class TransaksiController extends Controller
             return DB::transaction(function () use ($request) {
                 $transaksi = Transaksi::findOrFail($request->transaksi_id);
                 $pembayaran = Pembayaran::findOrFail($request->pembayaran_id);
+                $user = $transaksi->user;
 
                 if ($transaksi->id_pembayaran !== $pembayaran->id_pembayaran) {
                     return response()->json(['error' => 'Transaksi dan pembayaran tidak sesuai'], 400);
                 }
 
                 $createdAt = $transaksi->created_at;
-                if (now()->diffInSeconds($createdAt) > 10) {
+                if (now()->diffInSeconds($createdAt) > 60) {
                     return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
                 }
 
                 $file = $request->file('proof');
                 $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs($filename);
+                $path = $file->storeAs('pembayaran', $filename);
 
                 $pembayaran->update([
                     'ss_pembayaran' => $filename,
                     'status_pembayaran' => 'Menunggu Verifikasi',
                 ]);
 
+                $total = $transaksi->total;
+                $earnedPoints = floor($total / 10000);
+                if ($total > 500000) {
+                    $earnedPoints *= 1.2;
+                }
+                $earnedPoints = floor($earnedPoints);
+
+                $user->poin_loyalitas += $earnedPoints;
+                $user->save();
+
+                Log::info("Menambahkan $earnedPoints poin untuk user ID {$user->id_user} pada transaksi ID {$transaksi->id_transaksi}");
+
                 return response()->json([
                     'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
                     'pembayaran_id' => $pembayaran->id_pembayaran,
                     'proof_path' => $filename,
+                    'earned_points' => $earnedPoints,
                 ], 200);
             });
         } catch (Exception $e) {

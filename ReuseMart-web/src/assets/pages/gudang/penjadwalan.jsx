@@ -228,7 +228,7 @@ const Penjadwalan = () => {
           let score = 0;
           if (item.metode_pengiriman === "Delivery") {
             if (item.pengiriman?.status_pengiriman === "-") score = -1;
-            else if (item.pengiriman?.status_pengiriman === "Preparing")
+            else if (item.pengiriman?.status_pengiriman === "Scheduled")
               score = 1;
             else if (item.pengiriman?.status_pengiriman === "On Delivery")
               score = 2;
@@ -308,7 +308,7 @@ const Penjadwalan = () => {
           id_transaksi: selectedTransaksi.id_transaksi,
           id_pegawai: kurirId,
           tanggal_pengiriman: tanggalJadwal,
-          status_pengiriman: "Preparing",
+          status_pengiriman: "Scheduled",
         });
       } else {
         await api.post("/pengambilan", {

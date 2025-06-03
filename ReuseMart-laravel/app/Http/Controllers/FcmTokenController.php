@@ -9,17 +9,29 @@ class FcmTokenController extends Controller
 {
     public function store(Request $req)
     {
-        $req->validate(['device_token'=>'required|string']);
+        $req->validate([
+          'device_token' => 'required|string',
+        ]);
 
-        $userId = $req->user()->id_user;
-        $token  = $req->device_token;
+        $actor = $req->user(); 
 
-        // This will create OR update the row so it always points to the current user
+        if ($actor instanceof \App\Models\User) {
+          $ownerColumn = 'id_user';
+          $ownerId     = $actor->id_user;
+        }
+        elseif ($actor instanceof \App\Models\Pegawai) {
+          $ownerColumn = 'id_pegawai';
+          $ownerId     = $actor->id_pegawai;
+        }
+        else {
+          abort(403, 'Unauthenticated');
+        }
+
         \App\Models\FcmToken::updateOrCreate(
-          ['token'   => $token],
-          ['id_user' => $userId]
+          ['token' => $req->device_token],
+          [ $ownerColumn => $ownerId ]
         );
 
-        return response()->json(['message'=>'Token registered']);
-    }
+        return response()->json(['message' => 'Token registered']);
+  }
 }
