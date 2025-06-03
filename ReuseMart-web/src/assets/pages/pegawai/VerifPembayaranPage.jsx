@@ -212,7 +212,6 @@ const VerifPembayaranPage = () => {
                     </Modal.Footer>
                 </Modal>
 
-                {/* Toast for Feedback */}
                 <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
                     <Toast
                         show={toastShow}

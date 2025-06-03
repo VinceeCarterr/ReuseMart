@@ -95,7 +95,7 @@ export default function NavbarCS() {
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Apakah Anda yakin ingin keluar?</Modal.Body>
+        <Modal.Body>Apakah Anda yakin ingin keluar ?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeLogoutModal}>
             Batal
