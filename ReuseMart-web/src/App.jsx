@@ -24,6 +24,7 @@ import CatatPengambilan from "./assets/pages/gudang/catatPengambilan.jsx";
 import AddBarangPage from "./assets/pages/gudang/addBarangPage.jsx";
 import UploadProofPage from "./assets/pages/pembeli/UploadProofPage.jsx";
 import KlaimMerch from './assets/pages/pegawai/klaimMerch.jsx';
+import PelaporanPage from './assets/pages/Owner/pelaporanPage.jsx'
 
 import VerifPembayaranPage from "./assets/pages/pegawai/VerifPembayaranPage.jsx";
 
@@ -54,7 +55,7 @@ function App() {
           <Route path="penitipLP" element={<ProtectedRoute allowedRoles={['penitip']}> <PenitipLandingPage /> </ProtectedRoute>} />
           <Route path="/ownerLP" element={<ProtectedRoute allowedRoles={['owner']}> <OwnerLandingPage /> </ProtectedRoute>} />
           <Route path="/HistoryDonasi" element={<ProtectedRoute allowedRoles={['owner']}> <HistoryDonasi /> </ProtectedRoute>} />
-
+          <Route path="/pelaporan" element={<ProtectedRoute allowedRoles={['owner']}> <PelaporanPage /> </ProtectedRoute>} />
           {/* Gudang */}
           <Route path="/gudangLP" element = {<ProtectedRoute allowedRoles={['gudang']}> <GudangLandingPage /></ProtectedRoute>} />
           <Route path="/catatPengambilan" element = {<ProtectedRoute allowedRoles={['gudang']}> <CatatPengambilan /></ProtectedRoute>} />

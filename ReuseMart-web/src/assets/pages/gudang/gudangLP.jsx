@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Button, Form, Toast, ToastContainer, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Form, Toast, ToastContainer, Modal, Spinner } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { Pencil, Trash } from 'lucide-react';
 import api from "../../../api/api.js";
@@ -13,24 +13,40 @@ const GudangPage = () => {
     const [listUser, setListUser] = useState([]);
     const [listPegawai, setListPegawai] = useState([]);
     const [listFotoBarang, setListFotoBarang] = useState([]);
-    const [kategori, setKategori] = useState([]); // New state for categories
+    const [kategori, setKategori] = useState([]);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [selectedBarangId, setSelectedBarangId] = useState(null);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [toastVariant, setToastVariant] = useState('success');
     const [pencarian, setPencarian] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [barangToDelete, setBarangToDelete] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedBarang, setSelectedBarang] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        fetchBarang();
-        fetchPenitipan();
-        fetchUser();
-        fetchPegawai();
-        fetchFotoBarang();
-        fetchKategori(); // Fetch categories
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
+                await Promise.all([
+                    fetchBarang(),
+                    fetchPenitipan(),
+                    fetchUser(),
+                    fetchPegawai(),
+                    fetchFotoBarang(),
+                    fetchKategori(),
+                ]);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                showToastMessage('Failed to fetch data', 'danger');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
     }, []);
 
     const fetchFotoBarang = async () => {
@@ -38,8 +54,8 @@ const GudangPage = () => {
             const res = await api.get('/fotoGudang');
             setListFotoBarang(res.data);
         } catch (err) {
-            console.error('Failed to fetch Foto Barang:', err);
-            showToastMessage('Failed to fetch foto barang');
+            console.error('Failed Thats all for today! Failed to fetch Foto Barang:', err);
+            showToastMessage('Failed to fetch foto barang', 'danger');
         }
     };
 
@@ -49,7 +65,7 @@ const GudangPage = () => {
             setListPegawai(res.data);
         } catch (err) {
             console.error('Failed to fetch Pegawai:', err);
-            showToastMessage('Failed to fetch Pegawai');
+            showToastMessage('Failed to fetch Pegawai', 'danger');
         }
     };
 
@@ -59,7 +75,7 @@ const GudangPage = () => {
             setListBarang(res.data);
         } catch (err) {
             console.error('Failed to fetch Barang:', err);
-            showToastMessage('Failed to fetch items');
+            showToastMessage('Failed to fetch items', 'danger');
         }
     };
 
@@ -69,7 +85,7 @@ const GudangPage = () => {
             setListPenitipan(res.data);
         } catch (err) {
             console.error('Failed to fetch Penitipan:', err);
-            showToastMessage('Failed to fetch penitipan');
+            showToastMessage('Failed to fetch penitipan', 'danger');
         }
     };
 
@@ -79,7 +95,7 @@ const GudangPage = () => {
             setListUser(res.data);
         } catch (err) {
             console.error('Failed to fetch User:', err);
-            showToastMessage('Failed to fetch User');
+            showToastMessage('Failed to fetch User', 'danger');
         }
     };
 
@@ -96,8 +112,9 @@ const GudangPage = () => {
         }
     };
 
-    const showToastMessage = (message) => {
+    const showToastMessage = (message, variant = 'success') => {
         setToastMessage(message);
+        setToastVariant(variant);
         setShowToast(true);
     };
 
@@ -113,7 +130,7 @@ const GudangPage = () => {
                 showToastMessage('Item and all associated photos deleted successfully');
             } catch (err) {
                 console.error('Failed to delete Barang:', err);
-                showToastMessage('Failed to delete item');
+                showToastMessage('Failed to delete item', 'danger');
             } finally {
                 setShowDeleteModal(false);
                 setBarangToDelete(null);
@@ -136,8 +153,11 @@ const GudangPage = () => {
         setSelectedBarangId(null);
     };
 
-    const handleUpdateSuccess = () => {
-        fetchBarang();
+    const handleUpdateSuccess = ({ success, message }) => {
+        if (success) {
+            fetchBarang();
+            showToastMessage(message);
+        }
     };
 
     const handleShowDetail = (barang) => {
@@ -248,7 +268,12 @@ const GudangPage = () => {
             <Container className="mt-4" style={{ background: 'none' }}>
                 <Row>
                     <Col md={12} className="mx-auto">
-                        {filteredList.length > 0 ? (
+                        {isLoading ? (
+                            <div className="text-center mt-4">
+                                <Spinner animation="border" variant="success" />
+                                <p className="mt-2">Loading data...</p>
+                            </div>
+                        ) : filteredList.length > 0 ? (
                             <Table striped bordered hover responsive>
                                 <thead>
                                     <tr>
@@ -356,9 +381,9 @@ const GudangPage = () => {
             </Modal>
 
             <ToastContainer position="top-end" className="p-3">
-                <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
+                <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg={toastVariant}>
                     <Toast.Header>
-                        <strong className="me-auto">Notification</strong>
+                        <strong className="me-auto">{toastVariant === 'success' ? 'Sukses' : 'Error'}</strong>
                     </Toast.Header>
                     <Toast.Body>{toastMessage}</Toast.Body>
                 </Toast>

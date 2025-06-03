@@ -64,6 +64,14 @@ export default function NavbarOwner() {
                             >
                                 History Donasi
                             </NavLink>
+                            <NavLink
+                                to="/pelaporan"
+                                className={({ isActive }) =>
+                                    `text-decoration-none fs-5 me-4 nav-link ${isActive ? 'active' : ''}`
+                                }
+                            >
+                                Pelaporan
+                            </NavLink>
                             <Button variant="outline-danger" onClick={openLogoutModal}>
                                 Logout
                             </Button>

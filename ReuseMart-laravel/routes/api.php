@@ -159,17 +159,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/deleteReqDonasi/{reqDonasi}', [Req_DonasiController::class, 'destroy']);
     });
 
-    Route::middleware('role:gudang')->group(function () {
+Route::middleware('role:gudang')->group(function () {
         Route::get('/barang/with-users', [BarangController::class, 'getAllWithUsers']);
         Route::post('/barang/addBarang', [BarangController::class, 'store']);
+        Route::get('/barangShow/{id}', [BarangController::class, 'show']);
         Route::get('/kategoriGudang', [KategoriController::class, 'index']);
         Route::get('/fotoGudang', [Foto_BarangController::class, 'index']);
+        Route::post('/foto/addFoto', [Foto_BarangController::class, 'store']);
+        Route::put('/foto/update/{id}', [Foto_BarangController::class, 'update']);
+        Route::get('/fotoBarang/{id}', [Foto_BarangController::class, 'show']);
+        Route::put('/foto/updateFoto/{id}', [Foto_BarangController::class, 'updateFoto']);
+        Route::delete('/deleteFoto/{id}', [Foto_BarangController::class, 'destroy']);
         Route::put('/barang/{id}', [BarangController::class, 'update']);
         Route::get('/barangGudang', [BarangController::class, 'index']);
         Route::get('/alamat/gudang', [AlamatController::class, 'index']);
-        Route::post('/foto/addFoto', [Foto_BarangController::class, 'store']);
-        Route::delete('/deleteBarang/{id}', [BarangController::class, 'destroy']);
-        Route::delete('/deleteFoto/{id}', [Foto_BarangController::class, 'destroy']);
         Route::post('/forum/addForum', [ForumController::class, 'store']);
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
         Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
@@ -180,14 +183,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('akan-ambil', [BarangController::class, 'akanAmbilAll']);
         Route::patch('/barang/{id}/ambil', [BarangController::class, 'markAsTaken']);
         Route::get('/transaksi/penjadwalan', [TransaksiController::class, 'penjadwalan']);
-        Route::post('/pengiriman',   [PengirimanController::class,   'store']);
-        Route::post('/pengambilan',  [PengambilanController::class,  'store']);
+        Route::post('/pengiriman', [PengirimanController::class, 'store']);
+        Route::post('/pengambilan', [PengambilanController::class, 'store']);
         Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
         Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
         Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
         Route::post('/komisi', [KomisiController::class, 'store']);
         Route::get('/komisi', [KomisiController::class, 'index']);
         Route::patch('user/{id}', [UserController::class, 'update']);
+        Route::delete('/deleteBarang/{id}', [BarangController::class, 'destroy']);
     });
 
     Route::middleware('role:admin,gudang')->group(function () {
