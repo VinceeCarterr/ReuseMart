@@ -105,43 +105,26 @@ const NotaPenitipan = ({ show, onHide, penitipanId }) => {
             const pageHeight = 297;
             const margin = 10;
             const maxImgWidth = pageWidth - 2 * margin; // 190mm
+            const maxImgHeight = pageHeight - 2 * margin; // 277mm
 
-            // Calculate image height to maintain aspect ratio
-            const imgHeight = (canvas.height * maxImgWidth) / canvas.width;
+            // Calculate dimensions to fit content within A4 page while maintaining aspect ratio
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const aspectRatio = imgWidth / imgHeight;
 
-            // Check if content fits on one page; if not, add pages
-            let yPosition = margin;
-            let remainingHeight = imgHeight;
+            let finalWidth = maxImgWidth;
+            let finalHeight = finalWidth / aspectRatio;
 
-            if (imgHeight <= pageHeight - 2 * margin) {
-                // Content fits on one page
-                pdf.addImage(imgData, 'PNG', margin, yPosition, maxImgWidth, imgHeight);
-            } else {
-                // Content spans multiple pages
-                let canvasY = 0;
-                while (remainingHeight > 0) {
-                    const currentPageHeight = Math.min(pageHeight - 2 * margin, remainingHeight);
-                    const canvasHeight = (currentPageHeight * canvas.width) / maxImgWidth;
-
-                    // Create a temporary canvas for the current page section
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = canvas.width;
-                    tempCanvas.height = canvasHeight;
-                    const ctx = tempCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, canvasY, canvas.width, canvasHeight, 0, 0, canvas.width, canvasHeight);
-
-                    const tempImgData = tempCanvas.toDataURL('image/png');
-                    pdf.addImage(tempImgData, 'PNG', margin, yPosition, maxImgWidth, currentPageHeight);
-
-                    remainingHeight -= currentPageHeight;
-                    canvasY += canvasHeight;
-
-                    if (remainingHeight > 0) {
-                        pdf.addPage();
-                        yPosition = margin;
-                    }
-                }
+            // If the height exceeds the max height, scale down based on height
+            if (finalHeight > maxImgHeight) {
+                finalHeight = maxImgHeight;
+                finalWidth = finalHeight * aspectRatio;
             }
+
+            // Add image to PDF centered
+            const xPosition = margin + (maxImgWidth - finalWidth) / 2; // Center horizontally
+            const yPosition = margin + (maxImgHeight - finalHeight) / 2; // Center vertically
+            pdf.addImage(imgData, 'PNG', xPosition, yPosition, finalWidth, finalHeight);
 
             // Download the PDF
             pdf.save(`nota_penitipanbarang_${penitipan?.no_nota || 'penitipan'}.pdf`);

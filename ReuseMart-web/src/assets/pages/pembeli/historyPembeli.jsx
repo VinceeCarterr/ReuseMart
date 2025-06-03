@@ -355,7 +355,7 @@ const HistoryPembeli = () => {
       </Modal>
 
       {/* ========== PAGE CONTENT ========== */}
-      <Container className="mt-5">
+      <Container className="mt-5" style={{background:'none'}}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">Riwayat Pembelian</h2>
           <div className="d-flex align-items-center">

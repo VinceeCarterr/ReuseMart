@@ -25,7 +25,7 @@ const VerifPembayaranPage = () => {
     const [toastShow, setToastShow] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [toastVariant, setToastVariant] = useState("success");
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Fixed typo
 
     const profile = JSON.parse(localStorage.getItem("profile") || "{}");
     const type = localStorage.getItem("type");
@@ -42,14 +42,14 @@ const VerifPembayaranPage = () => {
         const fetchPayments = async () => {
             try {
                 setLoading(true);
-                const response = await api.get('/pembayaran');
+                const response = await api.get("/pembayaran");
                 setPayments(response.data);
                 setLoading(false);
                 if (id) {
                     fetchPaymentDetails(id);
                 }
             } catch (err) {
-                setError('Gagal memuat data pembayaran. Silakan coba lagi nanti.');
+                setError("Gagal memuat data pembayaran. Silakan coba lagi nanti.");
                 setLoading(false);
             }
         };
@@ -59,10 +59,11 @@ const VerifPembayaranPage = () => {
     const fetchPaymentDetails = async (paymentId) => {
         try {
             const response = await api.get(`/pembayaran/${paymentId}`);
+            console.log("Payment details:", response.data); // Debug API response
             setSelectedPayment(response.data);
             setShowModal(true);
         } catch (err) {
-            setToastMessage('Gagal memuat detail pembayaran.');
+            setToastMessage("Gagal memuat detail pembayaran.");
             setToastVariant("danger");
             setToastShow(true);
         }
@@ -70,15 +71,15 @@ const VerifPembayaranPage = () => {
 
     const handleVerify = async (status) => {
         try {
-            const newStatus = status === 'Berhasil' ? 'Berhasil' : 'Tidak Valid';
+            const newStatus = status === "Berhasil" ? "Berhasil" : "Tidak Valid";
             await api.post(`/pembayaran/verify/${selectedPayment.id_pembayaran}`, { status: newStatus });
-            setPayments(payments.filter(p => p.id_pembayaran !== selectedPayment.id_pembayaran));
+            setPayments(payments.filter((p) => p.id_pembayaran !== selectedPayment.id_pembayaran));
             setShowModal(false);
             setToastMessage(`Pembayaran ditandai sebagai ${newStatus}`);
             setToastVariant("success");
             setToastShow(true);
         } catch (err) {
-            setToastMessage('Gagal memperbarui status pembayaran.');
+            setToastMessage("Gagal memperbarui status pembayaran.");
             setToastVariant("danger");
             setToastShow(true);
         }
@@ -92,7 +93,7 @@ const VerifPembayaranPage = () => {
     return (
         <>
             <NavbarCS />
-            <Container className="mt-5" style={{ background: 'none' }}>
+            <Container className="mt-5" style={{ background: "none" }}>
                 <Row className="align-items-center mb-2">
                     <Col md={6}>
                         <h2 className="text-success fw-bold">Verifikasi Pembayaran</h2>
@@ -107,24 +108,31 @@ const VerifPembayaranPage = () => {
                 ) : error ? (
                     <p className="text-danger text-center">{error}</p>
                 ) : (
-                    <Container className="mt-4 text-center" style={{ background: 'none' }}>
+                    <Container className="mt-4 text-center" style={{ background: "none" }}>
                         <Col md={12} className="mx-auto">
                             {payments.length > 0 ? (
                                 <Table striped bordered hover responsive>
                                     <thead>
                                         <tr>
-                                            <th><FiHash /> ID Pembayaran</th>
-                                            <th><FiUser /> Nama Pengguna</th>
-                                            <th><FiCheckCircle /> Status</th>
+                                            <th>
+                                                <FiHash /> ID Pembayaran
+                                            </th>
+                                            <th>
+                                                <FiUser /> Nama Pengguna
+                                            </th>
+                                            <th>
+                                                <FiCheckCircle /> Status
+                                            </th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {payments.map((payment) => (
-                                            <tr key={payment.id_pembayaran} style={{ cursor: 'pointer' }}>
+                                            <tr key={payment.id_pembayaran} style={{ cursor: "pointer" }}>
                                                 <td>{payment.id_pembayaran}</td>
                                                 <td>
-                                                    {payment.transaksi?.user?.first_name} {payment.transaksi?.user?.last_name}
+                                                    {payment.transaksi?.user?.first_name}{" "}
+                                                    {payment.transaksi?.user?.last_name}
                                                 </td>
                                                 <td>{payment.status_pembayaran}</td>
                                                 <td>
@@ -157,19 +165,36 @@ const VerifPembayaranPage = () => {
                         {selectedPayment && (
                             <>
                                 <div className="mb-4">
-                                    <p><strong><FiUser /> Pengguna:</strong> {selectedPayment.transaksi?.user?.first_name} {selectedPayment.transaksi?.user?.last_name}</p>
-                                    <p><strong><FiCheckCircle /> Status Pembayaran:</strong> {selectedPayment.status_pembayaran}</p>
+                                    <p>
+                                        <strong>
+                                            <FiUser /> Pengguna:
+                                        </strong>{" "}
+                                        {selectedPayment.transaksi?.user?.first_name}{" "}
+                                        {selectedPayment.transaksi?.user?.last_name}
+                                    </p>
+                                    <p>
+                                        <strong>
+                                            <FiCheckCircle /> Status Pembayaran:
+                                        </strong>{" "}
+                                        {selectedPayment.status_pembayaran}
+                                    </p>
                                 </div>
 
                                 <div className="mb-4">
                                     <h3 className="fs-5 fw-semibold">Bukti Pembayaran</h3>
                                     {selectedPayment.ss_pembayaran ? (
-                                        <img
-                                            src={`/storage/${selectedPayment.ss_pembayaran}`}
-                                            alt="Bukti Pembayaran"
-                                            className="img-fluid rounded"
-                                            style={{ maxWidth: '100%' }}
-                                        />
+                                        <>
+                                            <img
+                                                src={`http://127.0.0.1:8000/storage/${selectedPayment.ss_pembayaran}`}
+                                                alt="Bukti Pembayaran"
+                                                className="img-fluid rounded"
+                                                style={{ maxWidth: "100%" }}
+                                                onError={(e) => {
+                                                    console.log("Failed to load image:", e.target.src);
+                                                    e.target.src = "/placeholder-image.jpg"; // Fallback
+                                                }}
+                                            />
+                                        </>
                                     ) : (
                                         <p>Tidak ada bukti yang diunggah</p>
                                     )}
@@ -180,8 +205,12 @@ const VerifPembayaranPage = () => {
                                     {selectedPayment.transaksi?.detiltransaksi?.length > 0 ? (
                                         selectedPayment.transaksi.detiltransaksi.map((detail) => (
                                             <div key={detail.id_dt} className="border-bottom py-2">
-                                                <p><strong>Nama Item:</strong> {detail.barang?.nama_barang}</p>
-                                                <p><strong>Kode Item:</strong> {detail.barang?.kode_barang || 'N/A'}</p>
+                                                <p>
+                                                    <strong>Nama Item:</strong> {detail.barang?.nama_barang}
+                                                </p>
+                                                <p>
+                                                    <strong>Kode Item:</strong> {detail.barang?.kode_barang || "N/A"}
+                                                </p>
                                             </div>
                                         ))
                                     ) : (
@@ -194,15 +223,15 @@ const VerifPembayaranPage = () => {
                     <Modal.Footer>
                         <Button
                             variant="success"
-                            onClick={() => handleVerify('Berhasil')}
-                            disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
+                            onClick={() => handleVerify("Berhasil")}
+                            disabled={selectedPayment?.status_pembayaran !== "Menunggu Verifikasi"}
                         >
                             <FiCheckCircle /> Tandai Berhasil
                         </Button>
                         <Button
                             variant="outline-danger"
-                            onClick={() => handleVerify('Tidak Valid')}
-                            disabled={selectedPayment?.status_pembayaran !== 'Menunggu Verifikasi'}
+                            onClick={() => handleVerify("Tidak Valid")}
+                            disabled={selectedPayment?.status_pembayaran !== "Menunggu Verifikasi"}
                         >
                             <FiXCircle /> Tandai Tidak Valid
                         </Button>
@@ -212,7 +241,10 @@ const VerifPembayaranPage = () => {
                     </Modal.Footer>
                 </Modal>
 
-                <ToastContainer className="position-fixed top-50 start-50 translate-middle z-3" style={{ minWidth: "300px" }}>
+                <ToastContainer
+                    className="position-fixed top-50 start-50 translate-middle z-3"
+                    style={{ minWidth: "300px" }}
+                >
                     <Toast
                         show={toastShow}
                         onClose={() => setToastShow(false)}
@@ -221,7 +253,9 @@ const VerifPembayaranPage = () => {
                         bg={toastVariant}
                     >
                         <Toast.Header>
-                            <strong className="me-auto">{toastVariant === "success" ? "Sukses" : "Error"}</strong>
+                            <strong className="me-auto">
+                                {toastVariant === "success" ? "Sukses" : "Error"}
+                            </strong>
                         </Toast.Header>
                         <Toast.Body className={toastVariant === "success" ? "text-white" : ""}>
                             {toastMessage}

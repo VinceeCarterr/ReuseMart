@@ -172,16 +172,16 @@ class PembayaranController extends Controller
                 }
 
                 $createdAt = $transaksi->created_at;
-                if (now()->diffInSeconds($createdAt) > 60) {
+                if (now()->diffInSeconds($createdAt) > 300) {
                     return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
                 }
 
                 $file = $request->file('proof');
                 $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('pembayaran', $filename);
+                $path = $file->storeAs('bukti_bayar', $filename, 'public'); // Store in storage/app/public/bukti_bayar
 
                 $pembayaran->update([
-                    'ss_pembayaran' => $filename,
+                    'ss_pembayaran' => 'bukti_bayar/' . $filename, // Save relative path
                     'status_pembayaran' => 'Menunggu Verifikasi',
                 ]);
 
@@ -196,11 +196,15 @@ class PembayaranController extends Controller
                 $user->save();
 
                 Log::info("Menambahkan $earnedPoints poin untuk user ID {$user->id_user} pada transaksi ID {$transaksi->id_transaksi}");
+                Log::info('Proof uploaded', [
+                    'pembayaran_id' => $pembayaran->id_pembayaran,
+                    'proof_path' => 'bukti_bayar/' . $filename,
+                ]);
 
                 return response()->json([
                     'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
                     'pembayaran_id' => $pembayaran->id_pembayaran,
-                    'proof_path' => $filename,
+                    'proof_path' => 'bukti_bayar/' . $filename,
                     'earned_points' => $earnedPoints,
                 ], 200);
             });
