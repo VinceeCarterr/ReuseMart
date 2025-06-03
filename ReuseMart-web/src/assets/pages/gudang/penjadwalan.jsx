@@ -126,7 +126,7 @@ const Penjadwalan = () => {
     const total = t.total || 0;
     const soldDays = Math.floor(
       (new Date(t.tanggal_transaksi) - new Date(tanggal_titip)) /
-        (1000 * 60 * 60 * 24)
+      (1000 * 60 * 60 * 24)
     );
 
     let pctCompany = status_periode === "Periode 1" ? 0.2 : 0.3;
@@ -185,10 +185,10 @@ const Penjadwalan = () => {
       prev.map((row) =>
         row.id_transaksi === t.id_transaksi
           ? {
-              ...row,
-              komisi_perusahaan: komisiPerusahaan,
-              komisi_hunter: komisiHunter,
-            }
+            ...row,
+            komisi_perusahaan: komisiPerusahaan,
+            komisi_hunter: komisiHunter,
+          }
           : row
       )
     );
@@ -374,6 +374,21 @@ const Penjadwalan = () => {
           );
         }
       }
+      if (filter === "Delivery" && kurirId) {
+        try {
+          await api.post("/send-notification", {
+            user_id: kurirId,
+            title,
+            body,
+          });
+          console.log(`✅ Push sent to kurir ${kurirId}`);
+        } catch (pushErr) {
+          console.warn(
+            `⚠️ Push to kurir ${kurirId} failed (ignored):`,
+            pushErr.response?.data || pushErr.message
+          );
+        }
+      }
     })();
   };
 
@@ -498,7 +513,7 @@ const Penjadwalan = () => {
       </ToastContainer>
       <NavbarGudang />
 
-      <Container className="mt-5" style={{background:'none'}}>
+      <Container className="mt-5" style={{ background: 'none' }}>
         {/* FILTER BAR */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="text-success fw-bold">Penjadwalan</h2>
@@ -507,9 +522,8 @@ const Penjadwalan = () => {
               {methodOptions.map((opt) => (
                 <span
                   key={opt.value}
-                  className={`filter-option ${
-                    filter === opt.value ? "active" : ""
-                  }`}
+                  className={`filter-option ${filter === opt.value ? "active" : ""
+                    }`}
                   onClick={() => setFilter(opt.value)}
                 >
                   {opt.label}
@@ -574,14 +588,14 @@ const Penjadwalan = () => {
                   filter === "Delivery"
                     ? t.pengiriman?.tanggal_pengiriman
                       ? new Date(
-                          t.pengiriman.tanggal_pengiriman
-                        ).toLocaleDateString("id-ID")
+                        t.pengiriman.tanggal_pengiriman
+                      ).toLocaleDateString("id-ID")
                       : "-"
                     : t.pengambilan?.tanggal_pengambilan
-                    ? new Date(
+                      ? new Date(
                         t.pengambilan.tanggal_pengambilan
                       ).toLocaleDateString("id-ID")
-                    : "-";
+                      : "-";
                 const statusRaw =
                   filter === "Delivery"
                     ? t.pengiriman?.status_pengiriman ?? "-"
@@ -827,13 +841,13 @@ const Penjadwalan = () => {
                     <td>
                       {selectedTransaksi.pengiriman?.tanggal_pengiriman
                         ? new Date(
-                            selectedTransaksi.pengiriman.tanggal_pengiriman
-                          ).toLocaleDateString("id-ID")
+                          selectedTransaksi.pengiriman.tanggal_pengiriman
+                        ).toLocaleDateString("id-ID")
                         : selectedTransaksi.pengambilan?.tanggal_pengambilan
-                        ? new Date(
+                          ? new Date(
                             selectedTransaksi.pengambilan.tanggal_pengambilan
                           ).toLocaleDateString("id-ID")
-                        : "–"}
+                          : "–"}
                     </td>
                   </tr>
                   {selectedTransaksi.pengiriman && (
@@ -957,7 +971,7 @@ const Penjadwalan = () => {
                         const soldDays = Math.floor(
                           (new Date(selectedTransaksi.tanggal_transaksi) -
                             new Date(tanggal_titip)) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         );
                         const bonus =
                           status_periode === "Periode 1" && soldDays < 7
