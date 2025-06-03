@@ -385,11 +385,13 @@ const Penjadwalan = () => {
   const closeDetail = () => setShowDetail(false);
 
   const handleKonfirmasiAmbil = async (t) => {
-    // 1️⃣ First: Mark as taken & add commission
     try {
-      await api.patch(`/pengambilan/${t.pengambilan.id_pengambilan}`, {
-        status_pengambilan: "Sudah diambil",
-      });
+      await api.patch(
+        `/updateStatusPengambilan/${t.pengambilan.id_pengambilan}`,
+        {
+          status_pengambilan: "Sudah diambil",
+        }
+      );
       await addKomisi(t);
 
       setToastVariant("success");
@@ -498,7 +500,7 @@ const Penjadwalan = () => {
       </ToastContainer>
       <NavbarGudang />
 
-      <Container className="mt-5" style={{background:'none'}}>
+      <Container className="mt-5" style={{ background: "none" }}>
         {/* FILTER BAR */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="text-success fw-bold">Penjadwalan</h2>

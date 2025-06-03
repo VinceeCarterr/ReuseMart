@@ -58,7 +58,7 @@ class PengambilanController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function updateStatusPengambilan(Request $request, $id)
     {
         $request->validate([
             'status_pengambilan' => 'required|string'

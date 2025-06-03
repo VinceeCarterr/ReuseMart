@@ -131,6 +131,41 @@ class UserController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        // 1) Validasi input: kita hanya mengizinkan 'saldo' dan 'poin_loyalitas'
+        $data = $request->validate([
+            'saldo'          => 'nullable|numeric',
+            'poin_loyalitas' => 'nullable|integer',
+        ]);
+
+        try {
+            // 2) Cari User berdasarkan primary key (id_user)
+            $user = User::findOrFail($id);
+
+            // 3) Hanya set bila ada di payload
+            if (array_key_exists('saldo', $data)) {
+                $user->saldo = $data['saldo'];
+            }
+            if (array_key_exists('poin_loyalitas', $data)) {
+                $user->poin_loyalitas = $data['poin_loyalitas'];
+            }
+
+            $user->save();
+
+            // 4) Kembalikan JSON response
+            return response()->json([
+                'message' => 'User updated',
+                'user'    => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Failed updating user $id: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Unable to update user',
+            ], 500);
+        }
+    }
+
     public function updatePenitip(Request $r, $id)
     {
         $data = $r->validate([

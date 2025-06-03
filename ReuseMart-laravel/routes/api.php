@@ -184,7 +184,7 @@ Route::middleware('role:gudang')->group(function () {
         Route::get('/transaksi/penjadwalan', [TransaksiController::class, 'penjadwalan']);
         Route::post('/pengiriman', [PengirimanController::class, 'store']);
         Route::post('/pengambilan', [PengambilanController::class, 'store']);
-        Route::patch('pengambilan/{id}', [PengambilanController::class, 'update']);
+        Route::patch('updateStatusPengambilan/{id}', [PengambilanController::class, 'updateStatusPengambilan']);
         Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
         Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
         Route::post('/komisi', [KomisiController::class, 'store']);
