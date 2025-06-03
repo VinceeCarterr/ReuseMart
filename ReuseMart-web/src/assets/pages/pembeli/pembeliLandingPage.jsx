@@ -89,13 +89,13 @@ const PembeliLandingPage = () => {
     );
 
     return (
-        <div>
+        <div >
             <NavbarPembeli
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery} />
 
             {/* Hero */}
-            <Container className="my-5">
+            <Container className="my-5" style={{background:'none'}}>
                 <h2 className="text-success fw-bold welcome-heading">
                     Selamat Datang di ReuseMart!
                 </h2>
@@ -143,7 +143,7 @@ const PembeliLandingPage = () => {
             <hr />
 
             {/* All Products */}
-            <Container className="mt-4">
+            <Container className="mt-4" style={{background:'none'}}>
                 <Row>
                     {filteredList
                         .filter(barang => 

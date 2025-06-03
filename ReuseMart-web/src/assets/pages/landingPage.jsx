@@ -257,7 +257,7 @@ const LandingPage = () => {
 
       <hr />
 
-      <Container className="mt-4">
+      <Container className="mt-4" style={{background:'none'}}>
         <Row>
           {filteredList
             .filter(
