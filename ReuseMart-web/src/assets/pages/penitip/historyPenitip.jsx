@@ -11,8 +11,8 @@ import {
   Form,
   Carousel,
   Dropdown,
-  Toast, 
-  ToastContainer
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FiCalendar, FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
@@ -106,6 +106,7 @@ const HistoryPenitip = () => {
       }
 
       setItems(data);
+      console.log("Fetched history items:", data);
     } catch (err) {
       console.error("Fetch error:", err.response ?? err);
       setItems([]);
@@ -323,22 +324,19 @@ const HistoryPenitip = () => {
   }, [now, items]);
   return (
     <>
-    <ToastContainer
-  position="top-end"
-  className="p-3"
->
-  <Toast
-    bg={toastVariant}
-    onClose={() => setToastShow(false)}
-    show={toastShow}
-    delay={3000}
-    autohide
-  >
-    <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
-      {toastMessage}
-    </Toast.Body>
-  </Toast>
-</ToastContainer>
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg={toastVariant}
+          onClose={() => setToastShow(false)}
+          show={toastShow}
+          delay={3000}
+          autohide
+        >
+          <Toast.Body className={toastVariant === "danger" ? "text-white" : ""}>
+            {toastMessage}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
       {/* NAVBAR */}
       <div className="py-3 navbar-penitip">
         <div className="container-fluid">
@@ -556,7 +554,15 @@ const HistoryPenitip = () => {
 
                   <Card.Footer className="d-flex justify-content-between align-items-end py-3 px-4">
                     <div>
-                      {item.status_periode === "Expired" &&
+                    {item.status === "Sold" ? (
+      <small className="d-block mb-1">
+        <strong>
+          Tanggal dibeli:{" "}
+          {new Date(item.transaksi.tanggal_transaksi).toLocaleDateString("id-ID")}
+        </strong>
+      </small>
+    ) :
+                      item.status_periode === "Expired" &&
                       item.status === "Akan Ambil" ? (
                         <small className="d-block mb-1">
                           <strong>
@@ -567,7 +573,7 @@ const HistoryPenitip = () => {
                           </strong>
                         </small>
                       ) : item.status_periode === "Expired" &&
-                      item.status === "Sudah Ambil" ? (
+                        item.status === "Sudah Ambil" ? (
                         (() => {
                           const titipTs = new Date(
                             item.tanggal_titip
@@ -578,12 +584,32 @@ const HistoryPenitip = () => {
                           return (
                             <small className="d-block mb-1">
                               <strong>
-                                Diambil Pada Tanggal:{" "+ item.tanggal_titip}
+                                Diambil Pada Tanggal:{" " + item.tanggal_titip}
+                              </strong>
+                            </small>
+                          );
+                        })()
+                      ) : item.status_periode === "Expired" ? (
+                        // Semua kasus lain saat status_periode === "Expired"
+                        (() => {
+                          const titipTs = new Date(
+                            item.tanggal_titip
+                          ).getTime();
+                          const akhirTs = titipTs + 30 * 24 * 3600 * 1000;
+                          const akhirDate = new Date(
+                            akhirTs
+                          ).toLocaleDateString("id-ID");
+
+                          return (
+                            <small className="d-block mb-1">
+                              <strong>
+                                Tanggal Akhir Penitipan: {akhirDate}
                               </strong>
                             </small>
                           );
                         })()
                       ) : (
+                        // Jika status_periode bukan "Expired"
                         <small className="d-block mb-1">
                           Dititipkan:{" "}
                           {item.tanggal_titip

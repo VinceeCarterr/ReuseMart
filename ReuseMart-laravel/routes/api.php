@@ -191,6 +191,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/komisi', [KomisiController::class, 'index']);
         Route::patch('user/{id}', [UserController::class, 'update']);
         Route::delete('/deleteBarang/{id}', [BarangController::class, 'destroy']);
+        Route::patch('/updateKomisiPegawai/{pegawai}', [PegawaiController::class, 'updateKomisi']);
+        Route::get('/pegawai/{id}', [PegawaiController::class, 'showHunter']);
     });
 
     Route::middleware('role:admin,gudang')->group(function () {
