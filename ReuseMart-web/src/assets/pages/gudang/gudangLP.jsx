@@ -127,7 +127,7 @@ const GudangPage = () => {
                 }
                 await api.delete(`/deleteBarang/${id}`);
                 fetchBarang();
-                showToastMessage('Item and all associated photos deleted successfully');
+                showToastMessage('Barang dan Foto Barang berhasil di hapus');
             } catch (err) {
                 console.error('Failed to delete Barang:', err);
                 showToastMessage('Failed to delete item', 'danger');
@@ -215,6 +215,7 @@ const GudangPage = () => {
         return 'N/A';
     };
 
+
     const filteredList = listBarang.filter(barang => {
         const searchTerm = pencarian.toLowerCase();
 
@@ -244,7 +245,7 @@ const GudangPage = () => {
             ? `${pegawai.first_name} ${pegawai.last_name}`.toLowerCase().includes(searchTerm)
             : false;
         const tanggalSelesai = hitungTanggalSelesai(barang.id_barang)?.toLowerCase().includes(searchTerm) || false;
-
+        
         // Return true if any field matches
         return (
             namaBarang ||
@@ -351,12 +352,6 @@ const GudangPage = () => {
                                                     onClick={() => handleEditBarang(barang.id_barang)}
                                                 >
                                                     <Pencil size={18} />
-                                                </Button>
-                                                <Button
-                                                    variant="outline-danger"
-                                                    onClick={() => confirmDelete(barang.id_barang)}
-                                                >
-                                                    <Trash size={18} />
                                                 </Button>
                                             </td>
                                         </tr>

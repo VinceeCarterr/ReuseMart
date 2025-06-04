@@ -142,7 +142,10 @@ Route::middleware('auth:sanctum')->group(function () {
     //mendonasikan barang
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
+        Route::get('/barangOwner', [BarangController::class, 'index']);
         Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
+        Route::get('/pegawaiOwner', [PegawaiController::class, 'index']);
+        Route::get('/userOwner', [UserController::class, 'publicList']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);

@@ -11,6 +11,8 @@ import {
   Table,
   Form,
   Dropdown,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import {
   FiShoppingCart,
@@ -27,22 +29,25 @@ import "./historyPembeli.css";
 const HistoryPembeli = () => {
   const navigate = useNavigate();
 
-  // ———— USER PROFILE ————
+  // — USER PROFILE —
   let profile = {};
   try {
     profile = JSON.parse(localStorage.getItem("profile") || "{}");
-  } catch { }
+  } catch {}
   const first = profile.first_name ?? profile.firstName ?? profile.name;
   const last = profile.last_name ?? profile.lastName;
   const userName = first && last ? `${first} ${last}` : first ? first : "User";
 
-  // ———— NAVBAR STATE ————
+  // — NAVBAR STATE —
   const [groupedCats, setGroupedCats] = useState([]);
   const [activeCatIdx, setActiveCatIdx] = useState(0);
   const [showMega, setShowMega] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // — TOAST STATE —
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     api
@@ -60,14 +65,14 @@ const HistoryPembeli = () => {
   const openProfileModal = () => setShowProfileModal(true);
   const closeProfileModal = () => setShowProfileModal(false);
 
-  // ———— HISTORY STATE & FILTERS ————
+  // — HISTORY STATE & FILTERS —
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("Delivery");
   const [showDetail, setShowDetail] = useState(false);
   const [selectedTx, setSelectedTx] = useState(null);
   const [showSSInline, setShowSSInline] = useState(false);
 
-  // ———— RATING STATE ————
+  // — RATING STATE —
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [rating, setRating] = useState(0);
@@ -142,8 +147,9 @@ const HistoryPembeli = () => {
       );
 
       await updateRatingAllUser();
-
-      closeRatingModal();
+      console.log("Setting showToast to true"); // Debug log
+      setShowToast(true); // Show toast on successful rating submission
+      setTimeout(() => closeRatingModal(), 100); // Slight delay to ensure toast renders
     } catch (error) {
       console.error(
         "Failed to submit rating:",
@@ -153,10 +159,22 @@ const HistoryPembeli = () => {
     }
   };
 
+  useEffect(() => {
+    console.log("showToast state:", showToast); // Debug toast state changes
+  }, [showToast]);
+
   let filtered = orders.filter((tx) => {
-    const statusPengiriman = tx.pengiriman?.status_pengiriman || tx.pengambilan?.status_pengambilan || "—";
-    const hasOnHoldItem = tx.detil_transaksi?.some((dt) => dt.barang?.status === "On Hold") || false;
-    return tx.metode_pengiriman === filter && statusPengiriman !== "On Hold" && !hasOnHoldItem;
+    const statusPengiriman =
+      tx.pengiriman?.status_pengiriman ||
+      tx.pengambilan?.status_pengambilan ||
+      "—";
+    const hasOnHoldItem =
+      tx.detil_transaksi?.some((dt) => dt.barang?.status === "On Hold") || false;
+    return (
+      tx.metode_pengiriman === filter &&
+      statusPengiriman !== "On Hold" &&
+      !hasOnHoldItem
+    );
   });
 
   // search by product name
@@ -188,11 +206,26 @@ const HistoryPembeli = () => {
 
   return (
     <>
+      {/* ========== TOAST NOTIFICATION ========== */}
+      <ToastContainer position="middle-center" className="p-3" style={{ zIndex: 1050 }}>
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={3000}
+          autohide
+          variant="success"
+        >
+          <Toast.Header>
+            <strong className="me-auto">Berhasil!</strong>
+          </Toast.Header>
+          <Toast.Body>Rating untuk produk berhasil dikirim.</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
       {/* ========== NAVBAR ========== */}
       <div className="py-3 navbar-pembeli">
         <div className="container-fluid">
           <div className="row align-items-center justify-content-between">
-            {/* Logo */}
             <div className="col-auto logo-container">
               <Link
                 to="/pembeliLP"
@@ -206,8 +239,6 @@ const HistoryPembeli = () => {
                 <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
               </Link>
             </div>
-
-            {/* Live Search */}
             <div className="col-md-6 px-2">
               <Form.Control
                 type="search"
@@ -217,8 +248,6 @@ const HistoryPembeli = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
-            {/* Kategori + Icons + Profile */}
             <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
               <div
                 className="mega-dropdown"
@@ -232,8 +261,9 @@ const HistoryPembeli = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
-                            }`}
+                          className={`mega-menu-item ${
+                            idx === activeCatIdx ? "active" : ""
+                          }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -254,14 +284,12 @@ const HistoryPembeli = () => {
                   </div>
                 )}
               </div>
-
               <Link to="/cart" className="text-dark fs-3 icon-link">
                 <FiShoppingCart />
               </Link>
               <Link to="/historyPembeli" className="text-dark fs-3 icon-link">
                 <FiClock />
               </Link>
-
               <Dropdown>
                 <Dropdown.Toggle variant="light" className="profile-toggle">
                   <FiUser className="me-2 fs-3" />
@@ -355,7 +383,7 @@ const HistoryPembeli = () => {
       </Modal>
 
       {/* ========== PAGE CONTENT ========== */}
-      <Container className="mt-5" style={{background:'none'}}>
+      <Container className="mt-5" style={{ background: "none" }}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">Riwayat Pembelian</h2>
           <div className="d-flex align-items-center">
@@ -530,10 +558,10 @@ const HistoryPembeli = () => {
                 </thead>
                 <tbody>
                   {selectedTx.detil_transaksi?.map((dt) => {
-                    const br = dt.barang || {}
-                    const fp = br.foto?.[0]?.path || "defaults/no-image.png"
-                    const currentRating = dt.rating ?? br.rating ?? 0
-                    const hasRated = currentRating > 0
+                    const br = dt.barang || {};
+                    const fp = br.foto?.[0]?.path || "defaults/no-image.png";
+                    const currentRating = dt.rating ?? br.rating ?? 0;
+                    const hasRated = currentRating > 0;
 
                     return (
                       <tr key={dt.id_dt}>

@@ -1,76 +1,92 @@
 .history-card {
-    border: 1px solid #e9ecef;
-  }
-  
-  .history-card.h-100 {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .history-card .card-header {
-    background: #fff;
-  }
-  
-  .store-name {
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
-  
-  .status-area .status-text {
-    font-size: 1.1rem;
-    font-weight: 500;
-  }
-  
-  .product-row {
-    padding: 1rem 0;
-  }
-  
-  .product-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-  
-  .product-price {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .tanggal-text {
-    font-size: 1.1rem;
-    font-weight: 500;
-  }
-  
+  border: 1px solid #e9ecef;
+}
+
+.history-card.h-100 {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-card .card-header {
+  background: #fff;
+}
+
+.store-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.status-area .status-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.product-row {
+  padding: 1rem 0;
+}
+
+.product-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.product-price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.tanggal-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
 /* Filter toggles */
 .filter-option {
-    display: inline-block;
-    margin-left: 1rem;
-    padding: 0.25rem 0.5rem;
-    font-weight: 600;             /* bold */
-    font-size: 1rem;              /* slightly larger */
-    color: #333;                  /* dark grey */
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
-    cursor: pointer;
-  }
-  
-  .filter-option:hover {
-    color: #198754;               /* Bootstrap “success” green */
-    border-color: transparent;
-  }
-  
-  .filter-option.active {
-    color: #198754;               /* green */
-    border-color: #198754;        /* green underline */
-  }  
-  
-  .summary-table tr td {
-    padding: 0.25rem 0;
-  }
-  
-  .summary-table .total-row td {
-    border-top: 1px solid #dee2e6;
-    padding-top: 0.75rem;
-  }
-  
+  display: inline-block;
+  margin-left: 1rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600; /* bold */
+  font-size: 1rem; /* slightly larger */
+  color: #333; /* dark grey */
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+
+.filter-option:hover {
+  color: #198754; /* Bootstrap “success” green */
+  border-color: transparent;
+}
+
+.filter-option.active {
+  color: #198754; /* green */
+  border-color: #198754; /* green underline */
+}
+
+.summary-table tr td {
+  padding: 0.25rem 0;
+}
+
+.summary-table .total-row td {
+  border-top: 1px solid #dee2e6;
+  padding-top: 0.75rem;
+}
+
+/* Toast styles */
+.toast {
+  background-color: #28a745;
+  color: white;
+  z-index: 1051; /* Ensure toast is above other elements */
+}
+
+.toast-header {
+  background-color: #218838;
+  color: white;
+}
+
+/* Ensure ToastContainer is above modals */
+.toast-container {
+  z-index: 1050 !important;
+}
