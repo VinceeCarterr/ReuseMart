@@ -156,53 +156,68 @@ const NotaPenitipan = ({ show, onHide, penitipanId }) => {
                     ) : !penitipan ? (
                         <p>Data penitipan tidak ditemukan.</p>
                     ) : (
-                        <div className="nota-printable" style={{ padding: '10px', border: '1px solid #000', borderRadius: '5px', backgroundColor: '#fff' }}>
+                        <div 
+                            className="nota-printable" 
+                            style={{ 
+                                padding: '15px', 
+                                border: '1px solid #000', 
+                                borderRadius: '0', 
+                                backgroundColor: '#fff', 
+                                fontFamily: 'Arial, sans-serif', 
+                                fontSize: '12px', 
+                                lineHeight: '1.5' 
+                            }}
+                            >
                             <Row>
-                                <strong>ReUse Mart</strong><br />
+                                <strong style={{ fontSize: '14px' }}>ReUse Mart</strong><br />
                                 <small>Jl. Green Eco Park No. 456 Yogyakarta</small>
                             </Row>
-                            <hr />
+                            <hr style={{ borderTop: '1px solid #000', margin: '10px 0' }} />
                             <Row>
-                                <p>No Nota: {penitipan.no_nota || 'N/A'}</p>
-                                <p>Tanggal Penitipan: {tanggalTitip}</p>
-                                <p>Masa Sampai: {masaSampai}</p>
-                            </Row>
-                            <hr />
-                            <Row>
-                                <p>
-                                    <strong>Penitip:</strong> {currentUser ? `T${currentUser.id_user} - ${currentUser.first_name} ${currentUser.last_name}` : 'Unknown'}<br />
-                                    {currentAlamat ? currentAlamat.alamat : 'Tidak ada'}<br />
-                                    {(currentAlamat && currentAlamat.kecamatan && currentAlamat.kota)
-                                        ? `${currentAlamat.kecamatan}, ${currentAlamat.kota}`
-                                        : ''}
+                                <p style={{ margin: '5px 0' }}>
+                                No Nota: {penitipan.no_nota || 'N/A'}<br />
+                                Tanggal Penitipan: {tanggalTitip}<br />
+                                Masa Sampai: {masaSampai}
                                 </p>
                             </Row>
-                            <hr />
+                            <hr style={{ borderTop: '1px solid #000', margin: '10px 0' }} />
+                            <Row>
+                                <p style={{ margin: '5px 0' }}>
+                                <strong>Penitip:</strong> {currentUser ? `T${currentUser.id_user} - ${currentUser.first_name} ${currentUser.last_name}` : 'Unknown'}<br />
+                                {currentAlamat ? currentAlamat.alamat : 'Tidak ada'}<br />
+                                {(currentAlamat && currentAlamat.kecamatan && currentAlamat.kota)
+                                    ? `${currentAlamat.kecamatan}, ${currentAlamat.kota}`
+                                    : ''}
+                                </p>
+                            </Row>
+                            <hr style={{ borderTop: '1px solid #000', margin: '10px 0' }} />
                             {currentBarangList.length === 0 ? (
-                                <p>Tidak ada barang untuk penitipan ini.</p>
+                                <p style={{ margin: '5px 0' }}>Tidak ada barang untuk penitipan ini.</p>
                             ) : (
                                 currentBarangList.map((barang, index) => (
-                                    <Row key={index} className="mb-2">
-                                        <Col xs={8}>
-                                            <p>
-                                                {barang.nama_barang}<br />
-                                                {cekGaransi(barang.garansi, today)}<br />
-                                                Berat Barang: {barang.berat} kg
-                                            </p>
-                                        </Col>
-                                        <Col xs={4} className="text-end">
-                                            <p>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(barang.harga || 0)}</p>
-                                        </Col>
-                                    </Row>
+                                <Row key={index} className="mb-2">
+                                    <Col xs={8}>
+                                    <p style={{ margin: '5px 0' }}>
+                                        {barang.nama_barang}<br />
+                                        {cekGaransi(barang.garansi, today)}<br />
+                                        Berat Barang: {barang.berat} kg
+                                    </p>
+                                    </Col>
+                                    <Col xs={4} className="text-end">
+                                    <p style={{ margin: '5px 0' }}>
+                                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(barang.harga || 0)}
+                                    </p>
+                                    </Col>
+                                </Row>
                                 ))
                             )}
-                            <hr />
+                            <hr style={{ borderTop: '1px solid #000', margin: '10px 0' }} />
                             <Row>
-                                <p>
-                                    <strong>Diterima dan QC Oleh:</strong> {currentPegawai ? `P${currentPegawai.id_pegawai} - ${currentPegawai.first_name} ${currentPegawai.last_name}` : 'Unknown'}
+                                <p style={{ margin: '5px 0' }}>
+                                <strong>Diterima dan QC Oleh:</strong> {currentPegawai ? `P${currentPegawai.id_pegawai} - ${currentPegawai.first_name} ${currentPegawai.last_name}` : 'Unknown'}
                                 </p>
                             </Row>
-                        </div>
+                            </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
