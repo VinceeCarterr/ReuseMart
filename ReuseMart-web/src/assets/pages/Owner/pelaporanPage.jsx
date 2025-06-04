@@ -2,17 +2,21 @@ import NavbarOwner from '../../components/Navbar/navbarOwner.jsx';
 import React, { useState } from 'react';
 import { Container, Row, Col, Button, Table, Card } from 'react-bootstrap';
 import LaporanStokGudang from '../../components/Owner/laporanStokGudang.jsx';
+import LaporanPenjualanPerKatModal from '../../components/Owner/laporanPenjualanPerKatModal.jsx';
+import LaporanBarangExpiredModal from '../../components/Owner/laporanBarangExpiredModal.jsx';
 import './pelaporanPage.css';
 
 const PelaporanPage = () => {
     const [showStockReportModal, setShowStockReportModal] = useState(false);
+    const [showPenjualanPerKatModal, setShowPenjualanPerKatModal] = useState(false);
+    const [showExpiredModal, setShowExpiredModal] = useState(false);
 
     const reports = [
         { name: 'Penjualan Bulanan Keseluruhan', action: () => handleReportClick('monthly-sales') },
         { name: 'Laporan Komisi Bulanan per Produk', action: () => handleReportClick('monthly-commission') },
         { name: 'Laporan Stok Gudang', action: () => setShowStockReportModal(true) },
-        { name: 'Laporan Penjualan per Kategori Barang', action: () => handleReportClick('category-sales') },
-        { name: 'Laporan Barang yang Masa Penitipannya Sudah Habis', action: () => handleReportClick('expired-consignment') },
+        {name: 'Laporan Penjualan per Kategori Barang',action: () => setShowPenjualanPerKatModal(true)},
+        { name: 'Laporan Barang yang Masa Penitipannya Sudah Habis', action: () => setShowExpiredModal(true) },
         { name: 'Laporan Donasi Barang', action: () => handleReportClick('donation') },
         { name: 'Laporan Request Donasi', action: () => handleReportClick('donation-request') },
         { name: 'Laporan Transaksi Penitip', action: () => handleReportClick('consignor-transaction') },
@@ -67,6 +71,14 @@ const PelaporanPage = () => {
             <LaporanStokGudang
                 show={showStockReportModal}
                 handleClose={() => setShowStockReportModal(false)}
+            />
+            <LaporanPenjualanPerKatModal
+                show={showPenjualanPerKatModal}
+                handleClose={() => setShowPenjualanPerKatModal(false)}
+            />
+            <LaporanBarangExpiredModal
+                show={showExpiredModal}
+                handleClose={() => setShowExpiredModal(false)}
             />
         </>
     );
