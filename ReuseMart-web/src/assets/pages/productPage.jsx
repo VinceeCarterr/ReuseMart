@@ -23,6 +23,7 @@ const ProductPage = () => {
     const [loading, setLoading] = useState(false);
     const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [userRating, setUserRating] = useState(null);
+    const [isLoading, setIsLoading] = useState(true); // New loading state for initial data fetch
 
     let profile = {};
     try {
@@ -48,62 +49,72 @@ const ProductPage = () => {
     };
 
     useEffect(() => {
-        const fetchPhotos = async () => {
+        const fetchData = async () => {
+            setIsLoading(true); // Set loading to true at the start
             try {
-                const response = await api.get(`/foto-barang/${id}`);
-                setFotos(response.data);
-                if (response.data.length > 0) {
-                    setSelectedPhoto(response.data[0].path);
-                }
-            } catch (error) {
-                console.error("Gagal mengambil foto barang:", error);
-            }
-        };
-
-        fetchPhotos();
-    }, [id]);
-
-    useEffect(() => {
-        const fetchBarangAndRating = async () => {
-            try {
-                const [barangResponse, penitipanResponse, userResponse] = await Promise.all([
-                    api.get(`/barang/${id}`),
-                    api.get('/penitipan/public'),
-                    api.get('/user/public')
+                await Promise.all([
+                    fetchPhotos(),
+                    fetchBarangAndRating(),
+                    fetchComments()
                 ]);
-
-                const barangData = barangResponse.data;
-                const penitipan = penitipanResponse.data.find(p => p.id_penitipan === barangData.id_penitipan);
-                const user = penitipan ? userResponse.data.find(u => u.id_user === penitipan.id_user) : null;
-
-                setBarang({
-                    ...barangData,
-                    rating: user ? user.rating : null
-                });
-                setUserRating(user ? user.rating : null);
             } catch (error) {
-                console.error("Gagal mengambil data produk atau rating:", error);
-                setBarang(null);
-                setUserRating(null);
+                console.error("Gagal mengambil data:", error);
+                setError("Gagal mengambil data. Silakan coba lagi.");
+            } finally {
+                setIsLoading(false); // Set loading to false after all fetches complete
             }
         };
 
-        fetchBarangAndRating();
+        fetchData();
     }, [id]);
 
-    useEffect(() => {
-        const fetchComments = async () => {
-            try {
-                const response = await api.get(`/barang/${id}/komentar`);
-                setComments(response.data.data);
-            } catch (error) {
-                console.error("Gagal mengambil komentar:", error);
-                setError("Gagal mengambil komentar. Silakan coba lagi.");
+    const fetchPhotos = async () => {
+        try {
+            const response = await api.get(`/foto-barang/${id}`);
+            setFotos(response.data);
+            if (response.data.length > 0) {
+                setSelectedPhoto(response.data[0].path);
             }
-        };
+        } catch (error) {
+            console.error("Gagal mengambil foto barang:", error);
+            throw error; // Propagate error to be caught in fetchData
+        }
+    };
 
-        fetchComments();
-    }, [id]);
+    const fetchBarangAndRating = async () => {
+        try {
+            const [barangResponse, penitipanResponse, userResponse] = await Promise.all([
+                api.get(`/barang/${id}`),
+                api.get('/penitipan/public'),
+                api.get('/user/public')
+            ]);
+
+            const barangData = barangResponse.data;
+            const penitipan = penitipanResponse.data.find(p => p.id_penitipan === barangData.id_penitipan);
+            const user = penitipan ? userResponse.data.find(u => u.id_user === penitipan.id_user) : null;
+
+            setBarang({
+                ...barangData,
+                rating: user ? user.rating : null
+            });
+            setUserRating(user ? user.rating : null);
+        } catch (error) {
+            console.error("Gagal mengambil data produk atau rating:", error);
+            setBarang(null);
+            setUserRating(null);
+            throw error; // Propagate error to be caught in fetchData
+        }
+    };
+
+    const fetchComments = async () => {
+        try {
+            const response = await api.get(`/barang/${id}/komentar`);
+            setComments(response.data.data);
+        } catch (error) {
+            console.error("Gagal mengambil komentar:", error);
+            throw error; // Propagate error to be caught in fetchData
+        }
+    };
 
     const handleAddComment = async (e) => {
         e.preventDefault();
@@ -207,7 +218,30 @@ const ProductPage = () => {
         });
     };
 
-    if (!barang) return <div>Sedang memuat...</div>;
+    if (isLoading) {
+        return (
+            <div>
+                {renderNavbar()}
+                <Container className="mt-4" style={{ background: 'none' }}>
+                    <div className="text-center mt-4">
+                        <Spinner animation="border" variant="success" />
+                        <p className="mt-2">Loading data...</p>
+                    </div>
+                </Container>
+            </div>
+        );
+    }
+
+    if (!barang) {
+        return (
+            <div>
+                {renderNavbar()}
+                <Container className="mt-4" style={{ background: 'none' }}>
+                    <Alert variant="danger">Gagal memuat data produk. Silakan coba lagi.</Alert>
+                </Container>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -254,7 +288,6 @@ const ProductPage = () => {
                                 <p>
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
-                                    {/* Updated to show user rating instead of barang.rating */}
                                     Rating Penitip: {userRating !== 0 ? userRating : 'Belum memiliki rating'}
                                 </p>
                             </Col>
@@ -272,7 +305,6 @@ const ProductPage = () => {
                                 </Button>
                             </Col>
                         </Row>
-                        {/* Tampilkan pesan sukses atau error */}
                         {successMessage && <Alert variant="success" className="mt-3">{successMessage}</Alert>}
                         {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
                         <Card className="mt-4">

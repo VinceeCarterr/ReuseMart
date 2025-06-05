@@ -22,6 +22,18 @@ class PegawaiController extends Controller
         }
     }
 
+    public function showHunter($id)
+    {
+         try {
+            $pegawai = Pegawai::with('jabatan')->findOrFail($id);
+            return response()->json($pegawai);
+        } catch (Exception $e) {
+            Log::error('Error fetching pegawai: ' . $e->getMessage());
+            return response()->json(['error' => 'Pegawai not found'], 404);
+        }
+    }
+
+
     public function show($id)
     {
         try {
@@ -196,5 +208,20 @@ class PegawaiController extends Controller
     {
         $kurirs = Pegawai::where('id_jabatan', 4)->get();
         return response()->json($kurirs);
+    }
+
+    public function updateKomisi(Request $request, Pegawai $pegawai)
+    {
+        $data = $request->validate([
+            'komisi' => 'required|numeric|min:0',
+        ]);
+
+        $pegawai->komisi = $data['komisi'];
+        $pegawai->save();
+
+        return response()->json([
+          'message' => 'Komisi pegawai updated',
+          'pegawai' => $pegawai,
+        ]);
     }
 }

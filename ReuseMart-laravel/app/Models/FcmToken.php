@@ -3,13 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class FcmToken extends Model
 {
-    protected $fillable = ['id_user', 'token'];
+    use HasFactory;
 
-    public function user()
+    protected $table = 'fcm_tokens';
+
+    protected $fillable = [
+        'token',
+        'owner_id',
+        'owner_type',
+    ];
+
+    public function owner()
     {
-       return $this->belongsTo(User::class, 'id_user', 'id_user');
+        return $this->morphTo();
     }
 }

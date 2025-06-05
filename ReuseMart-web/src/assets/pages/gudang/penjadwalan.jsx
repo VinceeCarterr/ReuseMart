@@ -56,37 +56,44 @@ const Penjadwalan = () => {
   }, []);
 
   const [expiredHandled, setExpiredHandled] = useState(false);
+  const [expiredHandledIds, setExpiredHandledIds] = useState(new Set());
 
   useEffect(() => {
-    if (
-      filter === "Pick Up" &&
-      showDetail &&
-      selectedTransaksi?.pengambilan &&
-      !expiredHandled
-    ) {
-      const pickTs = new Date(
-        selectedTransaksi.pengambilan.tanggal_pengambilan
-      ).getTime();
+    if (filter !== "Pick Up") return; // only do this background scan if we’re in “Pick Up” mode
+
+    schedules.forEach((t) => {
+      // skip any transaksi without a pengambilan object
+      if (!t.pengambilan) return;
+
+      // skip any we’ve already handled
+      if (expiredHandledIds.has(t.id_transaksi)) return;
+
+      const pickTs = new Date(t.pengambilan.tanggal_pengambilan).getTime();
       const deadline = pickTs + 44 * 3600 * 1000;
+
       if (now >= deadline) {
-        setExpiredHandled(true);
+        setExpiredHandledIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(t.id_transaksi);
+          return newSet;
+        });
         api
-          .patch(
-            `/pengambilan/${selectedTransaksi.pengambilan.id_pengambilan}`,
-            { status_pengambilan: "Tidak diambil" }
-          )
-          .then(() =>
-            api.patch(
-              `/barang/${selectedTransaksi.detil_transaksi[0].barang.id_barang}`,
+          .patch(`/updateStatusPengambilan/${t.pengambilan.id_pengambilan}`, {
+            status_pengambilan: "Tidak diambil",
+          })
+          .then(() => {
+            return api.patch(
+              `/barang/${t.detil_transaksi[0].barang.id_barang}`,
               { status: "Untuk Donasi" }
-            )
-          )
-          .then(() => addKomisi(selectedTransaksi))
-          .then(() => setShowDetail(false))
-          .catch(console.error);
+            );
+          })
+          .then(() => addKomisi(t))
+          .catch((err) => {
+            console.error(`Error auto‐expiring trx ${t.id_transaksi}:`, err);
+          });
       }
-    }
-  }, [now, filter, showDetail, selectedTransaksi, expiredHandled]);
+    });
+  }, [now, schedules, filter, expiredHandledIds]);
 
   const handleArrived = async (t) => {
     try {
@@ -126,7 +133,7 @@ const Penjadwalan = () => {
     const total = t.total || 0;
     const soldDays = Math.floor(
       (new Date(t.tanggal_transaksi) - new Date(tanggal_titip)) /
-      (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
     );
 
     let pctCompany = status_periode === "Periode 1" ? 0.2 : 0.3;
@@ -150,6 +157,7 @@ const Penjadwalan = () => {
       komisi_perusahaan: komisiPerusahaan,
       komisi_hunter: komisiHunter,
     });
+
     await api.post("/komisi", {
       id_dt: dtItem.id_dt,
       presentase_perusahaan: pctCompany,
@@ -159,11 +167,11 @@ const Penjadwalan = () => {
     });
 
     let bonusPenitip = 0;
-    if (status_periode === "Periode 1" && soldDays < 7) {
+    if (soldDays < 7) {
       bonusPenitip = Math.round(0.1 * komisiPerusahaan);
     }
-    const penghasilan = total - komisiHunter - komisiPerusahaan + bonusPenitip;
 
+    const penghasilan = total - komisiHunter - komisiPerusahaan + bonusPenitip;
     const penitipUser = dtItem.barang.penitipan.user;
     const updatedSaldo = penitipUser.saldo + penghasilan;
     await api.patch(`/user/${penitipUser.id_user}`, {
@@ -185,10 +193,10 @@ const Penjadwalan = () => {
       prev.map((row) =>
         row.id_transaksi === t.id_transaksi
           ? {
-            ...row,
-            komisi_perusahaan: komisiPerusahaan,
-            komisi_hunter: komisiHunter,
-          }
+              ...row,
+              komisi_perusahaan: komisiPerusahaan,
+              komisi_hunter: komisiHunter,
+            }
           : row
       )
     );
@@ -211,6 +219,34 @@ const Penjadwalan = () => {
         ...selectedTransaksi,
         detil_transaksi: [updatedDt],
       });
+    }
+
+    if (byHunter) {
+      const hunterId = byHunter;
+      const newlyEarned = komisiHunter;
+
+      try {
+        const { data: hunter } = await api.get(`/pegawai/${hunterId}`);
+        const existingKomisi = hunter.komisi || 0;
+
+        const newTotalKomisi = existingKomisi + newlyEarned;
+        console.log(
+          `⏩ Sending PATCH to set hunter #${hunterId}.komisi = ${existingKomisi} + ${newlyEarned} → ${newTotalKomisi}`
+        );
+
+        await api.patch(`/updateKomisiPegawai/${hunterId}`, {
+          komisi: newTotalKomisi,
+        });
+
+        console.log(
+          `✅ Hunter #${hunterId} komisi updated to ${newTotalKomisi}`
+        );
+      } catch (err) {
+        console.error(
+          `❌ Failed to fetch/update komisi for hunter #${hunterId}:`,
+          err
+        );
+      }
     }
   };
 
@@ -571,7 +607,7 @@ const Penjadwalan = () => {
       </ToastContainer>
       <NavbarGudang />
 
-      <Container className="mt-5" style={{ background: 'none' }}>
+      <Container className="mt-5" style={{ background: "none" }}>
         {/* FILTER BAR */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="text-success fw-bold">Penjadwalan</h2>
@@ -580,8 +616,9 @@ const Penjadwalan = () => {
               {methodOptions.map((opt) => (
                 <span
                   key={opt.value}
-                  className={`filter-option ${filter === opt.value ? "active" : ""
-                    }`}
+                  className={`filter-option ${
+                    filter === opt.value ? "active" : ""
+                  }`}
                   onClick={() => setFilter(opt.value)}
                 >
                   {opt.label}
@@ -644,15 +681,15 @@ const Penjadwalan = () => {
                 const tanggalJ =
                   filter === "Delivery"
                     ? t.pengiriman?.tanggal_pengiriman
-                      ? new Date(t.pengiriman.tanggal_pengiriman).toLocaleDateString(
-                        "id-ID"
-                      )
+                      ? new Date(
+                          t.pengiriman.tanggal_pengiriman
+                        ).toLocaleDateString("id-ID")
                       : "-"
                     : t.pengambilan?.tanggal_pengambilan
-                      ? new Date(t.pengambilan.tanggal_pengambilan).toLocaleDateString(
-                        "id-ID"
-                      )
-                      : "-";
+                    ? new Date(
+                        t.pengambilan.tanggal_pengambilan
+                      ).toLocaleDateString("id-ID")
+                    : "-";
                 const statusRaw =
                   filter === "Delivery"
                     ? t.pengiriman?.status_pengiriman ?? "-"
@@ -903,13 +940,13 @@ const Penjadwalan = () => {
                     <td>
                       {selectedTransaksi.pengiriman?.tanggal_pengiriman
                         ? new Date(
-                          selectedTransaksi.pengiriman.tanggal_pengiriman
-                        ).toLocaleDateString("id-ID")
+                            selectedTransaksi.pengiriman.tanggal_pengiriman
+                          ).toLocaleDateString("id-ID")
                         : selectedTransaksi.pengambilan?.tanggal_pengambilan
-                          ? new Date(
+                        ? new Date(
                             selectedTransaksi.pengambilan.tanggal_pengambilan
                           ).toLocaleDateString("id-ID")
-                          : "–"}
+                        : "–"}
                     </td>
                   </tr>
                   {selectedTransaksi.pengiriman && (
@@ -1033,7 +1070,7 @@ const Penjadwalan = () => {
                         const soldDays = Math.floor(
                           (new Date(selectedTransaksi.tanggal_transaksi) -
                             new Date(tanggal_titip)) /
-                          (1000 * 60 * 60 * 24)
+                            (1000 * 60 * 60 * 24)
                         );
                         const bonus =
                           status_periode === "Periode 1" && soldDays < 7

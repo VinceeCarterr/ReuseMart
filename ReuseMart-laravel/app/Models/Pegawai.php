@@ -47,4 +47,9 @@ class Pegawai extends Authenticatable
     {
         return $this->hasMany(Redeem::class, 'id_pegawai');
     }
+
+    public function fcmTokens()
+    {
+        return $this->morphMany(FcmToken::class, 'owner');
+    }
 }

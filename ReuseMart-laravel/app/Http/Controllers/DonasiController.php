@@ -59,7 +59,7 @@ class DonasiController extends Controller
             $penitipan = Penitipan::findOrFail($barang->id_penitipan);
             $penitipId = $penitipan->id_user;
 
-            $tokens = FcmToken::where('id_user', $penitipId)
+            $tokens = FcmToken::where('owner_id', $penitipId)
                     ->pluck('token')
                     ->toArray();
 

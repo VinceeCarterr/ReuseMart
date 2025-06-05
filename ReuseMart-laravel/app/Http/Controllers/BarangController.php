@@ -12,6 +12,7 @@ use App\Models\FcmToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FcmNotification;
+use Carbon\Carbon;
 
 
 
@@ -288,5 +289,55 @@ public function sendNotifBarangPenitip()
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function laporanPenjualanPerKategori(Request $request)
+    {
+        $tahun = $request->query('tahun');
+
+        $rows = Barang::query()
+            ->join('kategori', 'barang.id_kategori', '=', 'kategori.id_kategori')
+            ->selectRaw("
+                kategori.nama_kategori as kategori,
+                SUM(CASE WHEN barang.status = 'sold' THEN 1 ELSE 0 END) as terjual,
+                SUM(CASE WHEN barang.status_periode = 'expired' THEN 1 ELSE 0 END) as gagal
+            ")
+            ->groupBy('kategori.nama_kategori')
+            ->orderBy('kategori.nama_kategori')
+            ->get();
+        return response()->json($rows);
+    }
+
+    public function laporanBarangExpired(Request $request)
+    {
+        $barangExpired = Barang::with(['penitipan.user'])
+            ->where('status_periode', 'expired')
+            ->where('status', 'Available')
+            ->get();
+
+        $result = $barangExpired->map(function($barang) {
+            $tanggalMasuk = $barang->tanggal_titip;
+            
+            $carbonMasuk = Carbon::parse($tanggalMasuk);
+            $tanggalAkhir = $carbonMasuk->copy()->addDays(30)->format('Y-m-d');
+            $batasAmbil   = $carbonMasuk->copy()->addDays(30 + 7)->format('Y-m-d');
+
+            $penitipan = $barang->penitipan; 
+            $user      = $penitipan ? $penitipan->user : null;
+
+            return [
+                'kode_barang'    => $barang->kode_barang,
+                'nama_barang'    => $barang->nama_barang,
+                'id_penitip'     => $penitipan ? $penitipan->id_user : null,
+                'nama_penitip'   => $user 
+                    ? trim($user->first_name . ' ' . ($user->last_name ?? '' )) 
+                    : null,
+                'tanggal_masuk'  => $tanggalMasuk,
+                'tanggal_akhir'  => $tanggalAkhir,
+                'batas_ambil'    => $batasAmbil,
+            ];
+        });
+
+        return response()->json($result);
     }
 }

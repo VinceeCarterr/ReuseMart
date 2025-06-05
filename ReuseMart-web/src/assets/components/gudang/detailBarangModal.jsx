@@ -158,6 +158,9 @@ const DetailBarangModal = ({ show, onHide, barang, penitipanUser, barangPegawai,
                                 <strong>Tanggal Selesai:</strong> {tanggalSelesai || 'Unknown Date'}
                             </div>
                             <div className="mb-2">
+                                <strong>byHunter : </strong> {barang?.byHunter || 'Tanpa Hunter'}
+                            </div>
+                            <div className="mb-2">
                                 <strong>Deskripsi:</strong> {barang?.deskripsi || 'N/A'}
                             </div>
                         </Col>

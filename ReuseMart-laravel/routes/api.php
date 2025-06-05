@@ -143,11 +143,16 @@ Route::middleware('auth:sanctum')->group(function () {
     //mendonasikan barang
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
+        Route::get('/barangOwner', [BarangController::class, 'index']);
         Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
+        Route::get('/pegawaiOwner', [PegawaiController::class, 'index']);
+        Route::get('/userOwner', [UserController::class, 'publicList']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
         Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
+        Route::get('/laporan/penjualan-per-kategori',[BarangController::class, 'laporanPenjualanPerKategori']);
+        Route::get('/laporan/barang-expired',[BarangController::class, 'laporanBarangExpired']);
     });
 
 
@@ -192,6 +197,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/komisi', [KomisiController::class, 'index']);
         Route::patch('user/{id}', [UserController::class, 'update']);
         Route::delete('/deleteBarang/{id}', [BarangController::class, 'destroy']);
+        Route::patch('/updateKomisiPegawai/{pegawai}', [PegawaiController::class, 'updateKomisi']);
+        Route::get('/pegawai/{id}', [PegawaiController::class, 'showHunter']);
     });
 
     Route::middleware('role:admin,gudang')->group(function () {
