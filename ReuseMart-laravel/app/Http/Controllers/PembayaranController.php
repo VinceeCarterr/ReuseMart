@@ -135,7 +135,7 @@ class PembayaranController extends Controller
 
                     if ($request->status === 'Berhasil') {
                         $penitipId = $barang->penitipan->id_user;
-                        $tokens = FcmToken::where('id_user', $penitipId)
+                        $tokens = FcmToken::where('owner_id', $penitipId)
                             ->pluck('token')
                             ->toArray();
 
