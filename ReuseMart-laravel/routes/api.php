@@ -19,6 +19,7 @@ use App\Http\Controllers\DTController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FcmTokenController;
+use App\Http\Controllers\KeranjangController;
 use App\Http\Controllers\MerchController;
 use App\Http\Controllers\RedeemController;
 use Illuminate\Http\Request;
@@ -94,12 +95,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:pembeli')->group(function () {
         Route::get('transaksi/history', [TransaksiController::class, 'historyByUserId']);
         Route::post('user/avatar', [UserController::class, 'updateAvatar']);
-        Route::post('/cart/add', [TransaksiController::class, 'addToCart']);
-        Route::get('/cart', [TransaksiController::class, 'getCart']);
-        Route::delete('cart/remove', [TransaksiController::class, 'removeFromCart']);
+        Route::post('/cart/add', [KeranjangController::class, 'addToCart']);
+        Route::get('/cart', [KeranjangController::class, 'getCart']);
+        Route::delete('cart/remove', [KeranjangController::class, 'removeFromCart']);
         Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
-        Route::post('/checkout', [TransaksiController::class, 'checkout']);
-        Route::post('/upload-proof', [PembayaranController::class, 'uploadProof']);
+        Route::post('/checkout', [KeranjangController::class, 'checkout']);
+        Route::post('/upload-proof', [KeranjangController::class, 'uploadProof']);
     });
 
     Route::middleware('role:penitip')->group(function () {

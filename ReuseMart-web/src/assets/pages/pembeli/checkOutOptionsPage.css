@@ -1,90 +1,114 @@
-/* Container utama */
-.container {
-    border-radius: 12px;
-    background-color: #fff;
+.container-checkout {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Garis pemisah hitam */
+.checkout-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
 .section-divider {
-    border: 0;
-    border-top: 2px solid #000;
-    margin: 2rem 0;
+    margin: 1rem 0;
+    border-color: #e9ecef;
 }
 
-/* Tombol utama */
-.btn-primary {
+.item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 1rem;
+}
+
+.item-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #34495e;
+}
+
+.item-price {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.shipping-option,
+.points-section,
+.price-details {
+    font-size: 0.95rem;
+}
+
+.shipping-option label,
+.points-section p,
+.price-details span {
+    color: #34495e;
+}
+
+.address-box {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.points-input {
+    max-width: 150px;
+}
+
+.btn-apply-points,
+.btn-clear-points {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.btn-checkout {
+    font-size: 0.95rem;
+    padding: 0.6rem;
     background-color: #28a745;
     border-color: #28a745;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s;
 }
 
-.btn-primary:hover {
+.btn-checkout:hover {
     background-color: #218838;
-    border-color: #1e7e34;
 }
 
-/* Tombol lanjutkan */
-.btn-success {
-    border-radius: 8px;
-    padding: 12px;
-    font-weight: 600;
+.alert-warning {
+    font-size: 0.9rem;
+    padding: 0.75rem;
 }
 
-/* Input form */
-.form-control {
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    transition: border-color 0.3s;
-}
-
-.form-control:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-}
-
-/* Input poin */
-.points-input {
-    max-width: 200px;
-}
-
-/* List group */
 .list-group-item {
+    padding: 0.5rem 0;
     border: none;
-    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
 }
 
-.list-group-item:last-child {
-    border-bottom: none;
+.modal-title {
+    font-size: 1.2rem;
 }
 
-/* Modal */
-.modal-content {
-    border-radius: 12px;
-}
-
-/* Responsivitas */
-@media (max-width: 576px) {
-    .container {
-        padding: 15px;
+@media (max-width: 768px) {
+    .container-checkout {
+        padding: 1rem;
     }
 
-    .btn-success {
-        font-size: 1rem;
+    .checkout-title {
+        font-size: 1.3rem;
     }
 
-    .form-control {
-        font-size: 0.9rem;
+    .item-image {
+        width: 50px;
+        height: 50px;
     }
 
     .points-input {
-        max-width: 150px;
-    }
-
-    .section-divider {
-        margin: 1.5rem 0;
-    }
-
-    h3 {
-        font-size: 1.25rem;
+        max-width: 120px;
     }
 }

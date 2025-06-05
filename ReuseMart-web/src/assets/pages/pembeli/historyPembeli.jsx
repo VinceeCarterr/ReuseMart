@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -80,6 +80,7 @@ const HistoryPembeli = () => {
   useEffect(() => {
     api
       .get("transaksi/history")
+
       .then(({ data }) => {
         console.log("🔍 transaksi/history response:", data);
         setOrders(data);
@@ -153,13 +154,8 @@ const HistoryPembeli = () => {
     }
   };
 
-  let filtered = orders.filter((tx) => {
-    const statusPengiriman = tx.pengiriman?.status_pengiriman || tx.pengambilan?.status_pengambilan || "—";
-    const hasOnHoldItem = tx.detil_transaksi?.some((dt) => dt.barang?.status === "On Hold") || false;
-    return tx.metode_pengiriman === filter && statusPengiriman !== "On Hold" && !hasOnHoldItem;
-  });
+  let filtered = orders.filter((tx) => tx.metode_pengiriman === filter);
 
-  // search by product name
   if (searchTerm) {
     filtered = filtered.filter((tx) => {
       const nama = tx.detil_transaksi?.[0]?.barang?.nama_barang ?? "";
@@ -355,7 +351,7 @@ const HistoryPembeli = () => {
       </Modal>
 
       {/* ========== PAGE CONTENT ========== */}
-      <Container className="mt-5" style={{background:'none'}}>
+      <Container className="mt-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">Riwayat Pembelian</h2>
           <div className="d-flex align-items-center">
@@ -516,7 +512,7 @@ const HistoryPembeli = () => {
                   <Truck className="me-1" />
                   {selectedTx.pengiriman?.status_pengiriman ||
                     selectedTx.pengambilan?.status_pengambilan ||
-                    "—"}
+                    "Disiapkan"}
                 </div>
               </div>
               <Table borderless responsive className="mb-4">
@@ -620,7 +616,7 @@ const HistoryPembeli = () => {
                   <tr>
                     <td>Diskon</td>
                     <td className="text-end">
-                      –Rp{(selectedTx.diskon || 0).toLocaleString("id-ID")}
+                      Rp{(selectedTx.diskon || 0).toLocaleString("id-ID")}
                     </td>
                   </tr>
                   <tr className="total-row">

@@ -6,7 +6,7 @@ import NavbarPembeliPage from '../../components/Navbar/navbarPembeli.jsx';
 
 const UploadProofPage = () => {
     const { state } = useLocation();
-    const { transaksi_id, pembayaran_id, subtotal, shippingCost, discountAmount, total } = state || {};
+    const { transaksi_id, pembayaran_id, subtotal, shipping_cost, discount_amount, total } = state || {};
     const [file, setFile] = useState(null);
     const [timeLeft, setTimeLeft] = useState(60);
     const [showToast, setShowToast] = useState(false);
@@ -28,9 +28,9 @@ const UploadProofPage = () => {
                 if (prev <= 1) {
                     clearInterval(timer);
                     setToastVariant('danger');
-                    setToastMessage('Waktu habis! Transaksi dibatalkan.');
+                    setToastMessage('Waktu habis! Transaksi telah dibatalkan dan dapat dilihat di riwayat transaksi.');
                     setShowToast(true);
-                    setTimeout(() => navigate('/cart'), 1500);
+                    setTimeout(() => navigate('/pembeliLP'), 2000);
                     return 0;
                 }
                 return prev - 1;
@@ -43,10 +43,17 @@ const UploadProofPage = () => {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile && ['image/jpeg', 'image/png', 'image/jpg'].includes(selectedFile.type)) {
-            setFile(selectedFile);
+            if (selectedFile.size > 20 * 1024 * 1024) {
+                setToastVariant('danger');
+                setToastMessage('Ukuran file melebihi 20MB.');
+                setShowToast(true);
+                setFile(null);
+            } else {
+                setFile(selectedFile);
+            }
         } else {
             setToastVariant('danger');
-            setToastMessage('Pilih file gambar (JPEG, PNG, atau JPG) dengan ukuran maksimal 2MB.');
+            setToastMessage('Pilih file gambar (JPEG, PNG, atau JPG).');
             setShowToast(true);
             setFile(null);
         }
@@ -78,7 +85,7 @@ const UploadProofPage = () => {
         } catch (error) {
             setToastVariant('danger');
             setToastMessage(
-                error.response?.data?.error || 'Gagal mengunggah bukti pembayaran. Coba lagi.'
+                error.response?.data?.message || 'Gagal mengunggah bukti pembayaran. Coba lagi.'
             );
             setShowToast(true);
         }
@@ -124,12 +131,12 @@ const UploadProofPage = () => {
                     </ListGroup.Item>
                     <ListGroup.Item className="d-flex justify-content-between py-3">
                         <span>Ongkos Kirim</span>
-                        <span>Rp. {shippingCost?.toLocaleString('id-ID')}</span>
+                        <span>Rp. {(shipping_cost ?? 0).toLocaleString('id-ID')}</span>
                     </ListGroup.Item>
-                    {discountAmount > 0 && (
+                    {Number(discount_amount) > 0 && (
                         <ListGroup.Item className="d-flex justify-content-between py-3 text-success">
                             <span>Diskon Poin</span>
-                            <span>- Rp. {discountAmount?.toLocaleString('id-ID')}</span>
+                            <span>- Rp. {Number(discount_amount).toLocaleString('id-ID')}</span>
                         </ListGroup.Item>
                     )}
                     <ListGroup.Item className="d-flex justify-content-between py-3 fw-bold">

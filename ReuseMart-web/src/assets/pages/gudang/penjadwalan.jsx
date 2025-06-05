@@ -338,58 +338,61 @@ const Penjadwalan = () => {
       return;
     }
 
+    // Send role-specific notifications
     const nota = selectedTransaksi.no_nota ?? selectedTransaksi.id_transaksi;
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const timePart = `${hours}:${minutes}`;
+    const productNames = selectedTransaksi.detil_transaksi
+      .map((dt) => dt.barang.nama_barang)
+      .join(", ");
+    const tanggalJadwalFormatted = new Date(tanggalJadwal).toLocaleDateString("id-ID");
 
-    let title, body;
-    if (filter === "Delivery") {
-      title = "Pesanan Anda sudah dijadwalkan!";
-      body = `Pesanan dengan no nota (${nota}) akan dikirimkan pada tanggal ${tanggalJadwal}`;
-    } else {
-      title = "Pesanan Anda sudah dijadwalkan";
-      body = `Pesanan dengan no nota (${nota}) dapat diambil pada tanggal ${tanggalJadwal}`;
+    const buyerId = selectedTransaksi.user?.id_user;
+    const penitipUser = selectedTransaksi.detil_transaksi?.[0]?.barang?.penitipan?.user;
+    const penitipId = penitipUser?.id_user;
+
+    const recipients = [];
+
+    if (buyerId) {
+      const buyerTitle = filter === "Delivery"
+        ? "Pesanan Anda Akan Segera Dikirim!"
+        : "Pesanan Anda Siap Diambil!";
+      const buyerBody = filter === "Delivery"
+        ? `Pesanan (${nota}) berisi ${productNames} dijadwalkan untuk dikirim pada ${tanggalJadwalFormatted}.`
+        : `Pesanan (${nota}) berisi ${productNames} dapat diambil pada ${tanggalJadwalFormatted} di ReuseMart.`;
+      recipients.push({ id: buyerId, title: buyerTitle, body: buyerBody });
     }
 
-    (async () => {
-      const buyerId = selectedTransaksi.user?.id_user;
-      const penitipUser =
-        selectedTransaksi.detil_transaksi?.[0]?.barang?.penitipan?.user;
-      const penitipId = penitipUser?.id_user;
+    if (penitipId && penitipId !== buyerId) {
+      const penitipTitle = filter === "Delivery"
+        ? "Pesanan Barang Anda Telah Dijadwalkan!"
+        : "Pengambilan Barang Anda Telah Dijadwalkan!";
+      const penitipBody = filter === "Delivery"
+        ? `Barang Anda (${productNames}) dengan no nota (${nota}) akan dikirim ke pembeli pada ${tanggalJadwalFormatted}.`
+        : `Barang Anda (${productNames}) dengan no nota (${nota}) dapat diambil oleh pembeli pada ${tanggalJadwalFormatted}.`;
+      recipients.push({ id: penitipId, title: penitipTitle, body: penitipBody });
+    }
 
-      const recipients = [];
-      if (buyerId) recipients.push(buyerId);
-      if (penitipId && penitipId !== buyerId) recipients.push(penitipId);
+    if (filter === "Delivery" && kurirId) {
+      const kurirTitle = "Jadwal Pengiriman Baru!";
+      const kurirBody = `Anda ditugaskan untuk mengantar pesanan (${nota}) berisi ${productNames} pada ${tanggalJadwalFormatted}.`;
+      recipients.push({ id: kurirId, title: kurirTitle, body: kurirBody });
+    }
 
-      for (const user_id of recipients) {
-        try {
-          await api.post("/send-notification", { user_id, title, body });
-          console.log(`✅ Push sent to user ${user_id}`);
-        } catch (pushErr) {
-          console.warn(
-            `⚠️ Push to ${user_id} failed (ignored):`,
-            pushErr.response?.data || pushErr.message
-          );
-        }
+    // Send notifications to all recipients
+    for (const { id, title, body } of recipients) {
+      try {
+        await api.post("/send-notification", {
+          user_id: id,
+          title,
+          body,
+        });
+        console.log(`✅ Push sent to user ${id}`);
+      } catch (pushErr) {
+        console.warn(
+          `⚠️ Push to ${id} failed (ignored):`,
+          pushErr.response?.data || pushErr.message
+        );
       }
-      if (filter === "Delivery" && kurirId) {
-        try {
-          await api.post("/send-notification", {
-            user_id: kurirId,
-            title,
-            body,
-          });
-          console.log(`✅ Push sent to kurir ${kurirId}`);
-        } catch (pushErr) {
-          console.warn(
-            `⚠️ Push to kurir ${kurirId} failed (ignored):`,
-            pushErr.response?.data || pushErr.message
-          );
-        }
-      }
-    })();
+    }
   };
 
   const openDetail = (t) => {
@@ -425,18 +428,18 @@ const Penjadwalan = () => {
       return;
     }
 
-    // 2️⃣ Build both notification bodies
+    // Send role-specific notifications
     const productNames = t.detil_transaksi
       .map((dt) => dt.barang.nama_barang)
       .join(", ");
+    const nota = t.no_nota ?? t.id_transaksi;
 
-    const buyerTitle = "Terima Kasih Sudah Berbelanja di ReuseMart!";
-    const buyerBody = `${productNames} sudah diterima oleh Anda!`;
+    const buyerTitle = "Pesanan Anda Telah Dikonfirmasi!";
+    const buyerBody = `Terima kasih telah mengambil pesanan (${nota}) berisi ${productNames} di ReuseMart. Selamat menikmati!`;
 
-    const penitipTitle = "Pesanan Anda telah diambil!";
-    const penitipBody = `${productNames} sudah diterima oleh pembeli.Cek saldo Anda sekarang, CUAAAAANNN!`;
+    const penitipTitle = "Barang Anda Telah Diambil Pembeli!";
+    const penitipBody = `Barang (${productNames}) dengan no nota (${nota}) telah diambil. Cek saldo Anda untuk melihat penghasilan!`;
 
-    // 3️⃣ Determine both recipients
     const buyerId = t.user.id_user;
     const penitipUser = t.detil_transaksi?.[0]?.barang?.penitipan?.user;
     const penitipId = penitipUser?.id_user;
@@ -445,14 +448,9 @@ const Penjadwalan = () => {
     if (buyerId)
       recipients.push({ id: buyerId, title: buyerTitle, body: buyerBody });
     if (penitipId && penitipId !== buyerId) {
-      recipients.push({
-        id: penitipId,
-        title: penitipTitle,
-        body: penitipBody,
-      });
+      recipients.push({ id: penitipId, title: penitipTitle, body: penitipBody });
     }
 
-    // 4️⃣ Send to each, silently catching errors
     for (const { id, title, body } of recipients) {
       try {
         await api.post("/send-notification", {
@@ -497,6 +495,64 @@ const Penjadwalan = () => {
   };
 
   const closeNotaKurir = () => setShowNotaKurir(false);
+
+  const handleOnDelivery = async (t) => {
+    try {
+      await api.patch(`/pengiriman/${t.pengiriman.id_pengiriman}`, {
+        status_pengiriman: "On Delivery",
+      });
+
+      const productNames = t.detil_transaksi
+        .map((dt) => dt.barang.nama_barang)
+        .join(", ");
+      const nota = t.no_nota ?? t.id_transaksi;
+
+      const buyerTitle = "Pesanan Anda Sedang Dikirim!";
+      const buyerBody = `Pesanan (${nota}) berisi ${productNames} sedang dalam perjalanan ke alamat Anda.`;
+
+      const penitipTitle = "Barang Anda Sedang Dikirim ke Pembeli!";
+      const penitipBody = `Barang (${productNames}) dengan no nota (${nota}) sedang dikirim ke pembeli.`;
+
+      const buyerId = t.user.id_user;
+      const penitipUser = t.detil_transaksi?.[0]?.barang?.penitipan?.user;
+      const penitipId = penitipUser?.id_user;
+
+      const recipients = [];
+      if (buyerId)
+        recipients.push({ id: buyerId, title: buyerTitle, body: buyerBody });
+      if (penitipId && penitipId !== buyerId)
+        recipients.push({ id: penitipId, title: penitipTitle, body: penitipBody });
+
+      for (const { id, title, body } of recipients) {
+        try {
+          await api.post("/send-notification", {
+            user_id: id,
+            title,
+            body,
+          });
+          console.log(`✅ Notification sent to user ${id}`);
+        } catch (pushErr) {
+          console.warn(
+            `⚠️ Notification to ${id} failed (ignored):`,
+            pushErr.response?.data || pushErr.message
+          );
+        }
+      }
+
+      const params = { metode_pengiriman: filter, search };
+      const { data } = await api.get("/transaksi/penjadwalan", { params });
+      setSchedules(data);
+
+      setToastVariant("success");
+      setToastMessage("Status pengiriman diubah ke On Delivery!");
+      setToastShow(true);
+    } catch (err) {
+      console.error("Error marking On Delivery:", err);
+      setToastVariant("danger");
+      setToastMessage("Gagal mengubah status pengiriman.");
+      setToastShow(true);
+    }
+  };
 
   return (
     <>
@@ -563,12 +619,11 @@ const Penjadwalan = () => {
                 <th>Tanggal Transaksi</th>
                 {filter === "Delivery" && <th>Kurir</th>}
                 <th>
-                  {filter === "Delivery"
-                    ? "Tanggal Pengiriman"
-                    : "Tanggal Pengambilan"}
+                  {filter === "Delivery" ? "Tanggal Pengiriman" : "Tanggal Pengambilan"}
                 </th>
                 <th>Status</th>
                 <th>Detail</th>
+                {filter === "Delivery" && <th>Kurir Mengantar</th>}
                 <th>Action</th>
               </tr>
             </thead>
@@ -589,14 +644,14 @@ const Penjadwalan = () => {
                 const tanggalJ =
                   filter === "Delivery"
                     ? t.pengiriman?.tanggal_pengiriman
-                      ? new Date(
-                        t.pengiriman.tanggal_pengiriman
-                      ).toLocaleDateString("id-ID")
+                      ? new Date(t.pengiriman.tanggal_pengiriman).toLocaleDateString(
+                        "id-ID"
+                      )
                       : "-"
                     : t.pengambilan?.tanggal_pengambilan
-                      ? new Date(
-                        t.pengambilan.tanggal_pengambilan
-                      ).toLocaleDateString("id-ID")
+                      ? new Date(t.pengambilan.tanggal_pengambilan).toLocaleDateString(
+                        "id-ID"
+                      )
                       : "-";
                 const statusRaw =
                   filter === "Delivery"
@@ -641,32 +696,37 @@ const Penjadwalan = () => {
                       <td>
                         <Button
                           size="sm"
-                          variant="success"
-                          onClick={() => handleArrived(t)}
-                          disabled={
-                            t.pengiriman?.status_pengiriman === "Arrived"
-                          }
+                          variant="primary"
+                          onClick={() => handleOnDelivery(t)}
+                          disabled={t.pengiriman?.status_pengiriman !== "Scheduled"}
                         >
-                          Mark Arrived
+                          Mulai Pengiriman
                         </Button>
                       </td>
                     )}
-
-                    {filter === "Pick Up" && (
-                      <td>
+                    <td>
+                      {filter === "Delivery" ? (
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleArrived(t)}
+                          disabled={t.pengiriman?.status_pengiriman === "Arrived"}
+                        >
+                          Mark Arrived
+                        </Button>
+                      ) : (
                         <Button
                           size="sm"
                           variant="warning"
                           onClick={() => handleKonfirmasiAmbil(t)}
                           disabled={
-                            t.pengambilan?.status_pengambilan !==
-                            "Belum diambil"
+                            t.pengambilan?.status_pengambilan !== "Belum diambil"
                           }
                         >
                           Konfirmasi Ambil
                         </Button>
-                      </td>
-                    )}
+                      )}
+                    </td>
                   </tr>
                 );
               })}

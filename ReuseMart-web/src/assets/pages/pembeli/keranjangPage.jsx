@@ -16,7 +16,7 @@ import api from '../../../api/api.js';
 import NavbarPembeliPage from '../../components/Navbar/navbarPembeli.jsx';
 
 const KeranjangPage = () => {
-    const [cart, setCart] = useState(null);
+    const [cart, setCart] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -33,12 +33,14 @@ const KeranjangPage = () => {
             setError(null);
             try {
                 const response = await api.get('/cart');
+                console.log('Cart Response:', response.data);
                 setCart(response.data.data);
                 setSelectedItems([]);
             } catch (error) {
-                setError(error.response?.data.error || 'Gagal mengambil keranjang');
+                console.error('Cart Error:', error.response);
+                setError(error.response?.data.message || 'Gagal mengambil keranjang');
                 setToastVariant('danger');
-                setToastMessage(error.response?.data.error || 'Gagal mengambil keranjang');
+                setToastMessage(error.response?.data.message || 'Gagal mengambil keranjang');
                 setShowToast(true);
             } finally {
                 setLoading(false);
@@ -47,39 +49,39 @@ const KeranjangPage = () => {
         fetchCart();
     }, []);
 
-    const handleRemoveItem = async (id_barang) => {
+    const handleRemoveItem = async (id_keranjang) => {
         setLoading(true);
         setError(null);
         try {
-            await api.delete('/cart/remove', { data: { id_barang } });
+            await api.delete('/cart/remove', { data: { id_keranjang } });
             const response = await api.get('/cart');
             setCart(response.data.data);
-            setSelectedItems(selectedItems.filter((id) => id !== id_barang));
+            setSelectedItems(selectedItems.filter((id) => id !== id_keranjang));
             setShowDeleteModal(false);
             setItemToDelete(null);
             setToastVariant('success');
             setToastMessage('Barang berhasil dihapus dari keranjang');
             setShowToast(true);
         } catch (error) {
-            setError(error.response?.data.error || 'Gagal menghapus barang dari keranjang');
+            setError(error.response?.data.message || 'Gagal menghapus barang dari keranjang');
             setToastVariant('danger');
-            setToastMessage(error.response?.data.error || 'Gagal menghapus barang dari keranjang');
+            setToastMessage(error.response?.data.message || 'Gagal menghapus barang dari keranjang');
             setShowToast(true);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleShowDeleteModal = (id_barang) => {
-        setItemToDelete(id_barang);
+    const handleShowDeleteModal = (id_keranjang) => {
+        setItemToDelete(id_keranjang);
         setShowDeleteModal(true);
     };
 
-    const handleSelectItem = (id_barang) => {
+    const handleSelectItem = (id_keranjang) => {
         setSelectedItems((prev) =>
-            prev.includes(id_barang)
-                ? prev.filter((id) => id !== id_barang)
-                : [...prev, id_barang]
+            prev.includes(id_keranjang)
+                ? prev.filter((id) => id !== id_keranjang)
+                : [...prev, id_keranjang]
         );
     };
 
@@ -129,14 +131,14 @@ const KeranjangPage = () => {
                         {error}
                     </Alert>
                 )}
-                {!loading && !error && (!cart || !cart.items || cart.items.length === 0) && (
+                {!loading && !error && (!cart || cart.length === 0) && (
                     <div
                         className="d-flex justify-content-center align-items-center flex-column"
                         style={{ height: '50vh' }}
                     >
                         <div className="bg-light p-4 rounded shadow-sm text-center" style={{ maxWidth: '500px', width: '100%' }}>
                             <ShoppingCart size={48} className="text-muted mb-3" style={{ opacity: 0.7 }} />
-                            <h4 className="mb-3 text-muted">Keranjang Anda Kosong</h4>
+                            <h4 className="text-muted mb-3">Keranjang Anda Kosong</h4>
                             <p className="text-muted mb-4">Tambahkan barang ke keranjang untuk memulai belanja!</p>
                             <Button
                                 variant="success"
@@ -149,28 +151,23 @@ const KeranjangPage = () => {
                         </div>
                     </div>
                 )}
-                {!loading && !error && cart && cart.items && cart.items.length > 0 && (
+                {!loading && !error && cart && cart.length > 0 && (
                     <>
                         <h2>Keranjang Belanja</h2>
                         <ListGroup>
-                            {cart.items.map((item) => (
-                                <ListGroup.Item
-                                    key={item.id_barang}
-                                    className="d-flex align-items-center"
-                                >
+                            {cart.map((item) => (
+                                <ListGroup.Item key={item.id_keranjang} className="d-flex align-items-center">
                                     <Form.Check
                                         type="checkbox"
-                                        checked={selectedItems.includes(item.id_barang)}
-                                        onChange={() => handleSelectItem(item.id_barang)}
+                                        checked={selectedItems.includes(item.id_keranjang)}
+                                        onChange={() => handleSelectItem(item.id_keranjang)}
                                         className="me-3"
-                                        style={{
-                                            transform: 'scale(1.5)',
-                                        }}
+                                        style={{ transform: 'scale(1.5)' }}
                                     />
                                     <div className="d-flex">
                                         <img
-                                            src={item.foto || 'https://via.placeholder.com/70'}
-                                            alt={item.nama_barang}
+                                            src={item.barang.foto || '/assets/placeholder.jpg'}
+                                            alt={item.barang.nama_barang}
                                             style={{
                                                 width: '70px',
                                                 height: '70px',
@@ -178,11 +175,12 @@ const KeranjangPage = () => {
                                                 borderRadius: '8px',
                                                 marginRight: '15px',
                                             }}
+                                            onError={(e) => (e.target.src = '/assets/placeholder.jpg')}
                                         />
                                         <div>
-                                            <div className="fw-bold">{item.nama_barang}</div>
+                                            <div className="fw-bold">{item.barang.nama_barang}</div>
                                             <div className="text-muted">
-                                                Rp. {item.harga.toLocaleString('id-ID')}
+                                                Rp. {item.barang.harga.toLocaleString('id-ID')}
                                             </div>
                                         </div>
                                     </div>
@@ -190,7 +188,7 @@ const KeranjangPage = () => {
                                         <Button
                                             variant="outline-danger"
                                             size="sm"
-                                            onClick={() => handleShowDeleteModal(item.id_barang)}
+                                            onClick={() => handleShowDeleteModal(item.id_keranjang)}
                                             disabled={loading}
                                         >
                                             <Trash size={25} />

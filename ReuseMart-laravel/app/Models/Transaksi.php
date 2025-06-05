@@ -23,6 +23,7 @@ class Transaksi extends Model
         'subtotal',
         'total',
         'no_nota',
+        'status_transaksi',
     ];
 
     public function pembayaran()

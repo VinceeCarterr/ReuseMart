@@ -14,7 +14,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class CancelTransactionJob implements ShouldQueue
 {
@@ -34,112 +33,69 @@ class CancelTransactionJob implements ShouldQueue
     public function handle()
     {
         try {
-            Log::info("Starting CancelTransactionJob for transaksi_id: {$this->transaksiId}, user_id: {$this->userId}, points_redeemed: {$this->pointsRedeemed}");
+            Log::info("Starting CancelTransactionJob", [
+                'transaksi_id' => $this->transaksiId,
+                'user_id' => $this->userId,
+                'points_redeemed' => $this->pointsRedeemed,
+                'timestamp' => now()->toDateTimeString(),
+            ]);
 
-            DB::beginTransaction();
-
-            $transaksi = Transaksi::find($this->transaksiId);
-            if (!$transaksi) {
-                Log::warning("Transaksi tidak ditemukan untuk ID: {$this->transaksiId}. Mungkin sudah dihapus.");
-                $this->handleOrphanedData();
-                DB::commit();
-                return;
-            }
-
-            Log::info("Transaksi ditemukan: {$transaksi->id_transaksi}");
-
-            $pembayaran = Pembayaran::find($transaksi->id_pembayaran);
-            if (!$pembayaran) {
-                Log::warning("Pembayaran tidak ditemukan untuk transaksi_id: {$this->transaksiId}. Melanjutkan penghapusan.");
-                $this->cancelTransaction($transaksi, null);
-            } else {
-                Log::info("Pembayaran ditemukan, status: {$pembayaran->status_pembayaran}");
-                if ($pembayaran->status_pembayaran === 'Menunggu' || $pembayaran->status_pembayaran === 'Tidak Valid') {
-                    $this->cancelTransaction($transaksi, $pembayaran);
-                } else {
-                    DB::commit();
+            DB::transaction(function () {
+                $transaksi = Transaksi::find($this->transaksiId);
+                if (!$transaksi) {
+                    Log::warning("Transaksi tidak ditemukan untuk ID: {$this->transaksiId}");
+                    $this->handleOrphanedData();
                     return;
                 }
-            }
 
-            DB::commit();
+                $pembayaran = Pembayaran::find($transaksi->id_pembayaran);
+                if (!$pembayaran) {
+                    Log::warning("Pembayaran tidak ditemukan untuk transaksi_id: {$this->transaksiId}");
+                    $this->cancelTransaction($transaksi, null);
+                    return;
+                }
+
+                // Only cancel if payment is still Pending
+                if ($pembayaran->status_pembayaran !== 'Pending') {
+                    Log::info("Pembayaran sudah diproses: {$pembayaran->status_pembayaran}. Membatalkan job.");
+                    return;
+                }
+
+                $this->cancelTransaction($transaksi, $pembayaran);
+            });
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Gagal membatalkan transaksi: " . $e->getMessage());
+            Log::error("Gagal membatalkan transaksi: " . $e->getMessage(), [
+                'transaksi_id' => $this->transaksiId,
+                'user_id' => $this->userId,
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 
     private function cancelTransaction($transaksi, $pembayaran)
     {
+        // Update transaction and payment status
+        $transaksi->update([
+            'status_transaksi' => 'Batal',
+        ]);
+        Log::info("Updated transaksi status to Batal", [
+            'transaksi_id' => $transaksi->id_transaksi,
+        ]);
+
+        if ($pembayaran) {
+            $pembayaran->update([
+                'status_pembayaran' => 'Tidak Valid',
+            ]);
+            Log::info("Updated pembayaran status to Tidak Valid", [
+                'pembayaran_id' => $pembayaran->id_pembayaran,
+            ]);
+        }
+
+        // Restore item status to Available
         $detilTransaksis = DetilTransaksi::where('id_transaksi', $this->transaksiId)->get();
         if ($detilTransaksis->isEmpty()) {
             Log::warning("Tidak ada detail transaksi untuk transaksi_id: {$this->transaksiId}");
-        }
-
-        foreach ($detilTransaksis as $detil) {
-            $barang = Barang::find($detil->id_barang);
-            if ($barang) {
-                if ($barang->status === 'On Hold') {
-                    Log::info("Mengubah status barang ID: {$barang->id_barang} ke Available");
-                    $barang->status = 'Available';
-                    $barang->save();
-                    if (!$barang->save()) {
-                        Log::error("Gagal menyimpan perubahan status untuk barang ID: {$barang->id_barang}");
-                    }
-                } else {
-                    Log::info("Status barang ID: {$barang->id_barang} tidak diubah karena bukan On Hold: {$barang->status}");
-                }
-            } else {
-                Log::warning("Barang tidak ditemukan untuk detil ID: {$detil->id_barang}");
-            }
-        }
-
-        if ($this->pointsRedeemed > 0) {
-            $user = User::find($this->userId);
-            if ($user) {
-                Log::info("Mengembalikan {$this->pointsRedeemed} poin ke user ID: {$this->userId}");
-                $user->poin_loyalitas += $this->pointsRedeemed;
-                if (!$user->save()) {
-                    Log::error("Gagal menyimpan poin untuk user ID: {$this->userId}");
-                }
-            } else {
-                Log::warning("User tidak ditemukan untuk ID: {$this->userId}");
-            }
-        }
-
-        if ($pembayaran && $pembayaran->ss_pembayaran && $pembayaran->ss_pembayaran !== 'pending.jpg') {
-            $filePath = 'public/bukti_pembayaran/' . $pembayaran->ss_pembayaran;
-            if (Storage::exists($filePath)) {
-                Log::info("Menghapus file: {$filePath}");
-                Storage::delete($filePath);
-            } else {
-                Log::warning("File tidak ditemukan: {$filePath}");
-            }
-        }
-
-        $deletedDetil = DetilTransaksi::where('id_transaksi', $this->transaksiId)->delete();
-        Log::info("Menghapus {$deletedDetil} baris dari detil_transaksi");
-
-        if ($pembayaran) {
-            if ($pembayaran->delete()) {
-                Log::info("Pembayaran ID: {$pembayaran->id_pembayaran} dihapus");
-            } else {
-                Log::error("Gagal menghapus pembayaran ID: {$pembayaran->id_pembayaran}");
-            }
-        }
-
-        if ($transaksi->delete()) {
-            Log::info("Transaksi ID: {$transaksi->id_transaksi} dihapus");
         } else {
-            Log::error("Gagal menghapus transaksi ID: {$transaksi->id_transaksi}");
-        }
-    }
-
-    private function handleOrphanedData()
-    {
-        $detilTransaksis = DetilTransaksi::where('id_transaksi', $this->transaksiId)->get();
-        if ($detilTransaksis->isNotEmpty()) {
-            Log::info("Menemukan detail transaksi yang terlantar, memproses...");
             foreach ($detilTransaksis as $detil) {
                 $barang = Barang::find($detil->id_barang);
                 if ($barang && $barang->status === 'On Hold') {
@@ -147,7 +103,35 @@ class CancelTransactionJob implements ShouldQueue
                     $barang->status = 'Available';
                     $barang->save();
                 }
-                $detil->delete();
+            }
+        }
+
+        // Refund redeemed points
+        if ($this->pointsRedeemed > 0) {
+            $user = User::find($this->userId);
+            if ($user) {
+                Log::info("Mengembalikan {$this->pointsRedeemed} poin ke user ID: {$this->userId}");
+                $user->poin_loyalitas += $this->pointsRedeemed;
+                $user->save();
+            } else {
+                Log::warning("User tidak ditemukan untuk ID: {$this->userId}");
+            }
+        }
+
+        Log::info("Transaksi ID: {$this->transaksiId} dibatalkan. Status updated to Batal, pembayaran Tidak Valid");
+    }
+
+    private function handleOrphanedData()
+    {
+        $detilTransaksis = DetilTransaksi::where('id_transaksi', $this->transaksiId)->get();
+        if ($detilTransaksis->isNotEmpty()) {
+            foreach ($detilTransaksis as $detil) {
+                $barang = Barang::find($detil->id_barang);
+                if ($barang && $barang->status === 'On Hold') {
+                    Log::info("Mengubah status barang ID: {$barang->id_barang} ke Available");
+                    $barang->status = 'Available';
+                    $barang->save();
+                }
             }
         }
 
@@ -159,5 +143,7 @@ class CancelTransactionJob implements ShouldQueue
                 $user->save();
             }
         }
+
+        Log::info("Handled orphaned data for transaksi_id: {$this->transaksiId}");
     }
 }

@@ -8,11 +8,11 @@ use App\Models\Transaksi;
 use App\Models\Detiltransaksi;
 use App\Models\Barang;
 use App\Models\FcmToken;
+use App\Models\User;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FcmNotification;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -98,16 +98,34 @@ class PembayaranController extends Controller
                 $pembayaran = Pembayaran::findOrFail($id);
 
                 if ($pembayaran->status_pembayaran !== 'Menunggu Verifikasi') {
-                    return response()->json(['error' => 'Payment is not in pending verification status'], 400);
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Pembayaran tidak dalam status menunggu verifikasi.',
+                    ], 400);
                 }
 
                 $transaksi = Transaksi::where('id_pembayaran', $pembayaran->id_pembayaran)->firstOrFail();
-                $detilTransaksis = Detiltransaksi::where('id_transaksi', $transaksi->id_transaksi)->get();
+                $detilTransaksis = DetilTransaksi::where('id_transaksi', $transaksi->id_transaksi)->get();
+                $user = User::findOrFail($transaksi->id_user);
 
                 $pembayaran->update([
                     'status_pembayaran' => $request->status,
                     'verified_at' => now(),
                 ]);
+
+                $transaksi->update([
+                    'status_transaksi' => $request->status === 'Berhasil' ? 'Disiapkan' : 'Gagal',
+                ]);
+
+                if ($request->status === 'Tidak Valid') {
+                    // Refund points
+                    $pointsRedeemed = floor($transaksi->diskon / 100);
+                    if ($pointsRedeemed > 0) {
+                        $user->poin_loyalitas += $pointsRedeemed;
+                        $user->save();
+                        Log::info("Refunded {$pointsRedeemed} points to user ID {$user->id_user} for transaction ID {$transaksi->id_transaksi}");
+                    }
+                }
 
                 foreach ($detilTransaksis as $detil) {
                     $barang = Barang::findOrFail($detil->id_barang);
@@ -142,76 +160,23 @@ class PembayaranController extends Controller
                 }
 
                 return response()->json([
-                    'message' => "Payment marked as {$request->status}",
+                    'status' => 'success',
+                    'message' => "Pembayaran ditandai sebagai {$request->status}.",
                     'pembayaran_id' => $pembayaran->id_pembayaran,
                     'status_pembayaran' => $pembayaran->status_pembayaran,
+                    'status_transaksi' => $transaksi->status_transaksi,
                 ], 200);
             });
         } catch (Exception $e) {
-            Log::error('Error verifying payment: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to verify payment'], 500);
-        }
-    }
-
-    public function uploadProof(Request $request)
-    {
-        $request->validate([
-            'transaksi_id' => 'required|exists:transaksi,id_transaksi',
-            'pembayaran_id' => 'required|exists:pembayaran,id_pembayaran',
-            'proof' => 'required|image|mimes:jpeg,png,jpg|max:20480',
-        ]);
-
-        try {
-            return DB::transaction(function () use ($request) {
-                $transaksi = Transaksi::findOrFail($request->transaksi_id);
-                $pembayaran = Pembayaran::findOrFail($request->pembayaran_id);
-                $user = $transaksi->user;
-
-                if ($transaksi->id_pembayaran !== $pembayaran->id_pembayaran) {
-                    return response()->json(['error' => 'Transaksi dan pembayaran tidak sesuai'], 400);
-                }
-
-                $createdAt = $transaksi->created_at;
-                if (now()->diffInSeconds($createdAt) > 10) {
-                    return response()->json(['error' => 'Waktu untuk mengunggah bukti pembayaran telah habis'], 400);
-                }
-
-                $file = $request->file('proof');
-                $filename = Str::random(10) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('bukti_bayar', $filename, 'public');
-
-                $pembayaran->update([
-                    'ss_pembayaran' => 'bukti_bayar/' . $filename,
-                    'status_pembayaran' => 'Menunggu Verifikasi',
-                ]);
-
-                // Tambahkan poin loyalitas
-                $total = $transaksi->total;
-                $earnedPoints = floor($total / 10000);
-                if ($total > 500000) {
-                    $earnedPoints *= 1.2;
-                }
-                $earnedPoints = floor($earnedPoints);
-
-                $user->poin_loyalitas += $earnedPoints;
-                $user->save();
-
-                Log::info("Menambahkan $earnedPoints poin untuk user ID {$user->id_user} pada transaksi ID {$transaksi->id_transaksi}");
-                Log::info('Proof uploaded', [
-                    'pembayaran_id' => $pembayaran->id_pembayaran,
-                    'proof_path' => 'bukti_bayar/' . $filename,
-                ]);
-
-                return response()->json([
-                    'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi.',
-                    'pembayaran_id' => $pembayaran->id_pembayaran,
-                    'proof_path' => 'bukti_bayar/' . $filename,
-                    'earned_points' => $earnedPoints,
-                ], 200);
-            });
-        } catch (Exception $e) {
-            Log::error('Gagal mengunggah bukti pembayaran: ' . $e->getMessage());
-            return response()->json(['error' => 'Gagal mengunggah bukti pembayaran'], 500);
+            Log::error('Error verifying payment: ' . $e->getMessage(), [
+                'pembayaran_id' => $id,
+                'status' => $request->status,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memverifikasi pembayaran.',
+            ], 500);
         }
     }
 }

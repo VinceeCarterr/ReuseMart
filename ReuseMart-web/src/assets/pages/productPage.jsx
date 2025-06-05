@@ -169,7 +169,7 @@ const ProductPage = () => {
                 setIsLoggedIn(false);
                 navigate('/login');
             } else if (error.response?.status === 400) {
-                setError(error.response.data.error || "Barang tidak tersedia untuk dibeli.");
+                setError(error.response.data.error || "Barang sudah terdapat di keranjang.");
             } else {
                 setError(error.response?.data.error || "Gagal menambahkan barang ke keranjang. Silakan coba lagi.");
             }
@@ -212,7 +212,7 @@ const ProductPage = () => {
     return (
         <div>
             {renderNavbar()}
-            <Container className="mt-1" style={{ background:'none'}}>
+            <Container className="mt-1" style={{ background: 'none' }}>
                 <Row>
                     <Col md={6} className="my-5 d-flex flex-column align-items-center">
                         <div className="main-image-container mb-3">
