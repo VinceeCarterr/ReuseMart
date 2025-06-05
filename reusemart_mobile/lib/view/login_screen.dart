@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
-import 'package:reusemart_mobile/view/home_screen.dart';
+import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => HomeScreen(user: user),
+              builder: (context) => HomePage(),
             ),
           );
         } else {
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
+        MaterialPageRoute(builder: (_) => HomePage()),
       );
     } catch (e) {
       setState(() {

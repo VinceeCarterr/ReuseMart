@@ -1,11 +1,13 @@
+// lib/main.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:reusemart_mobile/services/user_service.dart';
+import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
-import 'package:reusemart_mobile/view/home_screen.dart';
 import 'package:reusemart_mobile/view/splash_screen.dart';
+import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -27,7 +29,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  final UserService _userService = UserService();
   String? _fcmToken;
   bool _showSplash = true;
 
@@ -36,7 +37,6 @@ class _MainAppState extends State<MainApp> {
     super.initState();
     _initFcm();
     _listenForegroundMessages();
-
     Future.delayed(const Duration(seconds: 3), () {
       setState(() {
         _showSplash = false;
@@ -51,10 +51,10 @@ class _MainAppState extends State<MainApp> {
     setState(() => _fcmToken = token);
     debugPrint('🔑 FCM Token: $token');
 
-    final apiToken = await _userService.getToken();
+    final apiToken = await UserService().getToken();
     if (apiToken != null) {
       try {
-        await _userService.registerFcmToken(token);
+        await UserService().registerFcmToken(token);
         debugPrint('✅ Token registered with server');
       } catch (e) {
         debugPrint('❌ Failed to register token: $e');
@@ -77,62 +77,15 @@ class _MainAppState extends State<MainApp> {
     });
   }
 
-  Future<Widget> _getInitialScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    final rememberMe = prefs.getBool('remember_me') ?? false;
-
-    if (token != null && rememberMe) {
-      try {
-        final user = await _userService.validateToken();
-        if (user != null) return HomeScreen(user: user);
-      } catch (e) {
-        debugPrint('❌ Token validation failed: $e');
-        await prefs.remove('access_token');
-        await prefs.remove('remember_me');
-      }
-    }
-    return const LoginScreen();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Reusemart',
+      title: 'ReuseMart',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: _showSplash
-          // ← USE your custom SplashScreen (with logo + Poppins + colors)
-          ? const SplashScreen()
-          : FutureBuilder<Widget>(
-              future: _getInitialScreen(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                return Stack(
-                  children: [
-                    snapshot.data ?? const LoginScreen(),
-                    if (_fcmToken != null)
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Container(
-                          color: Colors.black87,
-                          padding: const EdgeInsets.all(8),
-                          child: SelectableText(
-                            'FCM Token:\n$_fcmToken',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
+      home: _showSplash 
+          ? const SplashScreen() 
+          : const HomePage(),
     );
   }
 }

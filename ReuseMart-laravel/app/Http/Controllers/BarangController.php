@@ -311,7 +311,7 @@ public function sendNotifBarangPenitip()
     public function laporanBarangExpired(Request $request)
     {
         $barangExpired = Barang::with(['penitipan.user'])
-            ->where('status_periode', 'expired')
+            ->where('status_periode', 'Expired')
             ->where('status', 'Available')
             ->get();
 
