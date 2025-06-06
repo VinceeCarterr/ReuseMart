@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
 
 class UserService {
@@ -121,22 +122,44 @@ class UserService {
     final token = prefs.getString('access_token');
     final rememberMe = prefs.getBool('remember_me') ?? false;
 
-    if (token == null || !rememberMe) {
+    debugPrint("ValidateToken - Token: $token, RememberMe: $rememberMe");
+
+    if (token == null) {
+      debugPrint("ValidateToken - No token found");
       return null;
     }
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/getUserPegawai'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/getUserPegawai'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return UserModel.fromJson(jsonDecode(response.body));
-    } else {
+      debugPrint("ValidateToken - Status Code: ${response.statusCode}");
+      debugPrint("ValidateToken - Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        debugPrint("ValidateToken - Parsed Data: $data");
+        try {
+          return UserModel.fromJson(data);
+        } catch (e) {
+          debugPrint("ValidateToken - Error parsing UserModel: $e");
+          return null;
+        }
+      } else {
+        debugPrint(
+            "ValidateToken - Failed with status: ${response.statusCode}, Body: ${response.body}");
+        await prefs.remove('access_token');
+        await prefs.remove('remember_me');
+        return null;
+      }
+    } catch (e) {
+      debugPrint("ValidateToken - Error: $e");
       await prefs.remove('access_token');
       await prefs.remove('remember_me');
       return null;

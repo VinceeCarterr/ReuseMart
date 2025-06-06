@@ -1,11 +1,14 @@
-// lib/view/home_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/barang_model.dart';
 import 'package:reusemart_mobile/model/foto_barang_model.dart';
+import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/product_service.dart';
+import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/productPage.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
+import 'package:reusemart_mobile/view/profile_page.dart';
+import 'package:reusemart_mobile/components/simple_bottom_navigation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -15,17 +18,63 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
   List<Barang> _barangList = [];
   List<dynamic> _penitipanList = [];
   List<dynamic> _userList = [];
   bool _isLoading = true;
   String _searchQuery = "";
   String? _error;
+  UserModel? _user;
+  final _userService = UserService();
+
+  static const _navBarItems = [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home_outlined),
+      activeIcon: Icon(Icons.home_rounded),
+      label: 'Home',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.history_outlined),
+      activeIcon: Icon(Icons.history_rounded),
+      label: 'History',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person_outline_rounded),
+      activeIcon: Icon(Icons.person_rounded),
+      label: 'Profile',
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
     _fetchAllData();
+    _loadUser().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      debugPrint("HomePage - Access token: $token");
+      final user = await _userService.validateToken();
+      debugPrint("HomePage - User loaded: ${user?.name}");
+      if (mounted) {
+        setState(() {
+          _user = user;
+        });
+      }
+    } catch (e) {
+      debugPrint("HomePage - Error loading user: $e");
+      if (mounted) {
+        setState(() {
+          _user = null;
+        });
+      }
+    }
   }
 
   Future<void> _fetchAllData() async {
@@ -45,14 +94,11 @@ class _HomePageState extends State<HomePage> {
       final penitipan = results[1] as List<dynamic>;
       final users = results[2] as List<dynamic>;
 
-      // Debug‐print actual status strings to console:
       for (var b in allBarang) {
         debugPrint(
-          ">> BARANG #${b.id_barang}: status='${b.status}' | status_periode='${b.status_periode}'"
-        );
+            ">> BARANG #${b.id_barang}: status='${b.status}' | status_periode='${b.status_periode}'");
       }
 
-      // Stitch rating into each Barang
       for (var b in allBarang) {
         final p = penitipan.firstWhere(
           (p) => p['id_penitipan'] == b.id_penitipan,
@@ -85,27 +131,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("ReUseMart"),
-        backgroundColor: Colors.green,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            },
-            child: const Text(
-              "Login",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-      body: _isLoading
+  List<Widget> _buildPageContent() {
+    return [
+      _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : _error != null
               ? Center(
@@ -122,7 +150,6 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 24),
-                        // Welcome heading
                         Center(
                           child: Column(
                             children: const [
@@ -143,9 +170,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 24),
-                        // Search bar
                         TextField(
                           decoration: InputDecoration(
                             hintText: "Cari produk...",
@@ -160,9 +185,7 @@ class _HomePageState extends State<HomePage> {
                             });
                           },
                         ),
-
                         const SizedBox(height: 24),
-                        // “Kesempatan Terakhir!” HORIZONTAL SCROLL
                         const Text(
                           "Kesempatan Terakhir!",
                           style: TextStyle(
@@ -172,14 +195,13 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-
                         Builder(
                           builder: (_) {
-                            // Filter case‐insensitive for Available & Periode 2
                             final kesempatanList = _filteredList()
                                 .where((b) =>
-                                  b.status.toLowerCase() == "available" &&
-                                  b.status_periode.toLowerCase() == "periode 2")
+                                    b.status.toLowerCase() == "available" &&
+                                    b.status_periode.toLowerCase() ==
+                                        "periode 2")
                                 .toList();
 
                             if (kesempatanList.isEmpty) {
@@ -202,7 +224,7 @@ class _HomePageState extends State<HomePage> {
                                 itemBuilder: (ctx, idx) {
                                   final barang = kesempatanList[idx];
                                   return SizedBox(
-                                    width: 160,       // <-- FIXED WIDTH
+                                    width: 160,
                                     child: _buildProductCard(barang),
                                   );
                                 },
@@ -210,20 +232,19 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                         ),
-
                         const SizedBox(height: 24),
                         const Divider(thickness: 1.0),
                         const SizedBox(height: 12),
-
-                        // GRID OF AVAILABLE (Periode 1 or 2)
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _filteredList()
                               .where((b) =>
-                                b.status.toLowerCase() == "available" &&
-                                (b.status_periode.toLowerCase() == "periode 1" ||
-                                 b.status_periode.toLowerCase() == "periode 2"))
+                                  b.status.toLowerCase() == "available" &&
+                                  (b.status_periode.toLowerCase() ==
+                                          "periode 1" ||
+                                      b.status_periode.toLowerCase() ==
+                                          "periode 2"))
                               .length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -235,24 +256,38 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (ctx, idx) {
                             final gridItems = _filteredList()
                                 .where((b) =>
-                                  b.status.toLowerCase() == "available" &&
-                                  (b.status_periode.toLowerCase() == "periode 1" ||
-                                   b.status_periode.toLowerCase() == "periode 2"))
+                                    b.status.toLowerCase() == "available" &&
+                                    (b.status_periode.toLowerCase() ==
+                                            "periode 1" ||
+                                        b.status_periode.toLowerCase() ==
+                                            "periode 2"))
                                 .toList();
                             final barang = gridItems[idx];
                             return _buildProductCard(barang);
                           },
                         ),
-
                         const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
-    );
+      const Center(
+        child: Text(
+          "History Page",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
+      _user == null
+          ? const Center(
+              child: Text(
+                "Please log in to view your profile",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            )
+          : ProfilePage(user: _user!),
+    ];
   }
 
-  // Search filtering
   List<Barang> _filteredList() {
     if (_searchQuery.isEmpty) return _barangList;
     return _barangList
@@ -261,7 +296,6 @@ class _HomePageState extends State<HomePage> {
         .toList();
   }
 
-  // Renders a single product card (first‐photo loaded via FutureBuilder)
   Widget _buildProductCard(Barang barang) {
     return GestureDetector(
       onTap: () {
@@ -272,19 +306,16 @@ class _HomePageState extends State<HomePage> {
         );
       },
       child: Card(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         elevation: 4,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ─── IMAGE with FutureBuilder ────────────────────────────
             SizedBox(
               height: 100,
               child: FutureBuilder<List<FotoBarang>>(
                 future: ProductService.fetchFotos(barang.id_barang),
                 builder: (context, snapshot) {
-                  // Default fallback:
                   String imageUrl =
                       "http://10.0.2.2:8000/storage/defaults/no-image.png";
 
@@ -293,7 +324,8 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
                         borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(8.0)),
+                          top: Radius.circular(8.0),
+                        ),
                       ),
                       child: const Center(child: CircularProgressIndicator()),
                     );
@@ -311,11 +343,13 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                       color: Colors.grey.shade200,
                       borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8.0)),
+                        top: Radius.circular(8.0),
+                      ),
                     ),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8.0)),
+                        top: Radius.circular(8.0),
+                      ),
                       child: Image.network(
                         imageUrl,
                         fit: BoxFit.cover,
@@ -328,8 +362,6 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
-
-            // ─── TEXTUAL INFO ───────────────────────────────────────
             Expanded(
               child: Padding(
                 padding:
@@ -371,7 +403,9 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             barang.rating.toString(),
                             style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ] else ...[
                           const Text(
@@ -387,6 +421,63 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.green,
+        centerTitle: false,
+        title: Row(
+          children: [
+            const Text(
+              "ReUseMart",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            if (_user != null)
+              Text(
+                "Hello, ${_user!.name}!",
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
+        actions: [
+          if (_user == null)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text(
+                "Login",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+        ],
+      ),
+      body: _buildPageContent()[_selectedIndex],
+      bottomNavigationBar: SimpleBottomNavigation(
+        navBarItems: _navBarItems,
+        initialIndex: _selectedIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }

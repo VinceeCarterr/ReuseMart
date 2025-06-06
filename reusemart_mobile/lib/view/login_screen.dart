@@ -30,23 +30,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
     final rememberMe = prefs.getBool('remember_me') ?? false;
+    debugPrint("Checking remember me: token=$token, rememberMe=$rememberMe");
 
     if (token != null && rememberMe) {
       try {
-        // Validate the token using UserService
         final user = await _apiService.validateToken();
+        debugPrint("Auto-login user: ${user?.name}");
         if (user != null && mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => HomePage(),
-            ),
+            MaterialPageRoute(builder: (context) => const HomePage()),
           );
         } else {
           await prefs.remove('access_token');
           await prefs.remove('remember_me');
         }
       } catch (e) {
+        debugPrint("Auto-login failed: $e");
         await prefs.remove('access_token');
         await prefs.remove('remember_me');
       }
@@ -64,23 +64,31 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
+      debugPrint("Login successful: ${user.name}, token=${user.accessToken}");
 
-      // Save remember_me preference
+      if (user.accessToken.isEmpty) {
+        throw Exception("Access token is empty after login");
+      }
+
+      // Save access_token and remember_me preference
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('access_token', user.accessToken);
       await prefs.setBool('remember_me', _rememberMe);
+      debugPrint("Saved token: ${prefs.getString('access_token')}");
 
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken != null) {
         await _apiService.registerFcmToken(fcmToken);
-        debugPrint('✅ FCM token auto-registered');
+        debugPrint('✅ FCM token auto-registered: $fcmToken');
       }
 
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomePage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
       );
     } catch (e) {
+      debugPrint("Login error: $e");
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
@@ -105,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Email
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -115,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
-            // Password
             TextField(
               controller: _passwordController,
               decoration: const InputDecoration(
@@ -125,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             const SizedBox(height: 16),
-            // Remember Me Checkbox
             Row(
               children: [
                 Checkbox(
@@ -140,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            // Error message
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -149,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
-            // Login button / spinner
             SizedBox(
               width: double.infinity,
               child: _isLoading
