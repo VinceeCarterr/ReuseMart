@@ -204,4 +204,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin,gudang')->group(function () {
         Route::get('/pegawai', [PegawaiController::class, 'index']);
     });
+
+    Route::middleware('role:hunter')->group(function () {
+        Route::get('/komisi/hunter/{id}', [KomisiController::class, 'byHunter']);
+        Route::get('/hunter/{id}/transactions', [KomisiController::class, 'transactionsByHunter']);
+    });
 });
