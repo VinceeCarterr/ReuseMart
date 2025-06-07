@@ -11,20 +11,20 @@ use Exception;
 
 class PegawaiController extends Controller
 {
-    public function index()
+    public function index($id)
     {
         try {
-            $pegawai = Pegawai::with('jabatan')->get();
+            $pegawai = Pegawai::with('jabatan')->findOrFail($id);
             return response()->json($pegawai);
         } catch (Exception $e) {
             Log::error('Error fetching pegawai: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to fetch pegawai'], 500);
+            return response()->json(['error' => 'Failed to fetch pegawai'], 404);
         }
     }
 
     public function showHunter($id)
     {
-         try {
+        try {
             $pegawai = Pegawai::with('jabatan')->findOrFail($id);
             return response()->json($pegawai);
         } catch (Exception $e) {
@@ -220,8 +220,8 @@ class PegawaiController extends Controller
         $pegawai->save();
 
         return response()->json([
-          'message' => 'Komisi pegawai updated',
-          'pegawai' => $pegawai,
+            'message' => 'Komisi pegawai updated',
+            'pegawai' => $pegawai,
         ]);
     }
 }

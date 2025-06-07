@@ -3,6 +3,7 @@ import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:reusemart_mobile/view/hunter/history_hunter_page.dart';
+import 'package:reusemart_mobile/view/kurir/profile_kurir_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -63,12 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
         throw Exception("Access token is empty after login");
       }
 
-      // persist token & preference
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', user.accessToken);
       await prefs.setBool('remember_me', _rememberMe);
 
-      // register FCM
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken != null) {
         await _apiService.registerFcmToken(fcmToken);
@@ -85,31 +84,45 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _goToRolePage(UserModel user) {
-  final int uid = int.tryParse(user.id) ?? 0;
-  late Widget target;
+  Future<void> _goToRolePage(UserModel user) async {
+    final int uid = int.tryParse(user.id) ?? 0;
+    Widget? target;
 
-  if (user.type == 'user') {
-    switch (user.role?.toLowerCase()) {
-      case 'pembeli':
-        target = HomePage();
-        break;
+    if (user.type == 'user') {
+      switch (user.role?.toLowerCase()) {
+        case 'pembeli':
+          target = const HomePage();
+          break;
+      }
+    } else if (user.type == 'pegawai') {
+      switch (user.jabatan?.toLowerCase()) {
+        case 'hunter':
+          target = HistoryHunterPage(hunterId: uid);
+          break;
+        case 'kurir':
+          try {
+            target = ProfileKurirPage(kurirId: uid);
+          } catch (e) {
+            setState(() {
+              _errorMessage = 'Failed to load courier profile: $e';
+            });
+            return;
+          }
+          break;
+      }
     }
 
-  } else if (user.type == 'pegawai') {
-    switch (user.jabatan?.toLowerCase()) {
-      case 'hunter':
-        target = HistoryHunterPage(hunterId: uid);
-        break;
+    if (target != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => target!),
+      );
+    } else {
+      setState(() {
+        _errorMessage = 'Invalid role or jabatan';
+      });
     }
-
   }
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => target),
-  );
-}
 
   @override
   void dispose() {

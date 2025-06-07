@@ -90,6 +90,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [UserController::class, 'me']);
     });
 
+    Route::middleware('role:kurir')->group(function () {
+        Route::get('/pegawai-kurir/{id}', [PegawaiController::class, 'index']);
+    });
+
 
     //halaman profile
     Route::middleware('role:pembeli')->group(function () {

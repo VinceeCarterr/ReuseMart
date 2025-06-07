@@ -19,7 +19,6 @@ class ProfilePage extends StatelessWidget {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -157,13 +156,13 @@ class _TopPortion extends StatelessWidget {
                 ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: profilePictureUrl != null
-                        ? 'http://10.0.2.2:8000$profilePictureUrl' // Remove extra slash
+                        ? 'http://10.0.2.2:8000$profilePictureUrl'
                         : 'https://via.placeholder.com/150',
                     fit: BoxFit.cover,
                     placeholder: (context, url) =>
                         const CircularProgressIndicator(),
                     errorWidget: (context, url, error) {
-                      print('Image load error: $error, URL: $url'); // Debug log
+                      print('Image load error: $error, URL: $url');
                       return Image.network(
                         'https://via.placeholder.com/150',
                         fit: BoxFit.cover,

@@ -436,7 +436,6 @@ const HistoryPembeli = () => {
                     <Table borderless responsive>
                       <thead>
                         <tr>
-                          <th>Foto</th>
                           <th>Nama Produk</th>
                           <th className="text-end">Harga</th>
                           <th className="text-end">Rating</th>
@@ -445,19 +444,11 @@ const HistoryPembeli = () => {
                       <tbody>
                         {tx.detil_transaksi?.map((dt) => {
                           const br = dt.barang || {};
-                          const fp = br.foto?.[0]?.path || "defaults/no-image.png";
                           const currentRating = dt.rating ?? br.rating ?? 0;
                           const hasRated = currentRating > 0;
 
                           return (
                             <tr key={dt.id_dt}>
-                              <td>
-                                <Image
-                                  src={`http://127.0.0.1:8000/storage/${fp}`}
-                                  thumbnail
-                                  style={{ width: 100 }}
-                                />
-                              </td>
                               <td>{br.nama_barang ?? "–"}</td>
                               <td className="text-end">
                                 Rp{(br.harga || 0).toLocaleString("id-ID")}
