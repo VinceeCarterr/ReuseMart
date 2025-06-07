@@ -238,190 +238,192 @@ const CheckoutOptionsPage = () => {
                 </Toast>
             </ToastContainer>
 
-            <Container className="container-checkout">
-                <Row>
-                    <Col md={8}>
-                        <h3 className="checkout-title">Rincian Pesanan</h3>
-                        {selectedItems.length === 0 ? (
-                            <Alert variant="warning">Tidak ada barang yang dipilih untuk checkout.</Alert>
-                        ) : (
-                            <ListGroup>
-                                {cart
-                                    .filter((item) => selectedItems.includes(item.id_keranjang))
-                                    .map((item) => (
-                                        <ListGroup.Item key={item.id_keranjang} className="d-flex align-items-center">
-                                            <img
-                                                src={item.barang.foto || 'https://picsum.photos/60'}
-                                                alt={item.barang.nama_barang}
-                                                className="item-image"
-                                                onError={(e) => (e.target.src = '/assets/placeholder.jpg')}
-                                            />
-                                            <div>
-                                                <div className="item-name">{item.barang.nama_barang}</div>
-                                                <div className="item-price">
-                                                    Rp. {item.barang.harga.toLocaleString('id-ID')}
+            <div className="checkout-wrapper">
+                <Container className="container-checkout">
+                    <Row>
+                        <Col md={8}>
+                            <h3 className="checkout-title">Rincian Pesanan</h3>
+                            {selectedItems.length === 0 ? (
+                                <Alert variant="warning">Tidak ada barang yang dipilih untuk checkout.</Alert>
+                            ) : (
+                                <ListGroup>
+                                    {cart
+                                        .filter((item) => selectedItems.includes(item.id_keranjang))
+                                        .map((item) => (
+                                            <ListGroup.Item key={item.id_keranjang} className="d-flex align-items-center">
+                                                <img
+                                                    src={item.barang.foto || 'https://picsum.photos/60'}
+                                                    alt={item.barang.nama_barang}
+                                                    className="item-image"
+                                                    onError={(e) => (e.target.src = '/assets/placeholder.jpg')}
+                                                />
+                                                <div>
+                                                    <div className="item-name">{item.barang.nama_barang}</div>
+                                                    <div className="item-price">
+                                                        Rp. {item.barang.harga.toLocaleString('id-ID')}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </ListGroup.Item>
-                                    ))}
-                            </ListGroup>
-                        )}
-
-                        <hr className="section-divider" />
-
-                        <h3 className="checkout-title">Metode Pengiriman</h3>
-                        <Form>
-                            <Form.Check
-                                type="radio"
-                                label="Delivery (Kota Yogyakarta)"
-                                name="shippingMethod"
-                                value="Delivery"
-                                checked={shippingMethod === 'Delivery'}
-                                onChange={(e) => setShippingMethod(e.target.value)}
-                                className="shipping-option mb-2"
-                            />
-                            <Form.Check
-                                type="radio"
-                                label="Pick Up"
-                                name="shippingMethod"
-                                value="Pick Up"
-                                checked={shippingMethod === 'Pick Up'}
-                                onChange={(e) => setShippingMethod(e.target.value)}
-                                className="shipping-option"
-                            />
-                        </Form>
-
-                        {shippingMethod === 'Delivery' && (
-                            <>
-                                <hr className="section-divider" />
-                                <h3 className="checkout-title">Alamat Pengiriman</h3>
-                                {defaultAddress ? (
-                                    <div className="address-box">
-                                        <div className="fw-bold">
-                                            {defaultAddress.label}
-                                            {defaultAddress.isdefault && (
-                                                <span className="badge bg-success ms-2">Utama</span>
-                                            )}
-                                        </div>
-                                        <div>
-                                            {defaultAddress.alamat}, {defaultAddress.kecamatan}, {defaultAddress.kota},{' '}
-                                            {defaultAddress.kode_pos}
-                                            {defaultAddress.catatan && `, ${defaultAddress.catatan}`}
-                                        </div>
-                                        <Button
-                                            variant="outline-primary"
-                                            size="sm"
-                                            className="mt-2"
-                                            onClick={() => setShowAddressModal(true)}
-                                        >
-                                            Ubah Alamat
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <Alert variant="warning">
-                                        Tidak ada alamat default.{' '}
-                                        <Button
-                                            variant="outline-primary"
-                                            size="sm"
-                                            onClick={() => setShowAddressModal(true)}
-                                        >
-                                            Pilih Alamat
-                                        </Button>
-                                    </Alert>
-                                )}
-                            </>
-                        )}
-                    </Col>
-
-                    <Col md={4}>
-                        <h3 className="checkout-title">Penukaran Poin & Rincian Harga</h3>
-                        <div className="points-section">
-                            <p>
-                                Poin Tersedia: <strong>{userData?.poin_loyalitas || 0} poin</strong>
-                            </p>
-                            <InputGroup size="sm" className="mb-2">
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Masukkan poin"
-                                    value={pointsToRedeem}
-                                    onChange={handlePointsInputChange}
-                                    className="points-input"
-                                />
-                                <Button
-                                    variant="primary"
-                                    onClick={handleApplyPoints}
-                                    disabled={!pointsToRedeem || parseInt(pointsToRedeem, 10) <= 0}
-                                    className="btn-apply-points"
-                                >
-                                    Terapkan
-                                </Button>
-                                {pointsToRedeem && (
-                                    <Button
-                                        variant="outline-danger"
-                                        onClick={handleClearPoints}
-                                        className="btn-clear-points"
-                                    >
-                                        Batal
-                                    </Button>
-                                )}
-                            </InputGroup>
-                            <p>
-                                Sisa Poin: <strong>{remainingPoints >= 0 ? remainingPoints : 0} poin</strong>
-                                {tempDiscount > 0 && (
-                                    <span> (Diskon: Rp {tempDiscount.toLocaleString('id-ID')})</span>
-                                )}
-                            </p>
-                        </div>
-
-                        <hr className="section-divider" />
-
-                        <ListGroup className="price-details">
-                            <ListGroup.Item className="d-flex justify-content-between">
-                                <span>Subtotal</span>
-                                <span>Rp. {calculateTotal().toLocaleString('id-ID')}</span>
-                            </ListGroup.Item>
-                            <ListGroup.Item className="d-flex justify-content-between">
-                                <span>Ongkos Kirim</span>
-                                <span>
-                                    {shippingMethod === 'Delivery'
-                                        ? `Rp. ${calculateShippingCost().toLocaleString('id-ID')}`
-                                        : 'Gratis'}
-                                </span>
-                            </ListGroup.Item>
-                            {discountAmount > 0 && (
-                                <ListGroup.Item className="d-flex justify-content-between text-success">
-                                    <span>Diskon Poin</span>
-                                    <span>- Rp. {discountAmount.toLocaleString('id-ID')}</span>
-                                </ListGroup.Item>
+                                            </ListGroup.Item>
+                                        ))}
+                                </ListGroup>
                             )}
-                            <ListGroup.Item className="d-flex justify-content-between fw-bold">
-                                <span>Total</span>
-                                <span>
-                                    Rp.{' '}
-                                    {(calculateTotal() +
-                                        (shippingMethod === 'Delivery' ? calculateShippingCost() : 0) -
-                                        discountAmount).toLocaleString('id-ID')}
-                                </span>
-                            </ListGroup.Item>
-                        </ListGroup>
-                        <p className="mt-2">
-                            Poin Didapat: <strong>{calculateEarnedPoints()} poin</strong>
-                        </p>
 
-                        <Button
-                            variant="success"
-                            className="btn-checkout w-100 mt-3"
-                            onClick={handleProceedToCheckout}
-                            disabled={
-                                selectedItems.length === 0 ||
-                                (shippingMethod === 'Delivery' && !selectedAddress)
-                            }
-                        >
-                            Lanjutkan ke Pembayaran
-                        </Button>
-                    </Col>
-                </Row>
-            </Container>
+                            <hr className="section-divider" />
+
+                            <h3 className="checkout-title">Metode Pengiriman</h3>
+                            <Form>
+                                <Form.Check
+                                    type="radio"
+                                    label="Delivery (Kota Yogyakarta)"
+                                    name="shippingMethod"
+                                    value="Delivery"
+                                    checked={shippingMethod === 'Delivery'}
+                                    onChange={(e) => setShippingMethod(e.target.value)}
+                                    className="shipping-option mb-2"
+                                />
+                                <Form.Check
+                                    type="radio"
+                                    label="Pick Up"
+                                    name="shippingMethod"
+                                    value="Pick Up"
+                                    checked={shippingMethod === 'Pick Up'}
+                                    onChange={(e) => setShippingMethod(e.target.value)}
+                                    className="shipping-option"
+                                />
+                            </Form>
+
+                            {shippingMethod === 'Delivery' && (
+                                <>
+                                    <hr className="section-divider" />
+                                    <h3 className="checkout-title">Alamat Pengiriman</h3>
+                                    {defaultAddress ? (
+                                        <div className="address-box">
+                                            <div className="fw-bold">
+                                                {defaultAddress.label}
+                                                {defaultAddress.isdefault && (
+                                                    <span className="badge bg-success ms-2">Utama</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                {defaultAddress.alamat}, {defaultAddress.kecamatan}, {defaultAddress.kota},{' '}
+                                                {defaultAddress.kode_pos}
+                                                {defaultAddress.catatan && `, ${defaultAddress.catatan}`}
+                                            </div>
+                                            <Button
+                                                variant="outline-primary"
+                                                size="sm"
+                                                className="mt-2"
+                                                onClick={() => setShowAddressModal(true)}
+                                            >
+                                                Ubah Alamat
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Alert variant="warning">
+                                            Tidak ada alamat default.{' '}
+                                            <Button
+                                                variant="outline-primary"
+                                                size="sm"
+                                                onClick={() => setShowAddressModal(true)}
+                                            >
+                                                Pilih Alamat
+                                            </Button>
+                                        </Alert>
+                                    )}
+                                </>
+                            )}
+                        </Col>
+
+                        <Col md={4}>
+                            <h3 className="checkout-title">Penukaran Poin & Rincian Harga</h3>
+                            <div className="points-section">
+                                <p>
+                                    Poin Tersedia: <strong>{userData?.poin_loyalitas || 0} poin</strong>
+                                </p>
+                                <InputGroup size="sm" className="mb-2">
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Masukkan poin"
+                                        value={pointsToRedeem}
+                                        onChange={handlePointsInputChange}
+                                        className="points-input"
+                                    />
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleApplyPoints}
+                                        disabled={!pointsToRedeem || parseInt(pointsToRedeem, 10) <= 0}
+                                        className="btn-apply-points"
+                                    >
+                                        Terapkan
+                                    </Button>
+                                    {pointsToRedeem && (
+                                        <Button
+                                            variant="outline-danger"
+                                            onClick={handleClearPoints}
+                                            className="btn-clear-points"
+                                        >
+                                            Batal
+                                        </Button>
+                                    )}
+                                </InputGroup>
+                                <p>
+                                    Sisa Poin: <strong>{remainingPoints >= 0 ? remainingPoints : 0} poin</strong>
+                                    {tempDiscount > 0 && (
+                                        <span> (Diskon: Rp {tempDiscount.toLocaleString('id-ID')})</span>
+                                    )}
+                                </p>
+                            </div>
+
+                            <hr className="section-divider" />
+
+                            <ListGroup className="price-details">
+                                <ListGroup.Item className="d-flex justify-content-between">
+                                    <span>Subtotal</span>
+                                    <span>Rp. {calculateTotal().toLocaleString('id-ID')}</span>
+                                </ListGroup.Item>
+                                <ListGroup.Item className="d-flex justify-content-between">
+                                    <span>Ongkos Kirim</span>
+                                    <span>
+                                        {shippingMethod === 'Delivery'
+                                            ? `Rp. ${calculateShippingCost().toLocaleString('id-ID')}`
+                                            : 'Gratis'}
+                                    </span>
+                                </ListGroup.Item>
+                                {discountAmount > 0 && (
+                                    <ListGroup.Item className="d-flex justify-content-between text-success">
+                                        <span>Diskon Poin</span>
+                                        <span>- Rp. {discountAmount.toLocaleString('id-ID')}</span>
+                                    </ListGroup.Item>
+                                )}
+                                <ListGroup.Item className="d-flex justify-content-between fw-bold">
+                                    <span>Total</span>
+                                    <span>
+                                        Rp.{' '}
+                                        {(calculateTotal() +
+                                            (shippingMethod === 'Delivery' ? calculateShippingCost() : 0) -
+                                            discountAmount).toLocaleString('id-ID')}
+                                    </span>
+                                </ListGroup.Item>
+                            </ListGroup>
+                            <p className="mt-2">
+                                Poin Didapat: <strong>{calculateEarnedPoints()} poin</strong>
+                            </p>
+
+                            <Button
+                                variant="success"
+                                className="btn-checkout w-100 mt-3"
+                                onClick={handleProceedToCheckout}
+                                disabled={
+                                    selectedItems.length === 0 ||
+                                    (shippingMethod === 'Delivery' && !selectedAddress)
+                                }
+                            >
+                                Lanjutkan ke Pembayaran
+                            </Button>
+                        </Col>
+                    </Row>
+                </Container>
+            </div>
 
             <Modal show={showAddressModal} onHide={() => setShowAddressModal(false)} centered>
                 <Modal.Header closeButton>

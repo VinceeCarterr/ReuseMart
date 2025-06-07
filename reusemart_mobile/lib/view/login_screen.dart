@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/home_page.dart';
+import 'package:reusemart_mobile/view/hunter/history_hunter_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,23 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
     final rememberMe = prefs.getBool('remember_me') ?? false;
-    debugPrint("Checking remember me: token=$token, rememberMe=$rememberMe");
 
     if (token != null && rememberMe) {
       try {
         final user = await _apiService.validateToken();
-        debugPrint("Auto-login user: ${user?.name}");
         if (user != null && mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
+          _goToRolePage(user);
         } else {
           await prefs.remove('access_token');
           await prefs.remove('remember_me');
         }
-      } catch (e) {
-        debugPrint("Auto-login failed: $e");
+      } catch (_) {
         await prefs.remove('access_token');
         await prefs.remove('remember_me');
       }
@@ -64,31 +59,24 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-      debugPrint("Login successful: ${user.name}, token=${user.accessToken}");
-
       if (user.accessToken.isEmpty) {
         throw Exception("Access token is empty after login");
       }
 
-      // Save access_token and remember_me preference
+      // persist token & preference
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', user.accessToken);
       await prefs.setBool('remember_me', _rememberMe);
-      debugPrint("Saved token: ${prefs.getString('access_token')}");
 
+      // register FCM
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken != null) {
         await _apiService.registerFcmToken(fcmToken);
-        debugPrint('✅ FCM token auto-registered: $fcmToken');
       }
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
+      _goToRolePage(user);
     } catch (e) {
-      debugPrint("Login error: $e");
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
@@ -96,6 +84,32 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  void _goToRolePage(UserModel user) {
+  final int uid = int.tryParse(user.id) ?? 0;
+  late Widget target;
+
+  if (user.type == 'user') {
+    switch (user.role?.toLowerCase()) {
+      case 'pembeli':
+        target = HomePage();
+        break;
+    }
+
+  } else if (user.type == 'pegawai') {
+    switch (user.jabatan?.toLowerCase()) {
+      case 'hunter':
+        target = HistoryHunterPage(hunterId: uid);
+        break;
+    }
+
+  }
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => target),
+  );
+}
 
   @override
   void dispose() {
@@ -135,24 +149,16 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Checkbox(
                   value: _rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      _rememberMe = value ?? false;
-                    });
-                  },
+                  onChanged: (v) => setState(() => _rememberMe = v ?? false),
                 ),
                 const Text('Remember Me'),
               ],
             ),
-            const SizedBox(height: 8),
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: _isLoading

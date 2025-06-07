@@ -81,4 +81,28 @@ class KomisiController extends Controller
             return response()->json(['error' => 'Failed to delete komisi'], 500);
         }
     }
+
+    public function byHunter($hunterId)
+    {
+        $komisis = Komisi::whereHas('dt.Barang', fn($q) => 
+                $q->where('byHunter', $hunterId)
+            )
+            ->with(['dt.Barang', 'dt.Transaksi'])
+            ->get();
+
+        return response()->json($komisis);
+    }
+
+    public function transactionsByHunter($hunterId)
+    {
+        $lines = DetilTransaksi::whereHas('Barang', fn($q) =>
+                $q->where('byHunter', $hunterId)
+            )
+            ->with(['Barang.foto','Transaksi','Komisi'])
+            ->get();
+
+        $grouped = $lines->groupBy(fn($dt) => $dt->Transaksi->id_transaksi);
+
+        return response()->json($grouped);
+    }
 }

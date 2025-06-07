@@ -151,8 +151,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);
         Route::get('/reqDonasi/all', [Req_DonasiController::class, 'index']);
         Route::put('/user/add-point-by-barang/{id_barang}', [UserController::class, 'tambahPoinPenitip']);
-        Route::get('/laporan/penjualan-per-kategori',[BarangController::class, 'laporanPenjualanPerKategori']);
-        Route::get('/laporan/barang-expired',[BarangController::class, 'laporanBarangExpired']);
+        Route::get('/laporan/penjualan-per-kategori', [BarangController::class, 'laporanPenjualanPerKategori']);
+        Route::get('/laporan/barang-expired', [BarangController::class, 'laporanBarangExpired']);
+        Route::get('/laporan/donasi-barang', [DonasiController::class, 'laporanDonasiBarang']);
     });
 
 
@@ -203,5 +204,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:admin,gudang')->group(function () {
         Route::get('/pegawai', [PegawaiController::class, 'index']);
+    });
+
+    Route::middleware('role:hunter')->group(function () {
+        Route::get('/komisi/hunter/{id}', [KomisiController::class, 'byHunter']);
+        Route::get('/hunter/{id}/transactions', [KomisiController::class, 'transactionsByHunter']);
     });
 });
