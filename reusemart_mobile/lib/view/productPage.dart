@@ -146,7 +146,10 @@ class _ProductPageState extends State<ProductPage> {
     if (_error != null && _barang == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text("Produk"),
+          title: const Text(
+            "Produk",
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.green,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),

@@ -41,4 +41,4 @@ class _SimpleBottomNavigationState extends State<SimpleBottomNavigation> {
       items: widget.navBarItems,
     );
   }
-}   
+}

@@ -94,7 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
       case 'pembeli':
         target = HomePage();
         break;
+      
+        case 'penitip':
+        target = HomePage();
+        break;
     }
+    
 
   } else if (user.type == 'pegawai') {
     switch (user.jabatan?.toLowerCase()) {
