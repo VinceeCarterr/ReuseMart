@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Donasi;
 use App\Models\Barang;
 use App\Models\Penitipan;
-use App\Models\User;
+use Exception;
 use App\Models\FcmToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -47,11 +47,11 @@ class DonasiController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-                'id_reqdonasi'   => 'required|exists:req_donasi,id_reqdonasi',
-                'id_barang'      => 'required|exists:barang,id_barang',
-                'nama_penerima'  => 'required|string',
-                'tanggal_donasi' => 'required|date',
-            ]);
+            'id_reqdonasi'   => 'required|exists:req_donasi,id_reqdonasi',
+            'id_barang'      => 'required|exists:barang,id_barang',
+            'nama_penerima'  => 'required|string',
+            'tanggal_donasi' => 'required|date',
+        ]);
 
         try {
             $donasi = Donasi::create($data);
@@ -60,8 +60,8 @@ class DonasiController extends Controller
             $penitipId = $penitipan->id_user;
 
             $tokens = FcmToken::where('owner_id', $penitipId)
-                    ->pluck('token')
-                    ->toArray();
+                ->pluck('token')
+                ->toArray();
 
             if (!empty($tokens)) {
                 $messaging = (new Factory)
@@ -118,5 +118,55 @@ class DonasiController extends Controller
             Log::error('Error searching donasi: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to search donasi'], 500);
         }
+    }
+
+    public function laporanDonasiBarang(Request $request)
+    {
+        $year = $request->query('year', date('Y'));
+
+        $donations = Donasi::select(
+            'donasi.id_donasi',
+            'donasi.tanggal_donasi',
+            'donasi.nama_penerima',
+            'barang.kode_barang',
+            'barang.nama_barang',
+            'penitipan.id_penitipan',
+            'penitip.first_name as penitip_first_name',
+            'penitip.last_name as penitip_last_name',
+            'organisasi.first_name as organisasi_name'
+        )
+            ->join('barang', 'donasi.id_barang', '=', 'barang.id_barang')
+            ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+            ->join('user as penitip', 'penitipan.id_user', '=', 'penitip.id_user')
+            ->join('req_donasi', 'donasi.id_reqdonasi', '=', 'req_donasi.id_reqdonasi')
+            ->join('user as organisasi', 'req_donasi.id_user', '=', 'organisasi.id_user')
+            ->whereYear('donasi.tanggal_donasi', $year)
+            ->get();
+
+        $formattedDonations = $donations->map(function ($donation) {
+            return [
+                'id_donasi' => $donation->id_donasi,
+                'tanggal_donasi' => $donation->tanggal_donasi,
+                'nama_penerima' => $donation->nama_penerima,
+                'barang' => [
+                    'kode_barang' => $donation->kode_barang,
+                    'nama_barang' => $donation->nama_barang,
+                ],
+                'penitipan' => [
+                    'id_penitip' => $donation->id_penitipan,
+                    'user' => [
+                        'first_name' => $donation->penitip_first_name,
+                        'last_name' => $donation->penitip_last_name,
+                    ],
+                ],
+                'req_donasi' => [
+                    'user' => [
+                        'first_name' => $donation->organisasi_name,
+                    ],
+                ],
+            ];
+        });
+
+        return response()->json($formattedDonations);
     }
 }

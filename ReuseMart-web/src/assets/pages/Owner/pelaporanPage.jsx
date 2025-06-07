@@ -4,20 +4,22 @@ import { Container, Row, Col, Button, Table, Card } from 'react-bootstrap';
 import LaporanStokGudang from '../../components/Owner/laporanStokGudang.jsx';
 import LaporanPenjualanPerKatModal from '../../components/Owner/laporanPenjualanPerKatModal.jsx';
 import LaporanBarangExpiredModal from '../../components/Owner/laporanBarangExpiredModal.jsx';
+import LaporanDonasiBarangModal from '../../components/Owner/laporanDonasiBarangModal.jsx';
 import './pelaporanPage.css';
 
 const PelaporanPage = () => {
     const [showStockReportModal, setShowStockReportModal] = useState(false);
     const [showPenjualanPerKatModal, setShowPenjualanPerKatModal] = useState(false);
     const [showExpiredModal, setShowExpiredModal] = useState(false);
+    const [showDonationModal, setShowDonationModal] = useState(false);
 
     const reports = [
         { name: 'Penjualan Bulanan Keseluruhan', action: () => handleReportClick('monthly-sales') },
         { name: 'Laporan Komisi Bulanan per Produk', action: () => handleReportClick('monthly-commission') },
         { name: 'Laporan Stok Gudang', action: () => setShowStockReportModal(true) },
-        {name: 'Laporan Penjualan per Kategori Barang',action: () => setShowPenjualanPerKatModal(true)},
+        { name: 'Laporan Penjualan per Kategori Barang', action: () => setShowPenjualanPerKatModal(true) },
         { name: 'Laporan Barang yang Masa Penitipannya Sudah Habis', action: () => setShowExpiredModal(true) },
-        { name: 'Laporan Donasi Barang', action: () => handleReportClick('donation') },
+        { name: 'Laporan Donasi Barang', action: () => setShowDonationModal(true) },
         { name: 'Laporan Request Donasi', action: () => handleReportClick('donation-request') },
         { name: 'Laporan Transaksi Penitip', action: () => handleReportClick('consignor-transaction') },
     ];
@@ -79,6 +81,10 @@ const PelaporanPage = () => {
             <LaporanBarangExpiredModal
                 show={showExpiredModal}
                 handleClose={() => setShowExpiredModal(false)}
+            />
+            <LaporanDonasiBarangModal
+                show={showDonationModal}
+                handleClose={() => setShowDonationModal(false)}
             />
         </>
     );
