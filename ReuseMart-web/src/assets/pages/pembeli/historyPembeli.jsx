@@ -33,7 +33,7 @@ const HistoryPembeli = () => {
   let profile = {};
   try {
     profile = JSON.parse(localStorage.getItem("profile") || "{}");
-  } catch {}
+  } catch { }
   const first = profile.first_name ?? profile.firstName ?? profile.name;
   const last = profile.last_name ?? profile.lastName;
   const userName = first && last ? `${first} ${last}` : first ? first : "User";
@@ -85,7 +85,6 @@ const HistoryPembeli = () => {
   useEffect(() => {
     api
       .get("transaksi/history")
-
       .then(({ data }) => {
         console.log("🔍 transaksi/history response:", data);
         setOrders(data);
@@ -135,7 +134,6 @@ const HistoryPembeli = () => {
         rating: rating,
       });
 
-      // Update local orders state to reflect the new rating
       setOrders((prevOrders) =>
         prevOrders.map((tx) => ({
           ...tx,
@@ -148,9 +146,8 @@ const HistoryPembeli = () => {
       );
 
       await updateRatingAllUser();
-      console.log("Setting showToast to true"); // Debug log
-      setShowToast(true); // Show toast on successful rating submission
-      setTimeout(() => closeRatingModal(), 100); // Slight delay to ensure toast renders
+      setShowToast(true);
+      setTimeout(() => closeRatingModal(), 100);
     } catch (error) {
       console.error(
         "Failed to submit rating:",
@@ -161,9 +158,10 @@ const HistoryPembeli = () => {
   };
 
   useEffect(() => {
-    console.log("showToast state:", showToast); // Debug toast state changes
+    console.log("showToast state:", showToast);
   }, [showToast]);
 
+  // Filter transactions
   let filtered = orders.filter((tx) => {
     const statusPengiriman =
       tx.pengiriman?.status_pengiriman ||
@@ -171,21 +169,24 @@ const HistoryPembeli = () => {
       "—";
     const hasOnHoldItem =
       tx.detil_transaksi?.some((dt) => dt.barang?.status === "On Hold") || false;
+    // Exclude transactions with status "Batal" or "Gagal"
     return (
       tx.metode_pengiriman === filter &&
       statusPengiriman !== "On Hold" &&
-      !hasOnHoldItem
+      !hasOnHoldItem &&
+      tx.status_transaksi !== "Batal" &&
+      tx.status_transaksi !== "Gagal"
     );
   });
 
   if (searchTerm) {
-    filtered = filtered.filter((tx) => {
-      const nama = tx.detil_transaksi?.[0]?.barang?.nama_barang ?? "";
-      return nama.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    filtered = filtered.filter((tx) =>
+      tx.detil_transaksi?.some((dt) =>
+        dt.barang?.nama_barang?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
   }
 
-  // inclusive date-range filter
   if (fromDate && toDate) {
     const from = new Date(fromDate);
     from.setHours(0, 0, 0, 0);
@@ -261,9 +262,8 @@ const HistoryPembeli = () => {
                       {groupedCats.map((cat, idx) => (
                         <div
                           key={idx}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
+                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
+                            }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
                         >
                           {cat.nama_kategori}
@@ -413,10 +413,7 @@ const HistoryPembeli = () => {
 
         <Row>
           {filtered.map((tx) => {
-            const dt = tx.detil_transaksi?.[0] || {};
-            const br = dt.barang || {};
-            const imgPath = br.foto?.[0]?.path || "defaults/no-image.png";
-            const seller = br.penitipan?.user;
+            const seller = tx.detil_transaksi?.[0]?.barang?.penitipan?.user;
             const sellerName = seller
               ? `${seller.first_name} ${seller.last_name}`
               : "—";
@@ -424,7 +421,7 @@ const HistoryPembeli = () => {
               tx.pengiriman?.status_pengiriman ||
               tx.pengambilan?.status_pengambilan ||
               "Disiapkan";
-            const alreadyRated = (br.rating ?? 0) > 0 || (dt.rating ?? 0) > 0;
+
             return (
               <Col md={6} key={tx.id_transaksi} className="mb-4">
                 <Card className="history-card h-100">
@@ -436,27 +433,62 @@ const HistoryPembeli = () => {
                     </div>
                   </Card.Header>
                   <Card.Body className="py-4 px-4">
-                    <Row className="product-row align-items-center">
-                      <Col xs={4}>
-                        <Image
-                          src={`http://127.0.0.1:8000/storage/${imgPath}`}
-                          thumbnail
-                          rounded
-                        />
-                      </Col>
-                      <Col xs={8}>
-                        <div className="product-name">{br.nama_barang}</div>
-                        <div className="product-price">
-                          Rp{(br.harga || 0).toLocaleString("id-ID")}
-                        </div>
-                      </Col>
-                    </Row>
+                    <Table borderless responsive>
+                      <thead>
+                        <tr>
+                          <th>Foto</th>
+                          <th>Nama Produk</th>
+                          <th className="text-end">Harga</th>
+                          <th className="text-end">Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tx.detil_transaksi?.map((dt) => {
+                          const br = dt.barang || {};
+                          const fp = br.foto?.[0]?.path || "defaults/no-image.png";
+                          const currentRating = dt.rating ?? br.rating ?? 0;
+                          const hasRated = currentRating > 0;
+
+                          return (
+                            <tr key={dt.id_dt}>
+                              <td>
+                                <Image
+                                  src={`http://127.0.0.1:8000/storage/${fp}`}
+                                  thumbnail
+                                  style={{ width: 100 }}
+                                />
+                              </td>
+                              <td>{br.nama_barang ?? "–"}</td>
+                              <td className="text-end">
+                                Rp{(br.harga || 0).toLocaleString("id-ID")}
+                              </td>
+                              <td className="text-end">
+                                {hasRated ? (
+                                  <span>
+                                    {currentRating}{" "}
+                                    <FiStar fill="gold" stroke="gold" />
+                                  </span>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={() => openRatingModal(dt)}
+                                  >
+                                    Nilai
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </Table>
                   </Card.Body>
                   <Card.Footer className="d-flex justify-content-between align-items-center py-3 px-4">
                     <small className="tanggal-text">
                       {new Date(tx.tanggal_transaksi).toLocaleDateString(
                         "id-ID"
-                      )}
+                      )} | No. Nota: {tx.no_nota}
                     </small>
                     <div className="d-flex align-items-center">
                       <Button
@@ -466,19 +498,6 @@ const HistoryPembeli = () => {
                         onClick={() => openDetail(tx)}
                       >
                         Lihat Detail
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="success"
-                        className="me-3"
-                        onClick={() => openRatingModal(dt)}
-                        disabled={
-                          (dt.barang?.rating ?? 0) > 0 || (dt.rating ?? 0) > 0
-                        }
-                      >
-                        {(br.rating ?? 0) > 0
-                          ? `Rated: ${br.rating}`
-                          : "Beri Rating"}
                       </Button>
                       <div className="fw-bold">
                         Total: Rp{(tx.total || 0).toLocaleString("id-ID")}
@@ -530,7 +549,14 @@ const HistoryPembeli = () => {
       </Modal>
 
       {/* Detail Modal */}
-      <Modal show={showDetail} onHide={closeDetail} size="lg" centered>
+      <Modal
+        show={showDetail}
+        onHide={closeDetail}
+        size="lg"
+        centered
+        className="custom-modal"
+        style={{ zIndex: 2000 }}
+      >
         <Modal.Body>
           {selectedTx && (
             <>
@@ -539,6 +565,7 @@ const HistoryPembeli = () => {
                   {selectedTx.detil_transaksi?.[0]?.barang?.penitipan?.user
                     ? `${selectedTx.detil_transaksi[0].barang.penitipan.user.first_name} ${selectedTx.detil_transaksi[0].barang.penitipan.user.last_name}`
                     : "—"}
+                  <span className="ms-3 text-muted">| No. Nota: {selectedTx.no_nota}</span>
                 </h5>
                 <div className="status-area text-success">
                   <Truck className="me-1" />
