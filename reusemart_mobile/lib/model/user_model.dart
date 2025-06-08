@@ -7,6 +7,7 @@ class UserModel {
   final String? profile_picture;
   final String? role;
   final String? jabatan;
+  final String? saldo; // Add saldo field
   final String type;
   final String accessToken;
   final String tokenType;
@@ -15,11 +16,12 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
-    this.no_telp, // Make nullable and not required
-    this.poin_loyalitas, // Make nullable and not required
-    this.profile_picture, // Make nullable and not required
+    this.no_telp,
+    this.poin_loyalitas,
+    this.profile_picture,
     this.role,
     this.jabatan,
+    this.saldo, // Make nullable and not required
     required this.type,
     required this.accessToken,
     required this.tokenType,
@@ -55,6 +57,7 @@ class UserModel {
       profile_picture: userData['profile_picture']?.toString(),
       role: json['type'] == 'user' ? userData['role']?.toString() : null,
       jabatan: json['type'] == 'pegawai' ? userData['jabatan']?.toString() : null,
+      saldo: userData['saldo']?.toString(), // Parse saldo from JSON
       type: json['type'],
       accessToken: json['access_token'] ?? '',
       tokenType: json['token_type'] ?? 'Bearer',

@@ -52,6 +52,7 @@ public function getUserPegawai(Request $request)
                 'no_telp' => $user->no_telp,
                 'poin_loyalitas' => $user->poin_loyalitas,
                 'profile_picture' => $user->profile_picture ? '/storage/' . $user->profile_picture : null,
+                'saldo' => $user->saldo ?? null,
             ],
             'access_token' => $request->bearerToken(),
             'token_type' => 'Bearer',

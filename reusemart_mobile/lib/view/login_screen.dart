@@ -93,6 +93,9 @@ class _LoginScreenState extends State<LoginScreen> {
         case 'pembeli':
           target = const HomePage();
           break;
+        case 'penitip':
+          target = const HomePage();
+          break;
       }
     } else if (user.type == 'pegawai') {
       switch (user.jabatan?.toLowerCase()) {
@@ -111,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
       }
     }
+    
 
     if (target != null) {
       Navigator.pushReplacement(

@@ -7,7 +7,7 @@ import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/productPage.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/profile_page.dart';
-import 'package:reusemart_mobile/components/simple_bottom_navigation.dart';
+import 'package:reusemart_mobile/view/history_page.dart'; // Import HistoryPage
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -129,6 +129,143 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
       });
     }
+  }
+
+  List<Barang> _filteredList() {
+    if (_searchQuery.isEmpty) return _barangList;
+    return _barangList
+        .where((b) =>
+            b.nama_barang.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+  }
+
+  Widget _buildProductCard(Barang barang) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ProductPage(barangId: barang.id_barang),
+          ),
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        elevation: 4,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 100,
+              child: FutureBuilder<List<FotoBarang>>(
+                future: ProductService.fetchFotos(barang.id_barang),
+                builder: (context, snapshot) {
+                  String imageUrl =
+                      "http://10.0.2.2:8000/storage/defaults/no-image.png";
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(8.0),
+                        ),
+                      ),
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (snapshot.hasData) {
+                    final fotos = snapshot.data!;
+                    if (fotos.isNotEmpty) {
+                      imageUrl =
+                          "http://10.0.2.2:8000/storage/${fotos.first.path}";
+                    }
+                  }
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(8.0),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(8.0),
+                      ),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(Icons.broken_image, size: 40),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      barang.nama_barang,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      barang.formattedHarga,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      barang.kategori,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        const Text(
+                          "Rating: ",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        if (barang.rating != null) ...[
+                          Text(
+                            barang.rating.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ] else ...[
+                          const Text(
+                            "N/A",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildPageContent() {
@@ -271,158 +408,16 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-      const Center(
-        child: Text(
-          "History Page",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
+      HistoryPage(), // Navigate to HistoryPage
       _user == null
           ? const Center(
               child: Text(
-                "Please log in to view your profile",
+                "Silahkan Login Terlebih Dahulu",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             )
           : ProfilePage(user: _user!),
     ];
-  }
-
-  List<Barang> _filteredList() {
-    if (_searchQuery.isEmpty) return _barangList;
-    return _barangList
-        .where((b) =>
-            b.nama_barang.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
-  }
-
-  Widget _buildProductCard(Barang barang) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ProductPage(barangId: barang.id_barang),
-          ),
-        );
-      },
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        elevation: 4,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: 100,
-              child: FutureBuilder<List<FotoBarang>>(
-                future: ProductService.fetchFotos(barang.id_barang),
-                builder: (context, snapshot) {
-                  String imageUrl =
-                      "http://10.0.2.2:8000/storage/defaults/no-image.png";
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8.0),
-                        ),
-                      ),
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
-                  }
-
-                  if (snapshot.hasData) {
-                    final fotos = snapshot.data!;
-                    if (fotos.isNotEmpty) {
-                      imageUrl =
-                          "http://10.0.2.2:8000/storage/${fotos.first.path}";
-                    }
-                  }
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(8.0),
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(8.0),
-                      ),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.broken_image, size: 40),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      barang.nama_barang,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      barang.formattedHarga,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.green,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      barang.kategori,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        const Text(
-                          "Rating: ",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        if (barang.rating != null) ...[
-                          Text(
-                            barang.rating.toString(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ] else ...[
-                          const Text(
-                            "N/A",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -470,10 +465,12 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: _buildPageContent()[_selectedIndex],
-      bottomNavigationBar: SimpleBottomNavigation(
-        navBarItems: _navBarItems,
-        initialIndex: _selectedIndex,
-        onIndexChanged: (index) {
+      bottomNavigationBar: BottomNavigationBar(
+        items: _navBarItems,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+        onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });

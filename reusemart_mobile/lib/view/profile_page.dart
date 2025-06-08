@@ -80,9 +80,12 @@ class _ProfileInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      if (user.no_telp != null) ProfileInfoItem("Phone", user.no_telp),
+      if (user.no_telp != null) ProfileInfoItem("Nomor Telepon", user.no_telp),
       if (user.type == 'user' && user.poin_loyalitas != null)
-        ProfileInfoItem("Loyalty Points", user.poin_loyalitas),
+        ProfileInfoItem("Poin Loyalitas", user.poin_loyalitas),
+      if (user.role?.toLowerCase() == 'penitip') // Show Saldo for role 3
+        ProfileInfoItem("Saldo", user.saldo),
+      if (user.role == '1') ProfileInfoItem("Role", user.role ?? "Pembeli"),
     ];
 
     return Container(
@@ -114,7 +117,9 @@ class _ProfileInfoRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(4.0),
             child: Text(
-              item.value?.toString() ?? 'N/A',
+              item.title == "Saldo" && item.value != null
+                  ? 'Rp ${item.value.toString()}'
+                  : item.value?.toString() ?? 'N/A',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
