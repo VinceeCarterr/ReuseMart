@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Redeem;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\Merch;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class RedeemController extends Controller
 {
@@ -31,15 +35,35 @@ class RedeemController extends Controller
         }
     }
 
-    public function store(Request $request)
-    {
-        try {
-            $redeem = Redeem::create($request->all());
-            return response()->json($redeem, 201);
-        } catch (Exception $e) {
-            Log::error('Error creating redeem: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create redeem'], 500);
+    public function store(Request $req) {
+        $user = $req->user();
+         $req->validate([
+            'id_merch' => 'required|integer|exists:merch,id_merch',
+        ]);
+
+        $merch = Merch::findOrFail($req->id_merch);
+
+        if ($user->poin_loyalitas < $merch->poin_merch) {
+        return response()->json(['error'=>'Not enough points'], 422);
         }
+        if ($merch->stock < 1) {
+        return response()->json(['error'=>'Out of stock'], 422);
+        }
+
+        DB::transaction(function() use($user, $merch) {
+        $user->decrement('poin_loyalitas', $merch->poin_merch);
+        $merch->decrement('stock', 1);
+
+        Redeem::create([
+            'id_merch'      => $merch->id_merch,
+            'id_user'       => $user->id_user,
+            'id_pegawai'    => null,
+            'tanggal_redeem'=> Carbon::now(),
+            'tanggal_ambil' => null,
+        ]);
+        });
+
+        return response()->json(['message'=>'Redeemed'], 201);
     }
 
     public function update(Request $request, $id)

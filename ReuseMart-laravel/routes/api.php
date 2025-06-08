@@ -90,7 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [UserController::class, 'me']);
     });
 
-    Route::middleware('role:kurir')->group(function () {
+    Route::middleware('role:kurir,hunter')->group(function () {
         Route::get('/pegawai-kurir/{id}', [PegawaiController::class, 'index']);
     });
 
@@ -105,6 +105,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
         Route::post('/checkout', [KeranjangController::class, 'checkout']);
         Route::post('/upload-proof', [KeranjangController::class, 'uploadProof']);
+        Route::get('/merch', [MerchController::class,'index']);
+        Route::get('/user/points', fn(Request $r) => response()->json(['poin_loyalitas'=>$r->user()->poin_loyalitas]));
+        Route::post('/redeem', [RedeemController::class,'store']);
     });
 
     Route::middleware('role:penitip')->group(function () {

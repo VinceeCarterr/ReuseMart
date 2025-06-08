@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../model/transaction_line.dart';
 import '../../services/transaction_service.dart';
 import '../../components/simple_bottom_navigation.dart';
+import '../hunter/profile_hunter_page.dart';
 
 class HistoryHunterPage extends StatefulWidget {
   final int hunterId;
@@ -33,7 +34,7 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        title: const Text('Hunter History'),
+        title: const Text('Hi, Hunter!'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
@@ -253,5 +254,5 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
   }
 
   Widget _buildProfileTab() =>
-      const Center(child: Text('Profile page under construction'));
+      ProfileHunterPage(hunterId: widget.hunterId);
 }

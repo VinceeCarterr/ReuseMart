@@ -7,8 +7,9 @@ import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/productPage.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/profile_page.dart';
-import 'package:reusemart_mobile/view/history_page.dart'; // Import HistoryPage
+import 'package:reusemart_mobile/view/history_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reusemart_mobile/view/merch_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -38,6 +39,11 @@ class _HomePageState extends State<HomePage> {
       icon: Icon(Icons.history_outlined),
       activeIcon: Icon(Icons.history_rounded),
       label: 'History',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.redeem_outlined),
+      activeIcon: Icon(Icons.redeem_outlined),
+      label: 'Merch',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.person_outline_rounded),
@@ -408,7 +414,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-      HistoryPage(), // Navigate to HistoryPage
+      HistoryPage(),
+      MerchPage(), // Navigate to HistoryPage
       _user == null
           ? const Center(
               child: Text(
