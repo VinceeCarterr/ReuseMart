@@ -22,6 +22,17 @@ class PegawaiController extends Controller
         }
     }
 
+    public function showAllPegawai()
+    {
+        try {
+            $pegawai = Pegawai::all();
+            return response()->json($pegawai);
+        } catch (Exception $e) {
+            Log::error('Error fetching pegawai: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch pegawai'], 404);
+        }
+    }
+
     public function showHunter($id)
     {
         try {

@@ -26,6 +26,7 @@ class User extends Authenticatable
         'NIK',
         'rating',
         'saldo',
+        'isTop',
     ];
 
     protected $hidden = ['password', 'remember_token'];

@@ -71,8 +71,10 @@ Route::middleware('auth:sanctum')->group(function () {
         //admin reset pw pegawai
         Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword']);
 
+
+        Route::post('/set-top-seller', [UserController::class, 'setTopSeller']);
         //kelola data pegawai
-        Route::get('/pegawai/admin', [PegawaiController::class, 'index']);
+        Route::get('/pegawai/admin', [PegawaiController::class, 'showAllPegawai']);
         Route::get('/pegawai/{id}', [PegawaiController::class, 'show']);
         Route::post('/pegawai/register', [PegawaiController::class, 'register']);
         Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
@@ -135,7 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pembayaran/verify/{id}', [PembayaranController::class, 'verify']);
 
         Route::get('/userCS', [UserController::class, 'publicList']);
-        Route::get('/pegawaiCS', [PegawaiController::class, 'index']);
+        Route::get('/pegawaiCS', [PegawaiController::class, 'showAllPegawai']);
         Route::get('/merchCS', [MerchController::class, 'index']);
         Route::get('/redeemCS', [RedeemController::class, 'index']);
         Route::put('/redeemCS/{id}', [RedeemController::class, 'update']);
@@ -152,7 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
         Route::get('/barangOwner', [BarangController::class, 'index']);
         Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
-        Route::get('/pegawaiOwner', [PegawaiController::class, 'index']);
+        Route::get('/pegawaiOwner', [PegawaiController::class, 'showAllPegawai']);
         Route::get('/userOwner', [UserController::class, 'publicList']);
         Route::post('/donasi/tambah', [DonasiController::class, 'store']);
         Route::put('/barang/{id}/updateStatus', [BarangController::class, 'updateStatusBarang']);

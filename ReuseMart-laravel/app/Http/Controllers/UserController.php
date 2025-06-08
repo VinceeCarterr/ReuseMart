@@ -78,7 +78,7 @@ public function getUserPegawai(Request $request)
 
     public function publicList()
     {
-        $users = User::select('id_user', 'first_name', 'last_name', 'no_telp', 'rating', 'email', 'poin_loyalitas')->get();
+        $users = User::select('id_user', 'first_name', 'last_name', 'no_telp', 'rating', 'email', 'poin_loyalitas', 'isTop')->get();
 
         return response()->json($users);
     }
@@ -634,6 +634,66 @@ public function getUserPegawai(Request $request)
             Log::error("Gagal memperbarui rating pengguna: {$e->getMessage()}");
             return response()->json([
                 'error' => 'Gagal memperbarui rating pengguna',
+                'exception' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+public function setTopSeller()
+    {
+        try {
+            // Fetch total sales for users based on sold barang through penitipan
+            $userSales = DB::table('user')
+                ->join('penitipan', 'user.id_user', '=', 'penitipan.id_user')
+                ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
+                ->where('barang.status', 'sold')
+                ->select('user.id_user', DB::raw('SUM(barang.harga) as total_sales'))
+                ->groupBy('user.id_user')
+                ->orderByDesc('total_sales')
+                ->get();
+
+            Log::info('Fetched user sales for top seller', ['userSales' => $userSales]);
+
+            if ($userSales->isEmpty()) {
+                Log::info('No sold items found, resetting all top sellers');
+                User::where('isTop', true)->update(['isTop' => false]);
+                return response()->json([
+                    'message' => 'No sold items found, no top seller set',
+                ], 200);
+            }
+
+            // Find the user with the highest sales
+            $topSeller = $userSales->first();
+            $topSellerId = $topSeller->id_user;
+
+            // Start transaction to ensure atomic updates
+            DB::beginTransaction();
+
+            // Reset all users' isTop to false
+            User::where('isTop', true)->update(['isTop' => false]);
+
+            // Set the top seller's isTop to true
+            $user = User::findOrFail($topSellerId);
+            $user->isTop = true;
+            $user->save();
+
+            DB::commit();
+
+            Log::info("Set top seller for user {$topSellerId} with total sales: {$topSeller->total_sales}");
+
+            return response()->json([
+                'message' => 'Top seller updated successfully',
+                'top_seller' => [
+                    'id_user' => $user->id_user,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'total_sales' => $topSeller->total_sales,
+                ],
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to set top seller: {$e->getMessage()}");
+            return response()->json([
+                'error' => 'Failed to set top seller',
                 'exception' => $e->getMessage(),
             ], 500);
         }
