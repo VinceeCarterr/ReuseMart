@@ -5,13 +5,18 @@ import LaporanStokGudang from '../../components/Owner/laporanStokGudang.jsx';
 import LaporanPenjualanPerKatModal from '../../components/Owner/laporanPenjualanPerKatModal.jsx';
 import LaporanBarangExpiredModal from '../../components/Owner/laporanBarangExpiredModal.jsx';
 import LaporanDonasiBarangModal from '../../components/Owner/laporanDonasiBarangModal.jsx';
+import LaporanRequestDonasiModal from '../../components/Owner/laporanRequestDonasiModal.jsx';
+import LaporanTransaksiPenitipModal from '../../components/Owner/laporanTransaksiPenitipModal.jsx';
 import './pelaporanPage.css';
+
 
 const PelaporanPage = () => {
     const [showStockReportModal, setShowStockReportModal] = useState(false);
     const [showPenjualanPerKatModal, setShowPenjualanPerKatModal] = useState(false);
     const [showExpiredModal, setShowExpiredModal] = useState(false);
     const [showDonationModal, setShowDonationModal] = useState(false);
+    const [showRequestDonationModal, setShowRequestDonationModal] = useState(false);
+    const [showTransaksiPenitipModal, setShowTransaksiPenitipModal] = useState(false);
 
     const reports = [
         { name: 'Penjualan Bulanan Keseluruhan', action: () => handleReportClick('monthly-sales') },
@@ -20,8 +25,8 @@ const PelaporanPage = () => {
         { name: 'Laporan Penjualan per Kategori Barang', action: () => setShowPenjualanPerKatModal(true) },
         { name: 'Laporan Barang yang Masa Penitipannya Sudah Habis', action: () => setShowExpiredModal(true) },
         { name: 'Laporan Donasi Barang', action: () => setShowDonationModal(true) },
-        { name: 'Laporan Request Donasi', action: () => handleReportClick('donation-request') },
-        { name: 'Laporan Transaksi Penitip', action: () => handleReportClick('consignor-transaction') },
+        { name: 'Laporan Request Donasi', action: () => setShowRequestDonationModal(true) },
+        { name: 'Laporan Transaksi Penitip', action: () => setShowTransaksiPenitipModal(true) },
     ];
 
     const handleReportClick = (reportType) => {
@@ -85,6 +90,14 @@ const PelaporanPage = () => {
             <LaporanDonasiBarangModal
                 show={showDonationModal}
                 handleClose={() => setShowDonationModal(false)}
+            />
+            <LaporanRequestDonasiModal
+                show={showRequestDonationModal}
+                handleClose={() => setShowRequestDonationModal(false)}
+            />
+            <LaporanTransaksiPenitipModal
+                show={showTransaksiPenitipModal}
+                handleClose={() => setShowTransaksiPenitipModal(false)}
             />
         </>
     );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Req_Donasi;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -17,8 +18,8 @@ class Req_DonasiController extends Controller
             $reqDonasi = Req_Donasi::with('user')->orderBy('id_reqdonasi', 'desc')->get();
             return response()->json($reqDonasi);
         } catch (Exception $e) {
-            Log::error('Error fetching Req_Donasi: '.$e->getMessage());
-            return response()->json(['error'=>'Failed to fetch requests'], 500);
+            Log::error('Error fetching Req_Donasi: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch requests'], 500);
         }
     }
 
@@ -57,11 +58,10 @@ class Req_DonasiController extends Controller
             return response()->json([
                 'message'         => 'Request donasi berhasil dibuat',
                 'req_donasi'      => $reqDonasi,
-                'contoh_foto_url' => asset('storage/'.$fotoPath),
+                'contoh_foto_url' => asset('storage/' . $fotoPath),
             ], 201);
-
         } catch (Exception $e) {
-            Log::error('Error creating Req_Donasi: '.$e->getMessage());
+            Log::error('Error creating Req_Donasi: ' . $e->getMessage());
             return response()->json([
                 'error'     => 'Failed to create request donasi',
                 'exception' => $e->getMessage(),
@@ -70,7 +70,7 @@ class Req_DonasiController extends Controller
     }
 
     public function update(Request $request, $id)
-    {   
+    {
         Log::info('UPDATE REQ_DONASI PAYLOAD', $request->all());
         $req = Req_Donasi::findOrFail($id);
 
@@ -82,7 +82,7 @@ class Req_DonasiController extends Controller
         ]);
 
         if ($v->fails()) {
-            return response()->json(['errors'=>$v->errors()], 422);
+            return response()->json(['errors' => $v->errors()], 422);
         }
 
         try {
@@ -93,7 +93,7 @@ class Req_DonasiController extends Controller
                     Storage::disk('public')->delete($req->contoh_foto);
                 }
                 $data['contoh_foto'] = $request->file('contoh_foto')
-                                             ->store('Foto_Req','public');
+                    ->store('Foto_Req', 'public');
             }
 
             $req->update($data);
@@ -101,11 +101,11 @@ class Req_DonasiController extends Controller
             return response()->json([
                 'message'         => 'Updated',
                 'req_donasi'      => $req,
-                'contoh_foto_url' => asset('storage/'.$req->contoh_foto)
+                'contoh_foto_url' => asset('storage/' . $req->contoh_foto)
             ]);
         } catch (Exception $e) {
-            Log::error('Error updating Req_Donasi: '.$e->getMessage());
-            return response()->json(['error'=>'Server error'], 500);
+            Log::error('Error updating Req_Donasi: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error'], 500);
         }
     }
 
@@ -118,10 +118,10 @@ class Req_DonasiController extends Controller
                 Storage::disk('public')->delete($req->contoh_foto);
             }
             $req->delete();
-            return response()->json(['message'=>'Deleted']);
+            return response()->json(['message' => 'Deleted']);
         } catch (Exception $e) {
-            Log::error('Error deleting Req_Donasi: '.$e->getMessage());
-            return response()->json(['error'=>'Server error'], 500);
+            Log::error('Error deleting Req_Donasi: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error'], 500);
         }
     }
 
@@ -138,6 +138,39 @@ class Req_DonasiController extends Controller
         } catch (Exception $e) {
             Log::error("Error fetching Req_Donasi for user {$userId}: " . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch your requests'], 500);
+        }
+    }
+
+    public function laporanRequestDonasi(Request $request)
+    {
+        try {
+            $requests = DB::table('req_donasi')
+                ->leftJoin('donasi', 'req_donasi.id_reqdonasi', '=', 'donasi.id_reqdonasi')
+                ->join('user', 'req_donasi.id_user', '=', 'user.id_user')
+                ->join('role', 'user.id_role', '=', 'role.id_role')
+                ->leftJoin('alamat', function ($join) {
+                    $join->on('user.id_user', '=', 'alamat.id_user')
+                        ->where('alamat.isdefault', '=', 1);
+                })
+                ->whereNull('donasi.id_reqdonasi')
+                ->where('role.id_role', '=', 3)
+                ->select(
+                    'req_donasi.id_reqdonasi',
+                    'user.id_user',
+                    'user.first_name as nama_organisasi',
+                    'alamat.alamat as alamat_organisasi',
+                    'req_donasi.nama_barangreq',
+                    'req_donasi.deskripsi'
+                )
+                ->get();
+
+            return response()->json($requests);
+        } catch (\Exception $e) {
+            Log::error('Error fetching unfulfilled donation request report: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Gagal memuat data request donasi',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -105,9 +105,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('barang/{id_barang}/updateRating', [BarangController::class, 'updateRatingBarang']);
         Route::post('/checkout', [KeranjangController::class, 'checkout']);
         Route::post('/upload-proof', [KeranjangController::class, 'uploadProof']);
-        Route::get('/merch', [MerchController::class,'index']);
-        Route::get('/user/points', fn(Request $r) => response()->json(['poin_loyalitas'=>$r->user()->poin_loyalitas]));
-        Route::post('/redeem', [RedeemController::class,'store']);
+        Route::get('/merch', [MerchController::class, 'index']);
+        Route::get('/user/points', fn(Request $r) => response()->json(['poin_loyalitas' => $r->user()->poin_loyalitas]));
+        Route::post('/redeem', [RedeemController::class, 'store']);
     });
 
     Route::middleware('role:penitip')->group(function () {
@@ -161,8 +161,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/laporan/penjualan-per-kategori', [BarangController::class, 'laporanPenjualanPerKategori']);
         Route::get('/laporan/barang-expired', [BarangController::class, 'laporanBarangExpired']);
         Route::get('/laporan/donasi-barang', [DonasiController::class, 'laporanDonasiBarang']);
+        Route::get('/laporan/request-donasi', [Req_DonasiController::class, 'laporanRequestDonasi']);
+        Route::get('/laporan/transaksi-penitip', [PenitipanController::class, 'laporanTransaksiPenitip']);
+        Route::get('/penitip', [UserController::class, 'penitip']);
     });
-
 
     //kelola req donasi
     Route::middleware('role:organisasi')->group(function () {
