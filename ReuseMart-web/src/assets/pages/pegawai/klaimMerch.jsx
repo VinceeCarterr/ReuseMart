@@ -196,7 +196,7 @@ const KlaimMerch = () => {
                                     </Table>
                                 ) : (
                                     <div className="text-center text-muted mt-4">
-                                        <p>Tidak ada barang ditemukan.</p>
+                                        <p>Tidak ada redeem ditemukan.</p>
                                     </div>
                                 )}
                             </Col>

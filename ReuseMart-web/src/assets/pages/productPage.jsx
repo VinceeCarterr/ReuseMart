@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Form, ListGroup, Alert, Spinner } from 'react-bootstrap';
 import { Link } from "react-router-dom";
+import { FaStar } from 'react-icons/fa';
 import api from "../../api/api.js";
 import "./productPage.css";
 
@@ -23,6 +24,7 @@ const ProductPage = () => {
     const [loading, setLoading] = useState(false);
     const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [userRating, setUserRating] = useState(null);
+    const [userIsTop, setUserIsTop] = useState(null);
     const [isLoading, setIsLoading] = useState(true); // New loading state for initial data fetch
 
     let profile = {};
@@ -93,11 +95,19 @@ const ProductPage = () => {
             const penitipan = penitipanResponse.data.find(p => p.id_penitipan === barangData.id_penitipan);
             const user = penitipan ? userResponse.data.find(u => u.id_user === penitipan.id_user) : null;
 
+            
+            if (user) {
+                setUserIsTop(user.isTop); 
+                setUserRating(user.rating);
+            } else {
+                setUserIsTop(null);
+                setUserRating(null);
+            }
+
             setBarang({
                 ...barangData,
                 rating: user ? user.rating : null
             });
-            setUserRating(user ? user.rating : null);
         } catch (error) {
             console.error("Gagal mengambil data produk atau rating:", error);
             setBarang(null);
@@ -105,6 +115,7 @@ const ProductPage = () => {
             throw error; // Propagate error to be caught in fetchData
         }
     };
+
 
     const fetchComments = async () => {
         try {
@@ -288,7 +299,16 @@ const ProductPage = () => {
                                 <p>
                                     Kategori: {barang.kategori}<br />
                                     Garansi: {cekGaransi(barang.garansi)}<br />
-                                    Rating Penitip: {userRating !== 0 ? userRating : 'Belum memiliki rating'}
+                                    Rating Penitip: {userRating !== null ? userRating : 'Belum memiliki rating'} <br />
+                                    <br />
+                                    <strong>
+                                        {userIsTop ? (
+                                            <>
+                                                <FaStar style={{ color: 'gold', marginRight: '5px' }} />
+                                                Top Seller
+                                            </>
+                                        ) : ""}
+                                    </strong>
                                 </p>
                             </Col>
                             <Col md={6} style={{ textAlign: 'right' }}>

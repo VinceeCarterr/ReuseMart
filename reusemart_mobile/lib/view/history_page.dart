@@ -75,7 +75,8 @@ class _HistoryPageState extends State<HistoryPage> {
             ">> BARANG #${b.id_barang}: id_penitipan=${b.id_penitipan}, status='${b.status}', status_periode='${b.status_periode}'");
       }
       for (var p in penitipan) {
-        debugPrint(">> PENITIPAN #${p['id_penitipan']}: id_user=${p['id_user']}");
+        debugPrint(
+            ">> PENITIPAN #${p['id_penitipan']}: id_user=${p['id_user']}");
       }
       debugPrint(">> USERS: ${users.map((u) => u['id_user']).toList()}");
 
@@ -122,7 +123,8 @@ class _HistoryPageState extends State<HistoryPage> {
         orElse: () => <String, dynamic>{},
       );
       if (p.isEmpty) {
-        debugPrint("HistoryPage - No penitipan found for barang #${b.id_barang}");
+        debugPrint(
+            "HistoryPage - No penitipan found for barang #${b.id_barang}");
         return false;
       }
       final penitipanUserId = p['id_user'].toString(); // Convert to String
@@ -195,57 +197,60 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
           Expanded(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    barang.nama_barang,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      barang.nama_barang,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.formattedHarga,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green,
+                    const SizedBox(height: 2),
+                    Text(
+                      barang.formattedHarga,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.kategori,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.kode_barang,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.tanggal_titip,
-                    style: const TextStyle(fontSize: 12, color: Colors.black),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.status,
-                    style: const TextStyle(fontSize: 12, color: Colors.black),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    barang.status_periode,
-                    style: const TextStyle(fontSize: 12, color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 2),
+                    Text(
+                      barang.kategori,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      barang.kode_barang,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      barang.tanggal_titip,
+                      style: const TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      barang.status,
+                      style: const TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    if (barang.status_periode == 'Periode 2')
+                      const Text(
+                        'Perpanjangan',
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                      ),
+                  ],
+                )),
           ),
         ],
       ),

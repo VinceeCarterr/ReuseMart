@@ -8,8 +8,9 @@ import 'package:reusemart_mobile/view/productPage.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/profile_page.dart';
 import 'package:reusemart_mobile/view/history_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reusemart_mobile/view/historyPembeli_page.dart';
 import 'package:reusemart_mobile/view/merch_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -274,148 +275,162 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<Widget> _buildPageContent() {
-    return [
-      _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
-          : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red, fontSize: 16),
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 24),
-                        Center(
-                          child: Column(
-                            children: const [
-                              Text(
-                                "Selamat Datang di ReuseMart!",
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
+  Widget _buildHomeContent() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator(color: Colors.green))
+        : _error != null
+            ? Center(
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                ),
+              )
+            : SingleChildScrollView(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      Center(
+                        child: Column(
+                          children: const [
+                            Text(
+                              "Selamat Datang di ReuseMart!",
+                              style: TextStyle(
+                                fontSize: 22,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                "Platform berbelanja barang bekas dengan kualitas terbaik. Pasti Murah!",
-                                style: TextStyle(fontSize: 16),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: "Cari produk...",
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
                             ),
+                            SizedBox(height: 8),
+                            Text(
+                              "Platform berbelanja barang bekas dengan kualitas terbaik. Pasti Murah!",
+                              style: TextStyle(fontSize: 16),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: "Cari produk...",
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
                           ),
-                          onChanged: (val) {
-                            setState(() {
-                              _searchQuery = val.trim();
-                            });
-                          },
                         ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          "Kesempatan Terakhir!",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        onChanged: (val) {
+                          setState(() {
+                            _searchQuery = val.trim();
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Kesempatan Terakhir!",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 12),
-                        Builder(
-                          builder: (_) {
-                            final kesempatanList = _filteredList()
-                                .where((b) =>
-                                    b.status.toLowerCase() == "available" &&
-                                    b.status_periode.toLowerCase() ==
-                                        "periode 2")
-                                .toList();
-
-                            if (kesempatanList.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12.0),
-                                child: Text(
-                                  "Tidak ada kesempatan terakhir saat ini.",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              );
-                            }
-
-                            return SizedBox(
-                              height: 250,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: kesempatanList.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 12),
-                                itemBuilder: (ctx, idx) {
-                                  final barang = kesempatanList[idx];
-                                  return SizedBox(
-                                    width: 160,
-                                    child: _buildProductCard(barang),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        const Divider(thickness: 1.0),
-                        const SizedBox(height: 12),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _filteredList()
+                      ),
+                      const SizedBox(height: 12),
+                      Builder(
+                        builder: (_) {
+                          final kesempatanList = _filteredList()
                               .where((b) =>
                                   b.status.toLowerCase() == "available" &&
-                                  (b.status_periode.toLowerCase() ==
-                                          "periode 1" ||
-                                      b.status_periode.toLowerCase() ==
-                                          "periode 2"))
-                              .length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                          itemBuilder: (ctx, idx) {
-                            final gridItems = _filteredList()
-                                .where((b) =>
-                                    b.status.toLowerCase() == "available" &&
-                                    (b.status_periode.toLowerCase() ==
-                                            "periode 1" ||
-                                        b.status_periode.toLowerCase() ==
-                                            "periode 2"))
-                                .toList();
-                            final barang = gridItems[idx];
-                            return _buildProductCard(barang);
-                          },
+                                  b.status_periode.toLowerCase() == "periode 2")
+                              .toList();
+
+                          if (kesempatanList.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12.0),
+                              child: Text(
+                                "Tidak ada kesempatan terakhir saat ini.",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            );
+                          }
+
+                          return SizedBox(
+                            height: 250,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: kesempatanList.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 12),
+                              itemBuilder: (ctx, idx) {
+                                final barang = kesempatanList[idx];
+                                return SizedBox(
+                                  width: 160,
+                                  child: _buildProductCard(barang),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      const Divider(thickness: 1.0),
+                      const SizedBox(height: 12),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _filteredList()
+                            .where((b) =>
+                                b.status.toLowerCase() == "available" &&
+                                (b.status_periode.toLowerCase() == "periode 1" ||
+                                    b.status_periode.toLowerCase() == "periode 2"))
+                            .length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
                         ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
+                        itemBuilder: (ctx, idx) {
+                          final gridItems = _filteredList()
+                              .where((b) =>
+                                  b.status.toLowerCase() == "available" &&
+                                  (b.status_periode.toLowerCase() == "periode 1" ||
+                                      b.status_periode.toLowerCase() == "periode 2"))
+                              .toList();
+                          final barang = gridItems[idx];
+                          return _buildProductCard(barang);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
-      HistoryPage(),
-      MerchPage(), // Navigate to HistoryPage
+              );
+  }
+
+  List<Widget> _buildPageContent() {
+    return [
+      _buildHomeContent(),
+      _user == null
+          ? const Center(
+              child: Text(
+                "Silahkan Login Terlebih Dahulu",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            )
+          : _user!.role == 'Pembeli'
+              ? const HistoryPembeliPage()
+              : _user!.role == 'Penitip'
+                  ? const HistoryPage()
+                  : const Center(
+                      child: Text(
+                        "Riwayat tidak tersedia untuk role ini",
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+      MerchPage(),
       _user == null
           ? const Center(
               child: Text(

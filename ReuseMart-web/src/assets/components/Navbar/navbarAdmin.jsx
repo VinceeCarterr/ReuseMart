@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
+import api from "../../../api/api.js";
 import "./navbarAdmin.css";
 
 export default function NavbarAdmin() {
@@ -8,6 +9,7 @@ export default function NavbarAdmin() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [userName, setUserName] = useState("User");
     const [jabatan, setJabatan] = useState("");
+    const [notification, setNotification] = useState(null);
 
     useEffect(() => {
         try {
@@ -27,6 +29,29 @@ export default function NavbarAdmin() {
     const handleConfirmLogout = () => {
         localStorage.clear();
         navigate("/");
+    };
+
+    const handleSetTopSeller = async () => {
+        try {
+            const response = await api.post('/set-top-seller');
+
+            if (response.status !== 200) {
+                throw new Error(response.data.error || "Failed to set top seller");
+            }
+
+            setNotification({
+                type: "success",
+                message: response.data.message || "Top seller updated successfully",
+            });
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: error.message || "Failed to set top seller",
+            });
+        }
+
+        // Clear notification after 3 seconds
+        setTimeout(() => setNotification(null), 3000);
     };
 
     return (
@@ -63,6 +88,13 @@ export default function NavbarAdmin() {
                             >
                                 Organisasi
                             </NavLink>
+                            <Button
+                                variant="outline-success"
+                                className="text-decoration-none fs-5 me-3"
+                                onClick={handleSetTopSeller}
+                            >
+                                Top Seller
+                            </Button>
                             <Button variant="outline-danger" onClick={openLogoutModal}>
                                 Logout
                             </Button>
@@ -85,6 +117,17 @@ export default function NavbarAdmin() {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {notification && (
+                <div
+                    className={`alert alert-${
+                        notification.type === "success" ? "success" : "danger"
+                    } position-fixed top-0 end-0 m-3`}
+                    style={{ zIndex: 1050 }}
+                >
+                    {notification.message}
+                </div>
+            )}
         </>
     );
 }
