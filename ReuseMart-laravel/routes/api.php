@@ -192,7 +192,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/alamat/gudang', [AlamatController::class, 'index']);
         Route::post('/forum/addForum', [ForumController::class, 'store']);
         Route::post('/penitipan/addPenitipan', [PenitipanController::class, 'store']);
-        Route::get('/pegawaiGudang', [PegawaiController::class, 'index']);
+        Route::get('/pegawaiGudang', [PegawaiController::class, 'showAllPegawai']);
         Route::get('/penitipan', [PenitipanController::class, 'index']);
         Route::put('/penitipan/{id}', [PenitipanController::class, 'update']);
         Route::get('/penitipan/getOne/{id}', [PenitipanController::class, 'getPenitipan']);

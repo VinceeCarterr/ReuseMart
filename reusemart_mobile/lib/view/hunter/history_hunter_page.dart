@@ -253,6 +253,10 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     );
   }
 
-  Widget _buildProfileTab() =>
-      ProfileHunterPage(hunterId: widget.hunterId);
+  _buildProfileTab() {
+    return ProfileHunterPage(
+      key: ValueKey(_currentIndex),
+      hunterId: widget.hunterId,
+    );
+  }
 }
