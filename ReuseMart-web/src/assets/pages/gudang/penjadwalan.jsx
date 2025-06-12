@@ -59,13 +59,11 @@ const Penjadwalan = () => {
   const [expiredHandledIds, setExpiredHandledIds] = useState(new Set());
 
   useEffect(() => {
-    if (filter !== "Pick Up") return; // only do this background scan if we’re in “Pick Up” mode
+    if (filter !== "Pick Up") return;
 
     schedules.forEach((t) => {
-      // skip any transaksi without a pengambilan object
       if (!t.pengambilan) return;
 
-      // skip any we’ve already handled
       if (expiredHandledIds.has(t.id_transaksi)) return;
 
       const pickTs = new Date(t.pengambilan.tanggal_pengambilan).getTime();
@@ -97,18 +95,66 @@ const Penjadwalan = () => {
 
   const handleArrived = async (t) => {
     try {
-      await api.patch(`/pengiriman/${t.pengiriman.id_pengiriman}`, {
+      await api.patch(`/pengiriman/${t.pengiriman.id_pengiriman}/arrived`, {
         status_pengiriman: "Arrived",
       });
 
       await addKomisi(t);
 
+      const nota = t.no_nota ?? t.id_transaksi;
+      const productNames = t.detil_transaksi
+        .map((dt) => dt.barang.nama_barang)
+        .join(", ");
+      const buyerId = t.user?.id_user;
+      const penitipUser = t.detil_transaksi?.[0]?.barang?.penitipan?.user;
+      const penitipId = penitipUser?.id_user;
+
+      const recipients = [];
+
+      if (buyerId) {
+        const buyerTitle = "Pesanan Anda Telah Tiba!";
+        const buyerBody = `Pesanan (${nota}) berisi ${productNames} telah tiba di tujuan. Terima kasih telah berbelanja di ReuseMart!`;
+        recipients.push({ id: buyerId, title: buyerTitle, body: buyerBody });
+      }
+
+      if (penitipId && penitipId !== buyerId) {
+        const penitipTitle = "Barang Anda Telah Sampai ke Pembeli!";
+        const penitipBody = `Barang Anda (${productNames}) dengan no nota (${nota}) telah sampai ke pembeli.`;
+        recipients.push({ id: penitipId, title: penitipTitle, body: penitipBody });
+      }
+
+      for (const { id, title, body } of recipients) {
+        try {
+          await api.post("/send-notification", {
+            user_id: id,
+            title,
+            body,
+          });
+          console.log(`✅ Push sent to user ${id}`);
+        } catch (pushErr) {
+          console.warn(
+            `⚠️ Push to ${id} failed (ignored):`,
+            pushErr.response?.data || pushErr.message
+          );
+        }
+      }
+
+      setToastVariant("success");
+      setToastMessage("Pengiriman berhasil ditandai sebagai Arrived!");
+      setToastShow(true);
+
       const params = { metode_pengiriman: filter, search };
       const { data } = await api.get("/transaksi/penjadwalan", { params });
       setSchedules(data);
     } catch (err) {
-      console.error("Error marking arrived:", err);
-      alert("Gagal menandai pengiriman Arrived.");
+      console.error("Error marking arrived:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      setToastVariant("danger");
+      setToastMessage("Gagal menandai pengiriman Arrived.");
+      setToastShow(true);
     }
   };
 
@@ -133,7 +179,7 @@ const Penjadwalan = () => {
     const total = t.total || 0;
     const soldDays = Math.floor(
       (new Date(t.tanggal_transaksi) - new Date(tanggal_titip)) /
-        (1000 * 60 * 60 * 24)
+      (1000 * 60 * 60 * 24)
     );
 
     let pctCompany = status_periode === "Periode 1" ? 0.2 : 0.3;
@@ -193,10 +239,10 @@ const Penjadwalan = () => {
       prev.map((row) =>
         row.id_transaksi === t.id_transaksi
           ? {
-              ...row,
-              komisi_perusahaan: komisiPerusahaan,
-              komisi_hunter: komisiHunter,
-            }
+            ...row,
+            komisi_perusahaan: komisiPerusahaan,
+            komisi_hunter: komisiHunter,
+          }
           : row
       )
     );
@@ -616,9 +662,8 @@ const Penjadwalan = () => {
               {methodOptions.map((opt) => (
                 <span
                   key={opt.value}
-                  className={`filter-option ${
-                    filter === opt.value ? "active" : ""
-                  }`}
+                  className={`filter-option ${filter === opt.value ? "active" : ""
+                    }`}
                   onClick={() => setFilter(opt.value)}
                 >
                   {opt.label}
@@ -682,14 +727,14 @@ const Penjadwalan = () => {
                   filter === "Delivery"
                     ? t.pengiriman?.tanggal_pengiriman
                       ? new Date(
-                          t.pengiriman.tanggal_pengiriman
-                        ).toLocaleDateString("id-ID")
+                        t.pengiriman.tanggal_pengiriman
+                      ).toLocaleDateString("id-ID")
                       : "-"
                     : t.pengambilan?.tanggal_pengambilan
-                    ? new Date(
+                      ? new Date(
                         t.pengambilan.tanggal_pengambilan
                       ).toLocaleDateString("id-ID")
-                    : "-";
+                      : "-";
                 const statusRaw =
                   filter === "Delivery"
                     ? t.pengiriman?.status_pengiriman ?? "-"
@@ -940,13 +985,13 @@ const Penjadwalan = () => {
                     <td>
                       {selectedTransaksi.pengiriman?.tanggal_pengiriman
                         ? new Date(
-                            selectedTransaksi.pengiriman.tanggal_pengiriman
-                          ).toLocaleDateString("id-ID")
+                          selectedTransaksi.pengiriman.tanggal_pengiriman
+                        ).toLocaleDateString("id-ID")
                         : selectedTransaksi.pengambilan?.tanggal_pengambilan
-                        ? new Date(
+                          ? new Date(
                             selectedTransaksi.pengambilan.tanggal_pengambilan
                           ).toLocaleDateString("id-ID")
-                        : "–"}
+                          : "–"}
                     </td>
                   </tr>
                   {selectedTransaksi.pengiriman && (
@@ -1070,7 +1115,7 @@ const Penjadwalan = () => {
                         const soldDays = Math.floor(
                           (new Date(selectedTransaksi.tanggal_transaksi) -
                             new Date(tanggal_titip)) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         );
                         const bonus =
                           status_periode === "Periode 1" && soldDays < 7

@@ -1,10 +1,8 @@
-// lib/main.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reusemart_mobile/view/kurir/profile_kurir_page.dart';
 
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
@@ -89,7 +87,6 @@ class _MainAppState extends State<MainApp> {
           : FutureBuilder<UserModel?>(
               future: UserService().validateToken(),
               builder: (ctx, snap) {
-                // still checking token?
                 if (snap.connectionState != ConnectionState.done) {
                   return const Scaffold(
                     body: Center(child: CircularProgressIndicator()),
@@ -98,18 +95,17 @@ class _MainAppState extends State<MainApp> {
 
                 final user = snap.data;
                 if (user == null) {
-                  // not logged in
                   return const LoginScreen();
                 }
 
-                // logged in → route by type/role/jabatan
                 final int uid = int.tryParse(user.id) ?? 0;
                 if (user.type == 'pegawai') {
                   final jab = user.jabatan?.toLowerCase();
                   if (jab == 'hunter') {
                     return HistoryHunterPage(hunterId: uid);
+                  } else if (jab == 'kurir') {
+                    return ProfileKurirPage(kurirId: uid);
                   }
-                  // any other pegawai falls back:
                   return const LoginScreen();
                 }
 

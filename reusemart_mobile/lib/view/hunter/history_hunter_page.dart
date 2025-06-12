@@ -80,8 +80,10 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
             final lines = entries[i].value;
             final nota = lines.first.transaksi.noNota;
             final totalItems = lines.length;
-            final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-            final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
+            final totalPrice =
+                lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
+            final totalKomisi = lines.fold<double>(
+                0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
             final photoUrl = lines.first.barang.imageUrl;
 
@@ -163,7 +165,8 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
 
   void _showDetail(BuildContext ctx, List<TransactionLine> lines) {
     final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-    final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
+    final totalKomisi =
+        lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
     showModalBottomSheet(
       context: ctx,
@@ -253,6 +256,5 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     );
   }
 
-  Widget _buildProfileTab() =>
-      ProfileHunterPage(hunterId: widget.hunterId);
+  Widget _buildProfileTab() => ProfileHunterPage(hunterId: widget.hunterId);
 }
