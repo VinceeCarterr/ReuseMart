@@ -1,6 +1,5 @@
-// lib/main.dart
-
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,6 +12,7 @@ import 'package:reusemart_mobile/view/splash_screen.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:reusemart_mobile/view/hunter/history_hunter_page.dart';
+import 'package:reusemart_mobile/view/info_umum.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('📨 BG message: ${message.messageId}');
@@ -34,17 +34,12 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   String? _fcmToken;
-  bool _showSplash = true;
 
   @override
   void initState() {
     super.initState();
     _initFcm();
     _listenForegroundMessages();
-    // Hide splash after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      setState(() => _showSplash = false);
-    });
   }
 
   Future<void> _initFcm() async {
@@ -84,43 +79,69 @@ class _MainAppState extends State<MainApp> {
       title: 'ReUseMart',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: _showSplash
-          ? const SplashScreen()
-          : FutureBuilder<UserModel?>(
-              future: UserService().validateToken(),
-              builder: (ctx, snap) {
-                // still checking token?
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final user = snap.data;
-                if (user == null) {
-                  // not logged in
-                  return const LoginScreen();
-                }
-
-                // logged in → route by type/role/jabatan
-                final int uid = int.tryParse(user.id) ?? 0;
-                if (user.type == 'pegawai') {
-                  final jab = user.jabatan?.toLowerCase();
-                  if (jab == 'hunter') {
-                    return HistoryHunterPage(hunterId: uid);
-                  }
-                  // any other pegawai falls back:
-                  return const LoginScreen();
-                }
-
-                // user-type accounts:
-                final role = user.role?.toLowerCase();
-                if (role == 'pembeli') {
-                  return HomePage();
-                }
-                return const LoginScreen();
-              },
-            ),
+      home: const InfoUmum(), // Set InfoUmum as the initial page
     );
+  }
+}
+
+// Widget to handle splash screen and user validation logic
+class AuthenticatedHome extends StatefulWidget {
+  const AuthenticatedHome({Key? key}) : super(key: key);
+
+  @override
+  State<AuthenticatedHome> createState() => _AuthenticatedHomeState();
+}
+
+class _AuthenticatedHomeState extends State<AuthenticatedHome> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Hide splash after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() => _showSplash = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _showSplash
+        ? const SplashScreen()
+        : FutureBuilder<UserModel?>(
+            future: UserService().validateToken(),
+            builder: (ctx, snap) {
+              // still checking token?
+              if (snap.connectionState != ConnectionState.done) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final user = snap.data;
+              if (user == null) {
+                // not logged in
+                return const LoginScreen();
+              }
+
+              // logged in → route by type/role/jabatan
+              final int uid = int.tryParse(user.id) ?? 0;
+              if (user.type == 'pegawai') {
+                final jab = user.jabatan?.toLowerCase();
+                if (jab == 'hunter') {
+                  return HistoryHunterPage(hunterId: uid);
+                }
+                // any other pegawai falls back:
+                return const LoginScreen();
+              }
+
+              // user-type accounts:
+              final role = user.role?.toLowerCase();
+              if (role == 'pembeli') {
+                return const HomePage();
+              }
+              return const LoginScreen();
+            },
+          );
   }
 }

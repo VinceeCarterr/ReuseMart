@@ -1,5 +1,4 @@
 // lib/model/barang_model.dart
-
 import 'package:intl/intl.dart';
 
 class Barang {
@@ -16,6 +15,7 @@ class Barang {
   final String tanggal_titip;
   final String status_periode;
   int? rating; // mutable because we’ll set it after fetching
+  bool? isTopSeller; // Added to store Top Seller status derived from User
 
   Barang({
     required this.id_barang,
@@ -31,6 +31,7 @@ class Barang {
     required this.tanggal_titip,
     required this.status_periode,
     this.rating,
+    this.isTopSeller, // Added as nullable
   });
 
   factory Barang.fromJson(Map<String, dynamic> json) {
@@ -48,6 +49,7 @@ class Barang {
       tanggal_titip: json['tanggal_titip'] as String,
       status_periode: json['status_periode'] as String,
       rating: json['rating'] as int?, // might be null initially
+      isTopSeller: json['isTopSeller'] as bool?, // Optional, can be null or set later
     );
   }
 

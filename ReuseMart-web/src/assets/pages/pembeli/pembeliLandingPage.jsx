@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card } from "react-bootstrap";
+import { FaStar } from "react-icons/fa"; // Import FaStar for Top Seller icon
 import api from "../../../api/api.js";
 import NavbarPembeli from "../../components/Navbar/navbarPembeli.jsx";
 import AOS from "aos";
@@ -8,22 +9,50 @@ import "aos/dist/aos.css";
 import "../landingPage.css";
 
 const ProductCard = ({ barang }) => (
-    <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
-            <img 
-                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
-                alt="Gambar 1" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+    <Card
+        className="ProductCart mb-2"
+        style={{ height: "350px", display: "flex", flexDirection: "column" }}
+    >
+        <div
+            style={{ height: "150px", backgroundColor: "#ccc", overflow: "hidden" }}
+        >
+            <img
+                src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? "defaults/no-image.png"
+                    }`}
+                alt="Gambar 1"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
         </div>
-        <Card.Body style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+        <Card.Body
+            style={{
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "column",
+                padding: "10px",
+            }}
+        >
             <div style={{ flexGrow: 1 }}>
-                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>{barang.nama_barang}</Card.Title>
-                <Card.Title style={{ fontWeight: '575', fontSize: '1rem' }}>Rp {barang.harga}</Card.Title>
-                <Card.Text style={{ fontSize: '0.9rem' }}>{barang.kategori}</Card.Text>
-                <Card.Text style={{ fontSize: '0.9rem' }}>
-                    Rating Penitip: {barang.rating ? barang.rating : 'Belum memiliki rating'}
+                <Card.Title style={{ fontWeight: "575", fontSize: "1rem" }}>
+                    {barang.nama_barang}
+                </Card.Title>
+                <Card.Title style={{ fontWeight: "575", fontSize: "1rem" }}>
+                    {barang.harga?.toLocaleString("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                    })}
+                </Card.Title>
+                <Card.Text style={{ fontSize: "0.9rem" }}>{barang.kategori}</Card.Text>
+                <Card.Text style={{ fontSize: "0.9rem" }}>
+                    Rating: {barang.rating ? `${barang.rating}` : "Belum memiliki rating"}
                 </Card.Text>
+                {barang.isTop ? (
+                    <>
+                        <Card.Text style={{ fontSize: "0.9rem" }}>
+                            <FaStar style={{ marginRight: "5px", color: "gold" }} />
+                            <strong>Top Seller</strong>
+                        </Card.Text>
+                    </>
+                ) : ""}
             </div>
         </Card.Body>
     </Card>
@@ -31,38 +60,116 @@ const ProductCard = ({ barang }) => (
 
 const PembeliLandingPage = () => {
     const [barangList, setBarangList] = useState([]);
-    const [highlightProducts, setHighlightProducts] = useState([]);
+    const [penitipanList, setPenitipanList] = useState([]);
+    const [userList, setUserList] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const scrollRef = useRef(null);
 
+    const [now, setNow] = useState(Date.now());
+    const hasSentNotifications = useRef(false);
+    const expiredPatched = useRef(new Set());
+    const donatedPatched = useRef(new Set());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
     const fetchBarang = async () => {
         try {
-            // Fetch barang
-            const { data } = await api.get("/barang");
+            const [tempBarang, tempPenitipan, tempUser] = await Promise.all([
+                api.get("/barang"),
+                api.get("/penitipan/public"),
+                api.get("/user/public"),
+            ]);
 
-            // Fetch user ratings
-            const ratingsResponse = await api.get('/user-ratings');
-            const ratingsData = ratingsResponse.data;
-
-            // Combine barang data with ratings
-            const combinedData = data.map(barang => {
-                const ratingObj = ratingsData.find(r => r.id_barang === barang.id_barang);
+            const barangWithRatings = tempBarang.data.map((barang) => {
+                const penitipan = tempPenitipan.data.find(
+                    (p) => p.id_penitipan === barang.id_penitipan
+                );
+                const user = penitipan
+                    ? tempUser.data.find((u) => u.id_user === penitipan.id_user)
+                    : null;
                 return {
                     ...barang,
-                    rating: ratingObj ? ratingObj.rating : null
+                    rating: user ? user.rating : null,
+                    isTop: user ? user.isTop : null,
                 };
             });
 
-            // Filter available barang for display
-            const available = combinedData.filter(b => b.status === "Available");
-            setBarangList(combinedData);
-            setHighlightProducts(available.slice(0, 6));
+            setBarangList(barangWithRatings);
+            setPenitipanList(tempPenitipan.data);
+            setUserList(tempUser.data);
         } catch (err) {
-            console.error("Failed to fetch barang or ratings:", err);
-            setBarangList([]); // Fallback to empty array to prevent rendering issues
-            setHighlightProducts([]);
+            console.error("Failed to fetch data:", err);
+            setBarangList([]);
+            setPenitipanList([]);
+            setUserList([]);
         }
     };
+
+    useEffect(() => {
+        const sendNotifications = async () => {
+            if (hasSentNotifications.current) {
+                return; // Skip if notifications have already been sent
+            }
+            hasSentNotifications.current = true;
+
+            try {
+                const response = await api.post("/barang/notifPenitip");
+                console.log("Notifications sent:", response.data);
+            } catch (error) {
+                console.error(
+                    "Failed to send notifications:",
+                    error.response?.data || error.message
+                );
+            }
+        };
+
+        sendNotifications();
+    }, []);
+
+    useEffect(() => {
+        barangList.forEach((item) => {
+            if (item.status === "Available") {
+                const expireTs =
+                    new Date(item.tanggal_titip).getTime() + 30 * 24 * 3600 * 1000;
+                if (
+                    now >= expireTs &&
+                    item.status_periode !== "Expired" &&
+                    !expiredPatched.current.has(item.id_barang)
+                ) {
+                    expiredPatched.current.add(item.id_barang);
+                    api
+                        .put("/barang/updateExpired")
+                        .then(() => fetchBarang())
+                        .catch(console.error);
+                }
+            }
+        });
+    }, [now, barangList]);
+
+    useEffect(() => {
+        barangList.forEach((item) => {
+            if (item.status_periode === "Expired" && item.status === "Akan Ambil") {
+                const pickupDeadline =
+                    new Date(item.tanggal_titip).getTime() + 2 * 24 * 3600 * 1000;
+
+                if (
+                    now >= pickupDeadline &&
+                    !donatedPatched.current.has(item.id_barang)
+                ) {
+                    donatedPatched.current.add(item.id_barang);
+                    api
+                        .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
+                            status: "Untuk Donasi",
+                        })
+                        .then(() => fetchBarang())
+                        .catch(console.error);
+                }
+            }
+        });
+    }, [now, barangList]);
 
     useEffect(() => {
         fetchBarang();
@@ -73,29 +180,26 @@ const PembeliLandingPage = () => {
         const el = scrollRef.current;
         if (!el) return;
         const onWheel = (e) => {
-            if (!e.deltaY) return;
+            if (e.deltaY === 0) return;
             e.preventDefault();
-            el.scrollTo({
-                left: el.scrollLeft + e.deltaY,
-                behavior: "smooth",
-            });
+            el.scrollTo({ left: el.scrollLeft + e.deltaY, behavior: "smooth" });
         };
         el.addEventListener("wheel", onWheel);
         return () => el.removeEventListener("wheel", onWheel);
     }, []);
 
-    const filteredList = barangList.filter(barang =>
+    const filteredList = barangList.filter((barang) =>
         barang.nama_barang.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
-        <div >
+        <div>
             <NavbarPembeli
                 searchQuery={searchQuery}
-                onSearchChange={setSearchQuery} />
+                onSearchChange={setSearchQuery}
+            />
 
-            {/* Hero */}
-            <Container className="my-5" style={{background:'none'}}>
+            <Container className="my-5 text-center" style={{ background: "none" }}>
                 <h2 className="text-success fw-bold welcome-heading">
                     Selamat Datang di ReuseMart!
                 </h2>
@@ -104,63 +208,73 @@ const PembeliLandingPage = () => {
                 </p>
             </Container>
 
-            {/* Highlight (Uncomment when needed) */}
-            {highlightProducts.length > 0 && (
-                <Container
-                    className="mb-4"
-                    style={{ backgroundColor: "white", borderRadius: 10, padding: 20, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
-                >
-                    <h4 className="text-success fw-bold border-start border-5 border-success ps-3 mb-3">
-                        Kesempatan Terakhir!
-                    </h4>
-                    <Row>
+            <Container
+                className="mb-4"
+                style={{
+                    backgroundColor: "white",
+                    borderRadius: "10px",
+                    padding: "20px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                }}
+            >
+                <h4 className="text-success fw-bold border-start border-5 border-success ps-3 mb-3">
+                    Kesempatan Terakhir!
+                </h4>
+                <Row>
+                    <Container fluid>
                         <div
                             ref={scrollRef}
                             className="horizontal-scroll d-flex flex-row overflow-auto mb-2"
                         >
                             {filteredList
-                                .filter(barang => 
-                                    barang.status === 'Available' && barang.status_periode === "Periode 2")
+                                .filter(
+                                    (barang) =>
+                                        barang.status === "Available" &&
+                                        barang.status_periode === "Periode 2"
+                                )
                                 .map((barang, index) => (
-                                <div
-                                    key={index}
-                                    className="highlight-card me-3 flex-shrink-0"
-                                    style={{ width: 200 }}
-                                >
-                                    <Link
-                                        to={`/produk/${barang.id_barang}`}
-                                        style={{ textDecoration: "none" }}
+                                    <div
+                                        key={index}
+                                        className="highlight-card me-3 flex-shrink-0"
                                     >
-                                        <ProductCard barang={barang} />
-                                    </Link>
-                                </div>
-                            ))}
+                                        <Link
+                                            to={`/produk/${barang.id_barang}`}
+                                            style={{ textDecoration: "none" }}
+                                        >
+                                            <ProductCard barang={barang} />
+                                        </Link>
+                                    </div>
+                                ))}
                         </div>
-                    </Row>
-                </Container>
-            )}
+                    </Container>
+                </Row>
+            </Container>
 
             <hr />
 
-            {/* All Products */}
-            <Container className="mt-4" style={{background:'none'}}>
+            <Container className="mt-4" style={{ background: "none" }}>
                 <Row>
                     {filteredList
-                        .filter(barang => 
-                            (barang.status === 'Available' && 
-                             (barang.status_periode === "Periode 1" || barang.status_periode === "Periode 2"))
+                        .filter(
+                            (barang) =>
+                                barang.status === "Available" &&
+                                (barang.status_periode === "Periode 1" ||
+                                    barang.status_periode === "Periode 2")
                         )
                         .map((barang, index) => (
-                            <Col 
-                                data-aos="fade-down" 
-                                key={index} 
-                                xs={6} 
-                                sm={4} 
-                                md={4} 
-                                lg={2} 
+                            <Col
+                                data-aos="fade-down"
+                                key={index}
+                                xs={6}
+                                sm={4}
+                                md={4}
+                                lg={2}
                                 className="mb-3"
                             >
-                                <Link to={`/produk/${barang.id_barang}`} style={{ textDecoration: 'none' }}>
+                                <Link
+                                    to={`/produk/${barang.id_barang}`}
+                                    style={{ textDecoration: "none" }}
+                                >
                                     <ProductCard barang={barang} />
                                 </Link>
                             </Col>

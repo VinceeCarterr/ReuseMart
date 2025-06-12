@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { FaStar } from "react-icons/fa"; // Import FaStar for Top Seller icon
 import api from "../../api/api.js";
 import "./landingPage.css";
 import NavbarLandingPage from "../components/Navbar/navbar.jsx";
@@ -17,9 +18,8 @@ const ProductCard = ({ barang }) => (
       style={{ height: "150px", backgroundColor: "#ccc", overflow: "hidden" }}
     >
       <img
-        src={`http://127.0.0.1:8000/storage/${
-          barang.foto?.[0]?.path ?? "defaults/no-image.png"
-        }`}
+        src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? "defaults/no-image.png"
+          }`}
         alt="Gambar 1"
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
       />
@@ -44,9 +44,18 @@ const ProductCard = ({ barang }) => (
         </Card.Title>
         <Card.Text style={{ fontSize: "0.9rem" }}>{barang.kategori}</Card.Text>
         <Card.Text style={{ fontSize: "0.9rem" }}>
-          Rating Penitip:{" "}
-          {barang.rating ? `${barang.rating}` : "Belum memiliki rating"}
+          Rating: {barang.rating ? `${barang.rating}` : "Belum memiliki rating"}
         </Card.Text>
+        {barang.isTop ? (
+          <>
+            <Card.Text style={{ fontSize: "0.9rem" }}>
+              <FaStar style={{ marginRight: "5px", color: "gold" }} />
+              <strong>Top Seller</strong>
+            </Card.Text>
+          </>
+        ) : (
+          ""
+        )}
       </div>
     </Card.Body>
   </Card>
@@ -64,7 +73,7 @@ const LandingPage = () => {
   const [now, setNow] = useState(Date.now());
   const hasSentNotifications = useRef(false);
   const expiredPatched = useRef(new Set());
-  const donatedPatched = useRef(new Set()); // Define donatedPatched
+  const donatedPatched = useRef(new Set());
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -89,6 +98,7 @@ const LandingPage = () => {
         return {
           ...barang,
           rating: user ? user.rating : null,
+          isTop: user ? user.isTop : null, // Add isTop field
         };
       });
 
@@ -104,27 +114,31 @@ const LandingPage = () => {
   };
 
   useEffect(() => {
-      const sendNotifications = async () => {
-          if (hasSentNotifications.current) {
-              return; // Skip if notifications have already been sent
-          }
-          hasSentNotifications.current = true;
+    const sendNotifications = async () => {
+      if (hasSentNotifications.current) {
+        return; // Skip if notifications have already been sent
+      }
+      hasSentNotifications.current = true;
 
-          try {
-              const response = await api.post("/barang/notifPenitip");
-              console.log("Notifications sent:", response.data);
-          } catch (error) {
-              console.error("Failed to send notifications:", error.response?.data || error.message);
-          }
-      };
+      try {
+        const response = await api.post("/barang/notifPenitip");
+        console.log("Notifications sent:", response.data);
+      } catch (error) {
+        console.error(
+          "Failed to send notifications:",
+          error.response?.data || error.message
+        );
+      }
+    };
 
-      sendNotifications();
+    sendNotifications();
   }, []);
 
   useEffect(() => {
-    barangList.forEach(item => {
+    barangList.forEach((item) => {
       if (item.status === "Available") {
-        const expireTs = new Date(item.tanggal_titip).getTime() + 30 * 24 * 3600 * 1000;
+        const expireTs =
+          new Date(item.tanggal_titip).getTime() + 30 * 24 * 3600 * 1000;
         if (
           now >= expireTs &&
           item.status_periode !== "Expired" &&
@@ -132,7 +146,7 @@ const LandingPage = () => {
         ) {
           expiredPatched.current.add(item.id_barang);
           api
-            .put('/barang/updateExpired')
+            .put("/barang/updateExpired")
             .then(() => fetchBarang())
             .catch(console.error);
         }
@@ -140,12 +154,34 @@ const LandingPage = () => {
     });
   }, [now, barangList]);
 
+useEffect(() => {
+  barangList.forEach((item) => {
+    if (item.status_periode === "Expired" && item.status === "Akan Ambil") {
+      const donationDeadline = new Date(item.tanggal_titip).getTime() + 37 * 24 * 3600 * 1000; // 30 + 7 days
+
+      if (now >= donationDeadline && !donatedPatched.current.has(item.id_barang)) {
+        donatedPatched.current.add(item.id_barang);
+        api
+          .put(`/barang/update/${item.id_barang}`, {
+            status: "Untuk Donasi",
+            status_periode: item.status_periode, // Include existing status_periode to avoid overwriting
+            tanggal_titip: item.tanggal_titip,  // Include existing tanggal_titip if needed
+          })
+          .then(() => fetchBarang())
+          .catch((error) => {
+            console.error(`Update failed for id_barang ${item.id_barang}:`, error);
+            donatedPatched.current.delete(item.id_barang); // Allow retry if update fails
+          });
+      }
+    }
+  });
+}, [now, barangList]);
+
   useEffect(() => {
     fetchBarang();
-  }, []);
-  useEffect(() => {
     AOS.init({ duration: 800 });
   }, []);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -157,28 +193,6 @@ const LandingPage = () => {
     el.addEventListener("wheel", onWheel);
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
-
-  useEffect(() => {
-    barangList.forEach((item) => {
-      if (item.status_periode === "Expired" && item.status === "Akan Ambil") {
-        const pickupDeadline =
-          new Date(item.tanggal_titip).getTime() + 2 * 24 * 3600 * 1000;
-
-        if (
-          now >= pickupDeadline &&
-          !donatedPatched.current.has(item.id_barang)
-        ) {
-          donatedPatched.current.add(item.id_barang);
-          api
-            .patch(`/transaksi/historyPenitip/${item.id_barang}`, {
-              status: "Untuk Donasi",
-            })
-            .then(() => fetchBarang())
-            .catch(console.error);
-        }
-      }
-    });
-  }, [now, barangList]);
 
   const handleAuthOpen = (mode) => {
     setAuthMode(mode);
@@ -257,7 +271,7 @@ const LandingPage = () => {
 
       <hr />
 
-      <Container className="mt-4" style={{background:'none'}}>
+      <Container className="mt-4" style={{ background: "none" }}>
         <Row>
           {filteredList
             .filter(

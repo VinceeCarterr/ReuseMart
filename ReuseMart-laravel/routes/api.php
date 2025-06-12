@@ -42,6 +42,7 @@ Route::get('/penitipan/public', [PenitipanController::class, 'index']);
 Route::post('/updateAllUserRatings', [UserController::class, 'updateAllUserRatings']);
 Route::put('/barang/updateExpired', [BarangController::class, 'updateStatusExpired']);
 Route::post('/barang/notifPenitip', [BarangController::class, 'sendNotifBarangPenitip']);
+Route::put('/barang/update/{id}', [BarangController::class, 'update']);
 
 Route::get('/transaksi/getOne/{id}', [TransaksiController::class, 'showOne']);
 
@@ -60,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-    Route::patch('transaksi/historyPenitip/{id_barang}', [TransaksiController::class, 'updateHistoryPenitip']);
+   
     Route::post('/register-token', [FcmTokenController::class, 'store']);
     Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
@@ -153,6 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:owner')->group(function () {
         Route::get('/donasi', [DonasiController::class, 'index']);
         Route::get('/barangOwner', [BarangController::class, 'index']);
+        Route::get('/dtOwner', [DTController::class, 'index']);
+        Route::get('/transaksiOwner', [TransaksiController::class, 'index']);
         Route::get('/penitipan/owner', [PenitipanController::class, 'index']);
         Route::get('/pegawaiOwner', [PegawaiController::class, 'showAllPegawai']);
         Route::get('/userOwner', [UserController::class, 'publicList']);

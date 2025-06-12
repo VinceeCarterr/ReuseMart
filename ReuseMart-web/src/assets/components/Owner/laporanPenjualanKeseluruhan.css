@@ -1,0 +1,64 @@
+/* Ensure table header is always visible and properly styled for PDF rendering */
+.report-table thead {
+  display: table-header-group !important;
+  position: relative;
+  z-index: 1;
+}
+
+.report-table th {
+  background-color: #f8f9fa !important;
+  padding: 8px;
+  font-weight: bold;
+  border: 1px solid #dee2e6;
+}
+
+/* Ensure table content is styled consistently */
+.report-table td {
+  padding: 8px;
+  border: 1px solid #dee2e6;
+}
+
+/* Spinner container for loading state */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Ensure modal content is properly sized */
+.custom-modal-width {
+  max-width: 90%;
+}
+
+.modal-with-border .modal-content {
+  border: 1px solid #dee2e6;
+  border-radius: 0.3rem;
+}
+
+/* Ensure report content is properly contained */
+.report-content {
+  width: 100%;
+  padding: 10px;
+  overflow: visible !important; /* Pastikan konten tidak dipotong */
+  height: auto !important; /* Pastikan tinggi otomatis menyesuaikan */
+}
+
+.report-table {
+  width: 100% !important;
+  overflow: visible !important;
+}

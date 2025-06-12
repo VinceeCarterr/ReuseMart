@@ -7,8 +7,9 @@ import LaporanBarangExpiredModal from '../../components/Owner/laporanBarangExpir
 import LaporanDonasiBarangModal from '../../components/Owner/laporanDonasiBarangModal.jsx';
 import LaporanRequestDonasiModal from '../../components/Owner/laporanRequestDonasiModal.jsx';
 import LaporanTransaksiPenitipModal from '../../components/Owner/laporanTransaksiPenitipModal.jsx';
+import LaporanKomisiBulananPerProduk from '../../components/Owner/laporanKomisiBUlananPerProduk.jsx';
+import LaporanPenjualanKeseluruhan from '../../components/Owner/laporanPenjualanKeseluruhan.jsx'; // Import the new component
 import './pelaporanPage.css';
-
 
 const PelaporanPage = () => {
     const [showStockReportModal, setShowStockReportModal] = useState(false);
@@ -17,10 +18,12 @@ const PelaporanPage = () => {
     const [showDonationModal, setShowDonationModal] = useState(false);
     const [showRequestDonationModal, setShowRequestDonationModal] = useState(false);
     const [showTransaksiPenitipModal, setShowTransaksiPenitipModal] = useState(false);
+    const [showKomisiBulananModal, setShowKomisiBulananModal] = useState(false);
+    const [showPenjualanKeseluruhanModal, setShowPenjualanKeseluruhanModal] = useState(false); // New state for the modal
 
     const reports = [
-        { name: 'Penjualan Bulanan Keseluruhan', action: () => handleReportClick('monthly-sales') },
-        { name: 'Laporan Komisi Bulanan per Produk', action: () => handleReportClick('monthly-commission') },
+        { name: 'Penjualan Bulanan Keseluruhan', action: () => setShowPenjualanKeseluruhanModal(true) }, // Updated action
+        { name: 'Laporan Komisi Bulanan per Produk', action: () => setShowKomisiBulananModal(true) },
         { name: 'Laporan Stok Gudang', action: () => setShowStockReportModal(true) },
         { name: 'Laporan Penjualan per Kategori Barang', action: () => setShowPenjualanPerKatModal(true) },
         { name: 'Laporan Barang yang Masa Penitipannya Sudah Habis', action: () => setShowExpiredModal(true) },
@@ -99,6 +102,14 @@ const PelaporanPage = () => {
                 show={showTransaksiPenitipModal}
                 handleClose={() => setShowTransaksiPenitipModal(false)}
             />
+            <LaporanKomisiBulananPerProduk
+                show={showKomisiBulananModal}
+                handleClose={() => setShowKomisiBulananModal(false)}
+            />
+            <LaporanPenjualanKeseluruhan
+                show={showPenjualanKeseluruhanModal}
+                handleClose={() => setShowPenjualanKeseluruhanModal(false)}
+            /> {/* Added the new modal component */}
         </>
     );
 };
