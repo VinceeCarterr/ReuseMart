@@ -90,7 +90,6 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
           return const Center(child: Text('No transactions found.'));
         }
 
-        // Convert map entries to list and sort by total price
         final entries = groups.entries.toList();
         final sortedEntries = [...entries]..sort((a, b) {
           final totalA = a.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
