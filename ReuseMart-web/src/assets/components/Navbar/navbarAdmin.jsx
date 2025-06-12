@@ -10,6 +10,8 @@ export default function NavbarAdmin() {
     const [userName, setUserName] = useState("User");
     const [jabatan, setJabatan] = useState("");
     const [notification, setNotification] = useState(null);
+    const [isTopSellerButtonEnabled, setIsTopSellerButtonEnabled] = useState(false);
+    const [hasAttemptedThisMonth, setHasAttemptedThisMonth] = useState(false);
 
     useEffect(() => {
         try {
@@ -22,6 +24,18 @@ export default function NavbarAdmin() {
             setUserName("User");
             setJabatan("");
         }
+
+        // Check if today is June 11, 2025
+        const today = new Date();
+        const isTargetDate = today.getFullYear() === 2025 && today.getMonth() === 5 && today.getDate() === 11; // June is month 5 (0-based)
+
+        // Check if an attempt has been made this month
+        const lastAttempt = localStorage.getItem("topSellerLastAttempt");
+        const currentMonthYear = `${today.getFullYear()}-${today.getMonth() + 1}`;
+        const hasAttempted = lastAttempt === currentMonthYear;
+
+        setIsTopSellerButtonEnabled(isTargetDate && !hasAttempted);
+        setHasAttemptedThisMonth(hasAttempted);
     }, []);
 
     const openLogoutModal = () => setShowLogoutModal(true);
@@ -38,6 +52,13 @@ export default function NavbarAdmin() {
             if (response.status !== 200) {
                 throw new Error(response.data.error || "Failed to set top seller");
             }
+
+            // Mark attempt in localStorage
+            const today = new Date();
+            const currentMonthYear = `${today.getFullYear()}-${today.getMonth() + 1}`;
+            localStorage.setItem("topSellerLastAttempt", currentMonthYear);
+            setIsTopSellerButtonEnabled(false);
+            setHasAttemptedThisMonth(true);
 
             setNotification({
                 type: "success",
@@ -92,6 +113,12 @@ export default function NavbarAdmin() {
                                 variant="outline-success"
                                 className="text-decoration-none fs-5 me-3"
                                 onClick={handleSetTopSeller}
+                                disabled={!isTopSellerButtonEnabled}
+                                title={
+                                    hasAttemptedThisMonth
+                                        ? "Top Seller sudah diatur untuk bulan ini"
+                                        : "Hanya tersedia pada tanggal 11 Juni 2025"
+                                }
                             >
                                 Top Seller
                             </Button>

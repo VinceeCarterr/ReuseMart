@@ -1,4 +1,63 @@
 import 'barang_model.dart';
+import 'package:flutter/material.dart';
+
+class Pengiriman {
+  final int id;
+  final int idTransaksi;
+  final DateTime? tanggalPengiriman;
+  final String statusPengiriman;
+  final Pegawai? pegawai;
+
+  Pengiriman({
+    required this.id,
+    required this.idTransaksi,
+    this.tanggalPengiriman,
+    required this.statusPengiriman,
+    this.pegawai,
+  });
+
+factory Pengiriman.fromJson(Map<String, dynamic> json) {
+  debugPrint("Pengiriman JSON: $json");
+  return Pengiriman(
+    id: json['id_pengiriman'] as int? ?? 0,
+    idTransaksi: json['id_transaksi'] as int? ?? 0,
+    tanggalPengiriman: json['tanggal_pengiriman'] != null
+        ? DateTime.tryParse(json['tanggal_pengiriman'] as String)
+        : null,
+    statusPengiriman: json['status_pengiriman'] as String? ?? 'Disiapkan',
+    pegawai: json['pegawai'] != null
+        ? Pegawai.fromJson(json['pegawai'] as Map<String, dynamic>)
+        : null,
+  );
+}
+}
+
+class Pegawai {
+  final int id;
+  final String? firstName;
+  final String? lastName;
+  final String? nama;
+
+  Pegawai({
+    required this.id,
+    this.firstName,
+    this.lastName,
+    this.nama,
+  });
+
+  factory Pegawai.fromJson(Map<String, dynamic> json) {
+    return Pegawai(
+      id: json['id_pegawai'] as int? ?? 0,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
+      nama: json['nama'] as String?,
+    );
+  }
+
+  String get fullName => nama ?? (firstName != null && lastName != null
+      ? '$firstName $lastName'
+      : firstName ?? lastName ?? 'N/A');
+}
 
 class Transaksi {
   final int id;
@@ -14,6 +73,7 @@ class Transaksi {
   final double diskon;
   final String? statusPengiriman;
   final User? seller;
+  final Pengiriman? pengiriman;
 
   Transaksi({
     required this.id,
@@ -29,6 +89,7 @@ class Transaksi {
     required this.diskon,
     this.statusPengiriman,
     this.seller,
+    this.pengiriman,
   });
 
   factory Transaksi.fromJson(Map<String, dynamic> json) {
@@ -51,6 +112,9 @@ class Transaksi {
           'Disiapkan',
       seller: json['detil_transaksi'] != null && (json['detil_transaksi'] as List).isNotEmpty
           ? User.fromJson(json['detil_transaksi'][0]['barang']?['penitipan']?['user'] ?? {})
+          : null,
+      pengiriman: json['pengiriman'] != null
+          ? Pengiriman.fromJson(json['pengiriman'] as Map<String, dynamic>)
           : null,
     );
   }

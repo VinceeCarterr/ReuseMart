@@ -10,6 +10,7 @@ import 'package:reusemart_mobile/view/profile_page.dart';
 import 'package:reusemart_mobile/view/history_page.dart';
 import 'package:reusemart_mobile/view/historyPembeli_page.dart';
 import 'package:reusemart_mobile/view/merch_page.dart';
+import 'package:reusemart_mobile/view/info_umum.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -101,26 +102,55 @@ class _HomePageState extends State<HomePage> {
       final penitipan = results[1] as List<dynamic>;
       final users = results[2] as List<dynamic>;
 
+      debugPrint("Penitipan data length: ${penitipan.length} - $penitipan");
+      debugPrint("User data length: ${users.length} - $users");
+
       for (var b in allBarang) {
         debugPrint(
-            ">> BARANG #${b.id_barang}: status='${b.status}' | status_periode='${b.status_periode}'");
+            ">> BARANG #${b.id_barang}: status='${b.status}' | status_periode='${b.status_periode}' | id_penitipan=${b.id_penitipan}");
       }
 
       for (var b in allBarang) {
         final p = penitipan.firstWhere(
           (p) => p['id_penitipan'] == b.id_penitipan,
-          orElse: () => <String, dynamic>{},
+          orElse: () => null,
         );
-        if (p.isNotEmpty) {
+        if (p != null) {
           final userId = p['id_user'];
+          debugPrint("Barang #${b.id_barang} linked to userId: $userId (from penitipan: $p)");
           final u = users.firstWhere(
             (u) => u['id_user'] == userId,
-            orElse: () => <String, dynamic>{},
+            orElse: () => null,
           );
-          if (u.isNotEmpty && u['rating'] != null) {
-            b.rating = u['rating'] as int;
+          if (u != null) {
+            b.rating = u['rating'] as int?;
+            try {
+              final userData = UserModel.fromJson({
+                ...u,
+                'type': 'user',
+                'access_token': '',
+                'token_type': 'Bearer',
+              });
+              debugPrint(
+                  "User #${userId} for barang #${b.id_barang} has raw isTop: ${u['isTop']}, parsed isTop: ${userData.isTop}");
+              b.isTopSeller = userData.isTop;
+            } catch (e) {
+              debugPrint("Error parsing user data for barang #${b.id_barang}: $e - Raw user data: $u");
+              b.isTopSeller = false;
+            }
+          } else {
+            debugPrint("No user found for userId: $userId in barang #${b.id_barang}");
+            b.isTopSeller = false;
           }
+        } else {
+          debugPrint("No penitipan found for id_penitipan: ${b.id_penitipan} in barang #${b.id_barang}");
+          b.isTopSeller = false;
         }
+      }
+
+      // Final verification of isTopSeller
+      for (var b in allBarang) {
+        debugPrint("Final Barang #${b.id_barang} isTopSeller: ${b.isTopSeller}");
       }
 
       setState(() {
@@ -242,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                       barang.kategori,
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         const Text(
@@ -259,12 +289,29 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ] else ...[
                           const Text(
-                            "N/A",
+                            "Tidak terdapat rating",
                             style: TextStyle(fontSize: 12),
                           ),
                         ],
                       ],
                     ),
+                    if (barang.isTopSeller == true) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 16, color: Colors.yellow),
+                          const SizedBox(width: 5),
+                          const Text(
+                            "Top Seller",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.yellow,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -454,28 +501,36 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.green,
         centerTitle: false,
-        title: Row(
-          children: [
-            const Text(
-              "ReUseMart",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            if (_user != null)
-              Text(
-                "Hello, ${_user!.name}!",
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const InfoUmum()),
+            );
+          },
+          child: Row(
+            children: [
+              const Text(
+                "ReUseMart",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
-          ],
+              const Spacer(),
+              if (_user != null)
+                Text(
+                  "Hello, ${_user!.name}!",
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
         ),
         actions: [
           if (_user == null)

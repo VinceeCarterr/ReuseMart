@@ -639,54 +639,73 @@ public function getUserPegawai(Request $request)
         }
     }
 
-public function setTopSeller()
+    public function setTopSeller()
     {
         try {
-            // Fetch total sales for users based on sold barang through penitipan
+            // Calculate the date range for the previous month
+            $startOfLastMonth = now()->subMonth()->startOfMonth();
+            $endOfLastMonth = now()->subMonth()->endOfMonth();
+
             $userSales = DB::table('user')
                 ->join('penitipan', 'user.id_user', '=', 'penitipan.id_user')
                 ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
+                ->join('detiltransaksi', 'barang.id_barang', '=', 'detiltransaksi.id_barang')
+                ->join('transaksi', 'detiltransaksi.id_transaksi', '=', 'transaksi.id_transaksi')
                 ->where('barang.status', 'sold')
+                ->whereBetween('transaksi.tanggal_transaksi', [$startOfLastMonth, $endOfLastMonth])
                 ->select('user.id_user', DB::raw('SUM(barang.harga) as total_sales'))
                 ->groupBy('user.id_user')
                 ->orderByDesc('total_sales')
                 ->get();
 
-            Log::info('Fetched user sales for top seller', ['userSales' => $userSales]);
+            Log::info('Fetched user sales for top seller from previous month', [
+                'userSales' => $userSales,
+                'period' => [
+                    'start' => $startOfLastMonth->toDateTimeString(),
+                    'end' => $endOfLastMonth->toDateTimeString()
+                ]
+            ]);
 
             if ($userSales->isEmpty()) {
-                Log::info('No sold items found, resetting all top sellers');
+                Log::info('No sold items found for previous month, resetting all top sellers');
                 User::where('isTop', true)->update(['isTop' => false]);
                 return response()->json([
-                    'message' => 'No sold items found, no top seller set',
+                    'message' => 'No sold items found for previous month, no top seller set',
                 ], 200);
             }
 
-            // Find the user with the highest sales
+
             $topSeller = $userSales->first();
             $topSellerId = $topSeller->id_user;
-
-            // Start transaction to ensure atomic updates
+            $totalSales = $topSeller->total_sales ?? 0; // Ensure total_sales is not null
+            $bonus = $totalSales * 0.01; 
             DB::beginTransaction();
 
             // Reset all users' isTop to false
             User::where('isTop', true)->update(['isTop' => false]);
 
-            // Set the top seller's isTop to true
+            // Set the top seller's isTop to true and add bonus to saldo
             $user = User::findOrFail($topSellerId);
             $user->isTop = true;
+            $user->saldo += $bonus;
             $user->save();
 
             DB::commit();
 
-            Log::info("Set top seller for user {$topSellerId} with total sales: {$topSeller->total_sales}");
+            Log::info("Set top seller for user {$topSellerId} with total sales: {$totalSales} and bonus: {$bonus}");
 
             return response()->json([
-                'message' => 'Top seller updated successfully',
+                'message' => 'Top seller updated successfully with bonus',
                 'top_seller' => [
                     'id_user' => $user->id_user,
                     'name' => $user->first_name . ' ' . $user->last_name,
-                    'total_sales' => $topSeller->total_sales,
+                    'total_sales' => $totalSales,
+                    'bonus_added' => $bonus,
+                    'new_saldo' => $user->saldo,
+                    'sales_period' => [
+                        'start_date' => $startOfLastMonth->toDateString(),
+                        'end_date' => $endOfLastMonth->toDateString()
+                    ]
                 ],
             ], 200);
         } catch (Exception $e) {

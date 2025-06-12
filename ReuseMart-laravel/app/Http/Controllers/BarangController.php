@@ -54,17 +54,18 @@ public function show($id)
     }
 }
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $barang = Barang::findOrFail($id);
-            $barang->update($request->all());
-            return response()->json($barang);
-        } catch (Exception $e) {
-            Log::error('Error updating barang: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update barang'], 500);
-        }
+// app/Http/Controllers/BarangController.php
+public function update(Request $request, $id)
+{
+    try {
+        $barang = Barang::findOrFail($id);
+        $barang->update($request->all());
+        return response()->json($barang);
+    } catch (Exception $e) {
+        Log::error('Error updating barang: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to update barang'], 500);
     }
+}
 
     public function destroy($id)
     {

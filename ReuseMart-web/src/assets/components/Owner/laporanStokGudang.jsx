@@ -64,6 +64,8 @@ const LaporanStokGudang = ({ show, handleClose }) => {
         };
     };
 
+
+
     const handleDownloadPDF = async () => {
         setLoading(true);
         const doc = new jsPDF('p', 'mm', 'a4');
@@ -131,6 +133,17 @@ const LaporanStokGudang = ({ show, handleClose }) => {
         setLoading(false);
     };
 
+    const formatDate = (dateString) => {
+        if (!dateString || dateString === '-') return '-';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        });
+    };
+
     return (
         <Modal
             show={show}
@@ -182,7 +195,7 @@ const LaporanStokGudang = ({ show, handleClose }) => {
                                                     ? `${penitip.first_name} ${penitip.last_name || ''}`.trim() || 'N/A'
                                                     : 'N/A'}
                                             </td>
-                                            <td>{barang.tanggal_titip || 'N/A'}</td>
+                                            <td>{formatDate(barang.tanggal_titip)|| 'N/A'}</td>
                                             <td>{perpanjangan}</td>
                                             <td>{idHunter}</td>
                                             <td>{namaHunter}</td>

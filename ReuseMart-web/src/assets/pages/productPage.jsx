@@ -25,6 +25,7 @@ const ProductPage = () => {
     const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [userRating, setUserRating] = useState(null);
     const [userIsTop, setUserIsTop] = useState(null);
+    const [penitipFullName, setPenitipFullName] = useState(null); // New state for penitip's full name
     const [isLoading, setIsLoading] = useState(true); // New loading state for initial data fetch
 
     let profile = {};
@@ -99,9 +100,11 @@ const ProductPage = () => {
             if (user) {
                 setUserIsTop(user.isTop); 
                 setUserRating(user.rating);
+                setPenitipFullName(`${user.first_name} ${user.last_name || ''}`); // Set penitip's full name
             } else {
                 setUserIsTop(null);
                 setUserRating(null);
+                setPenitipFullName(null); // Reset penitip's full name
             }
 
             setBarang({
@@ -112,6 +115,7 @@ const ProductPage = () => {
             console.error("Gagal mengambil data produk atau rating:", error);
             setBarang(null);
             setUserRating(null);
+            setPenitipFullName(null); // Reset penitip's full name on error
             throw error; // Propagate error to be caught in fetchData
         }
     };
@@ -301,6 +305,8 @@ const ProductPage = () => {
                                     Garansi: {cekGaransi(barang.garansi)}<br />
                                     Rating Penitip: {userRating !== null ? userRating : 'Belum memiliki rating'} <br />
                                     <br />
+                                    <hr />
+                                    Penitip : {penitipFullName} <br /> 
                                     <strong>
                                         {userIsTop ? (
                                             <>

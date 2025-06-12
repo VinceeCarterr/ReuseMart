@@ -21,6 +21,7 @@ class _HistoryPageState extends State<HistoryPage> {
   String? _error;
   UserModel? _user;
   final UserService _userService = UserService();
+  bool _isAscending = true; // New state variable for sort order
 
   @override
   void initState() {
@@ -127,12 +128,19 @@ class _HistoryPageState extends State<HistoryPage> {
             "HistoryPage - No penitipan found for barang #${b.id_barang}");
         return false;
       }
-      final penitipanUserId = p['id_user'].toString(); // Convert to String
+      final penitipanUserId = p['id_user'].toString();
       final matches = penitipanUserId == _user!.id;
       debugPrint(
           "HistoryPage - Barang #${b.id_barang}: penitipan id_user=$penitipanUserId, user id=${_user!.id}, matches=$matches");
       return matches;
     }).toList();
+
+    filtered.sort((a, b) {
+      return _isAscending
+          ? a.nama_barang.compareTo(b.nama_barang)
+          : b.nama_barang.compareTo(a.nama_barang);
+    });
+
     debugPrint("HistoryPage - Filtered list length: ${filtered.length}");
     return filtered;
   }
@@ -283,13 +291,38 @@ class _HistoryPageState extends State<HistoryPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 24),
-                      const Text(
-                        "Riwayat Penitipan",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Riwayat Penitipan",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          DropdownButton<bool>(
+                            value: _isAscending,
+                            onChanged: (bool? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _isAscending = newValue;
+                                });
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                value: true,
+                                child: Text("Asc"),
+                              ),
+                              DropdownMenuItem(
+                                value: false,
+                                child: Text("Desc"),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
                       _filteredList().isEmpty
@@ -311,7 +344,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                               ),
-                              itemBuilder: (ctx, idx) {
+                              itemBuilder: (ctx, idx){
                                 final barang = _filteredList()[idx];
                                 return _buildProductCard(barang);
                               },

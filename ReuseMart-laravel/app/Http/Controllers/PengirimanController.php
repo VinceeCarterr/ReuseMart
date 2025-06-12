@@ -86,12 +86,23 @@ class PengirimanController extends Controller
         }
     }
 
-    public function getByTransaksi($transaksiId)
-    {
-        $ship = Pengiriman::where('id_transaksi', $transaksiId)
+public function getByTransaksi($transaksiId)
+{
+    try {
+        $pengiriman = Pengiriman::where('id_transaksi', $transaksiId)
             ->with('pegawai')
-            ->get();
+            ->first();
 
-        return response()->json($ship);
+        if (!$pengiriman) {
+            Log::info("No pengiriman found for transaksiId: $transaksiId");
+            return response()->json(['error' => 'Pengiriman not found'], 404);
+        }
+
+        Log::info("Pengiriman found: " . json_encode($pengiriman));
+        return response()->json($pengiriman);
+    } catch (\Exception $e) {
+        Log::error('Error fetching pengiriman by transaksi: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch pengiriman'], 500);
     }
+}
 }

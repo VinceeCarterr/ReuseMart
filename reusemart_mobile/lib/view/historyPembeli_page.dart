@@ -67,11 +67,10 @@ class _HistoryPembeliPageState extends State<HistoryPembeliPage> {
       await _loadUser(); // Load user first
 
       if (_user == null) {
-        // If user is not logged in, set loading to false and return
         setState(() {
           _isLoading = false;
         });
-        return; // Exit early if user is not logged in
+        return;
       }
 
       if (_user!.role != 'Pembeli') {
@@ -81,8 +80,11 @@ class _HistoryPembeliPageState extends State<HistoryPembeliPage> {
 
       debugPrint("HistoryPage - Fetching transactions for Pembeli");
       final transaksiList = await ts.TransaksiService.fetchAllTransaksi();
-      debugPrint(
-          "HistoryPage - Transactions fetched: ${transaksiList.length} items");
+      debugPrint("HistoryPage - Raw transactions: $transaksiList");
+      for (var transaksi in transaksiList) {
+        debugPrint(
+            "Transaksi: $transaksi, Pengiriman: ${transaksi.pengiriman}, Pegawai: ${transaksi.pengiriman?.pegawai}");
+      }
 
       if (mounted) {
         setState(() {
@@ -204,7 +206,7 @@ class _HistoryPembeliPageState extends State<HistoryPembeliPage> {
 
   void _showTransactionDetailsModal(tm.Transaksi transaksi) {
     debugPrint(
-        "Showing details for Transaksi: ${transaksi.noNota}, Detil items: ${transaksi.detilTransaksi.length}");
+        "Showing details for Transaksi: ${transaksi.noNota}, Detil items: ${transaksi.detilTransaksi.length}, Pengiriman: ${transaksi.pengiriman}, Pegawai: ${transaksi.pengiriman?.pegawai}");
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -338,6 +340,98 @@ class _HistoryPembeliPageState extends State<HistoryPembeliPage> {
                     'Metode Pengiriman: ${transaksi.metodePengiriman}',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
+                  // Add Delivery Details Table
+                  if (transaksi.metodePengiriman.toLowerCase() == 'delivery' &&
+                      transaksi.pengiriman != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Detail Pengiriman:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Table(
+                          border: TableBorder.all(color: Colors.grey.shade300),
+                          columnWidths: const {
+                            0: FlexColumnWidth(2),
+                            1: FlexColumnWidth(2),
+                            2: FlexColumnWidth(2),
+                          },
+                          children: [
+                            TableRow(
+                              decoration:
+                                  BoxDecoration(color: Colors.grey.shade200),
+                              children: const [
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Tanggal Pengiriman',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Status Pengiriman',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Pegawai',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    transaksi.pengiriman!.tanggalPengiriman !=
+                                            null
+                                        ? DateFormat('dd/MM/yyyy').format(
+                                            transaksi
+                                                .pengiriman!.tanggalPengiriman!)
+                                        : 'Belum dikirim',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    transaksi.pengiriman!.statusPengiriman,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    transaksi.pengiriman!.pegawai?.fullName ??
+                                        'N/A',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 16),
                   Table(
                     border: TableBorder.all(color: Colors.grey.shade300),
