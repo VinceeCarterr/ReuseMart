@@ -3,13 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Pengiriman;
 use App\Models\Transaksi;
+use App\Models\Detiltransaksi;
+use App\Models\Barang;
+use App\Models\Pengiriman;
+use App\Models\FcmToken;
+use Kreait\Firebase\Factory;
+use App\Models\User;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FcmNotification;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class PengirimanController extends Controller
 {
+    protected $messaging;
+
+    public function __construct()
+    {
+        $this->messaging = (new Factory)
+            ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+            ->createMessaging();
+    }
+
     public function index()
     {
         try {
@@ -32,13 +49,13 @@ class PengirimanController extends Controller
         }
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'id_transaksi'     => 'required|exists:transaksi,id_transaksi',
             'id_pegawai'       => 'required|exists:pegawai,id_pegawai',
-            'tanggal_pengiriman'=> 'required|date',
-            'status_pengiriman'=> 'required|string',
+            'tanggal_pengiriman' => 'required|date',
+            'status_pengiriman' => 'required|string',
         ]);
 
         try {
@@ -74,6 +91,20 @@ class PengirimanController extends Controller
         return response()->json($ambil);
     }
 
+    public function updateArrived(Request $request, $id)
+    {
+        $request->validate([
+            'status_pengiriman' => 'required|string'
+        ]);
+
+        $ambil = Pengiriman::findOrFail($id);
+        $ambil->status_pengiriman = $request->status_pengiriman;
+        $ambil->save();
+
+        return response()->json($ambil);
+    }
+
+
     public function destroy($id)
     {
         try {
@@ -103,6 +134,12 @@ public function getByTransaksi($transaksiId)
     } catch (\Exception $e) {
         Log::error('Error fetching pengiriman by transaksi: ' . $e->getMessage());
         return response()->json(['error' => 'Failed to fetch pengiriman'], 500);
+    }
+
+    public function showPengiriman()
+    {
+        $pengiriman = Pengiriman::with(['transaksi', 'pegawai'])->get();
+        return response()->json($pengiriman);
     }
 }
 }

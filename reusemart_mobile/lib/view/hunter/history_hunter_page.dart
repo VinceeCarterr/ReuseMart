@@ -106,8 +106,10 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
             final lines = sortedEntries[i].value;
             final nota = lines.first.transaksi.noNota;
             final totalItems = lines.length;
-            final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-            final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
+            final totalPrice =
+                lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
+            final totalKomisi = lines.fold<double>(
+                0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -187,7 +189,8 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
 
   void _showDetail(BuildContext ctx, List<TransactionLine> lines) {
     final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-    final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
+    final totalKomisi =
+        lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
     showModalBottomSheet(
       context: ctx,

@@ -97,6 +97,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pegawai-kurir/{id}', [PegawaiController::class, 'index']);
     });
 
+    Route::middleware('role:kurir')->group(function () {
+        Route::get('/pengiriman', [PengirimanController::class, 'showPengiriman']);
+        Route::patch('/pengiriman/{id}/arrived', [PengirimanController::class, 'updateArrived']);
+        Route::get('/history-kurir', [PegawaiController::class, 'getDeliveryHistory']);
+    });
+
 
     //halaman profile
     Route::middleware('role:pembeli')->group(function () {
@@ -206,7 +212,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pengiriman', [PengirimanController::class, 'store']);
         Route::post('/pengambilan', [PengambilanController::class, 'store']);
         Route::patch('updateStatusPengambilan/{id}', [PengambilanController::class, 'updateStatusPengambilan']);
-        Route::patch('pengiriman/{id}', [PengirimanController::class, 'update']);
+        // Route::patch('/pengiriman/{id}/arrived', [PengirimanController::class, 'updateArrived']);
         Route::patch('/barang/{id}', [BarangController::class, 'patchStatusBarang']);
         Route::post('/komisi', [KomisiController::class, 'store']);
         Route::get('/komisi', [KomisiController::class, 'index']);
@@ -217,7 +223,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:admin,gudang')->group(function () {
-        Route::get('/pegawai', [PegawaiController::class, 'index']);
+        Route::get('/pegawai', [PegawaiController::class, 'showAllPegawai']);
     });
 
     Route::middleware('role:hunter')->group(function () {

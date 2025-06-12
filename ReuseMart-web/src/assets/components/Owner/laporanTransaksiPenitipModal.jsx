@@ -119,60 +119,60 @@ const LaporanTransaksiPenitipModal = ({ show, handleClose }) => {
                 <div className="mb-3">
                     <h5>ReUse Mart</h5>
                     <p>Jl. Green Eco Park No. 456 Yogyakarta</p>
+                    <Form className="mb-4">
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label>Pilih Penitip</Form.Label>
+                                    <Form.Select
+                                        value={selectedPenitip}
+                                        onChange={(e) => setSelectedPenitip(e.target.value)}
+                                    >
+                                        <option value="">Pilih Penitip</option>
+                                        {penitipList.map((penitip) => (
+                                            <option key={penitip.id_user} value={penitip.id_user}>
+                                                T{penitip.id_user} - {penitip.first_name} {penitip.last_name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Bulan</Form.Label>
+                                    <Form.Select
+                                        value={selectedBulan}
+                                        onChange={(e) => setSelectedBulan(Number(e.target.value))}
+                                    >
+                                        {bulanOptions.map((bulan) => (
+                                            <option key={bulan.value} value={bulan.value}>
+                                                {bulan.label}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Tahun</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={selectedTahun}
+                                        onChange={(e) => setSelectedTahun(Number(e.target.value))}
+                                        min="2000"
+                                        max="2100"
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={2} className="d-flex align-items-end">
+                                <Button variant="primary" onClick={fetchReportData} disabled={isLoading}>
+                                    Tampilkan
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Form>
                     {reportData.penitip.id_user && (
                         <>
-                            <Form className="mb-4">
-                                <Row>
-                                    <Col md={4}>
-                                        <Form.Group>
-                                            <Form.Label>Pilih Penitip</Form.Label>
-                                            <Form.Select
-                                                value={selectedPenitip}
-                                                onChange={(e) => setSelectedPenitip(e.target.value)}
-                                            >
-                                                <option value="">Pilih Penitip</option>
-                                                {penitipList.map((penitip) => (
-                                                    <option key={penitip.id_user} value={penitip.id_user}>
-                                                        T{penitip.id_user} - {penitip.first_name} {penitip.last_name}
-                                                    </option>
-                                                ))}
-                                            </Form.Select>
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={3}>
-                                        <Form.Group>
-                                            <Form.Label>Bulan</Form.Label>
-                                            <Form.Select
-                                                value={selectedBulan}
-                                                onChange={(e) => setSelectedBulan(Number(e.target.value))}
-                                            >
-                                                {bulanOptions.map((bulan) => (
-                                                    <option key={bulan.value} value={bulan.value}>
-                                                        {bulan.label}
-                                                    </option>
-                                                ))}
-                                            </Form.Select>
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={3}>
-                                        <Form.Group>
-                                            <Form.Label>Tahun</Form.Label>
-                                            <Form.Control
-                                                type="number"
-                                                value={selectedTahun}
-                                                onChange={(e) => setSelectedTahun(Number(e.target.value))}
-                                                min="2000"
-                                                max="2100"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={2} className="d-flex align-items-end">
-                                        <Button variant="primary" onClick={fetchReportData} disabled={isLoading}>
-                                            Tampilkan
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </Form>
                             <p><strong>ID Penitip:</strong> T{reportData.penitip.id_user}</p>
                             <p><strong>Nama Penitip:</strong> {reportData.penitip.nama}</p>
                             <p><strong>Bulan:</strong> {bulanOptions.find(b => b.value === selectedBulan)?.label}</p>

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Pegawai;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Transaksi;
 use Exception;
 
 class PegawaiController extends Controller
@@ -234,5 +236,43 @@ class PegawaiController extends Controller
             'message' => 'Komisi pegawai updated',
             'pegawai' => $pegawai,
         ]);
+    }
+
+    public function getDeliveryHistory(Request $request)
+    {
+        $courier = Auth::guard('pegawai')->user();
+
+        if (!$courier || $courier->id_jabatan != 4) {
+            return response()->json([
+                'message' => 'Unauthorized: Only couriers can access this endpoint',
+            ], 403);
+        }
+
+        $deliveries = Transaksi::select(
+            'transaksi.id_transaksi',
+            'transaksi.tanggal_transaksi',
+            'transaksi.alamat',
+            'transaksi.metode_pengiriman',
+            'transaksi.biaya_pengiriman',
+            'transaksi.total',
+            'transaksi.no_nota',
+            'transaksi.status_transaksi',
+            'user.first_name as user_first_name',
+            'user.last_name as user_last_name'
+        )
+            ->join('user', 'transaksi.id_user', '=', 'user.id_user')
+            ->join('pengiriman', 'transaksi.id_transaksi', '=', 'pengiriman.id_transaksi')
+            ->where('transaksi.metode_pengiriman', 'Delivery')
+            ->where('pengiriman.id_pegawai', $courier->id_pegawai)
+            ->with(['detilTransaksi.barang' => function ($query) {
+                $query->select('barang.id_barang', 'barang.nama_barang', 'barang.harga', 'barang.deskripsi');
+            }])
+            ->orderBy('transaksi.tanggal_transaksi', 'desc')
+            ->get();
+
+        return response()->json([
+            'message' => 'Delivery history retrieved successfully',
+            'data' => $deliveries
+        ], 200);
     }
 }
