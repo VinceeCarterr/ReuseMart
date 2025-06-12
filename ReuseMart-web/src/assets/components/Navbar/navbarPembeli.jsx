@@ -6,10 +6,9 @@ import api from "../../../api/api.js";
 import ProfileModal from "../Pembeli/profileModal.jsx";
 import "./navbarPembeli.css";
 
-const NavbarPembeli = ( {searchQuery, onSearchChange} ) => {
+const NavbarPembeli = ({ searchQuery, onSearchChange, onCategorySelect }) => {
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [groupedCats, setGroupedCats] = useState([]);
@@ -93,6 +92,14 @@ const NavbarPembeli = ( {searchQuery, onSearchChange} ) => {
                             idx === activeCatIdx ? "active" : ""
                           }`}
                           onMouseEnter={() => setActiveCatIdx(idx)}
+                          onClick={() => {
+                            onCategorySelect({
+                              type: "category",
+                              id: cat.id,
+                              name: cat.nama_kategori,
+                            });
+                            setShowMega(false);
+                          }}
                         >
                           {cat.nama_kategori}
                         </div>
@@ -100,13 +107,20 @@ const NavbarPembeli = ( {searchQuery, onSearchChange} ) => {
                     </div>
                     <div className="mega-menu-content">
                       {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
-                        <Link
-                          to={`/kategori/${sub.id}`}
+                        <button
                           key={sub.id}
-                          className="mega-menu-link"
+                          className="mega-menu-link btn btn-link"
+                          onClick={() => {
+                            onCategorySelect({
+                              type: "subCategory",
+                              id: sub.id,
+                              name: sub.name,
+                            });
+                            setShowMega(false);
+                          }}
                         >
                           {sub.nama}
-                        </Link>
+                        </button>
                       ))}
                     </div>
                   </div>

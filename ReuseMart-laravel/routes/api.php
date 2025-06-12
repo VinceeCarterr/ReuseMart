@@ -33,6 +33,7 @@ Route::get('/user/public', [UserController::class, 'publicList']);
 
 //barang for landingpage
 Route::get('/barang', [BarangController::class, 'index']);
+Route::get('/barangWithKategori', [BarangController::class, 'indexWithKategori']);
 Route::get('/barang/{id}', [BarangController::class, 'show']);
 Route::get('/barang/{id_barang}/komentar', [ForumController::class, 'getComments']);
 Route::get('/foto_barang', [Foto_BarangController::class, 'index']);

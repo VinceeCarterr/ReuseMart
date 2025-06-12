@@ -17,21 +17,9 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
     userName = fn && ln ? `${fn} ${ln}` : fn || "Penitip";
   } catch { }
 
-  // categories for mega menu
-  const [groupedCats, setGroupedCats] = useState([]);
-  const [activeCatIdx, setActiveCatIdx] = useState(0);
-  const [showMega, setShowMega] = useState(false);
-
   // modals
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-
-  useEffect(() => {
-    api
-      .get("/kategori")
-      .then(({ data }) => setGroupedCats(data))
-      .catch(console.error);
-  }, []);
 
   const openLogoutModal = () => setShowLogoutModal(true);
   const closeLogoutModal = () => setShowLogoutModal(false);
@@ -78,41 +66,6 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
 
             {/* actions */}
             <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
-              {/* Mega-menu */}
-              <div
-                className="mega-dropdown"
-                onMouseEnter={() => setShowMega(true)}
-                onMouseLeave={() => setShowMega(false)}
-              >
-                <button className="category-toggle">Kategori</button>
-                {showMega && (
-                  <div className="mega-menu">
-                    <div className="mega-menu-sidebar">
-                      {groupedCats.map((cat, idx) => (
-                        <div
-                          key={cat.nama_kategori}
-                          className={`mega-menu-item ${idx === activeCatIdx ? "active" : ""
-                            }`}
-                          onMouseEnter={() => setActiveCatIdx(idx)}
-                        >
-                          {cat.nama_kategori}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mega-menu-content">
-                      {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
-                        <Link
-                          key={sub.id}
-                          to={`/kategori/${sub.id}`}
-                          className="mega-menu-link"
-                        >
-                          {sub.nama}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* Cart */}
               <Link to="/cart" className="text-dark fs-3 icon-link">
