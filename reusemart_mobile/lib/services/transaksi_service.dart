@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../model/barang_model.dart'; // Use Barang from barang_model.dart
-import '../model/transaksi_model.dart'; // Import Transaksi and DetilTransaksi from transaksi_model.dart
+import '../model/transaksi_model.dart';
 
 class TransaksiService {
   static const String _base = 'http://10.0.2.2:8000/api';

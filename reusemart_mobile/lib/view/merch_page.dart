@@ -21,7 +21,8 @@ class _MerchPageState extends State<MerchPage> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
-      final results = await Future.wait([ApiService.getMerchList(), ApiService.getUserPoints()]);
+      final results = await Future.wait(
+          [ApiService.getMerchList(), ApiService.getUserPoints()]);
       _merchList = results[0] as List<Merch>;
       _userPoints = results[1] as int;
     } catch (e) {
@@ -73,14 +74,33 @@ class _MerchPageState extends State<MerchPage> {
         itemCount: _merchList.length,
         itemBuilder: (context, index) {
           final merch = _merchList[index];
+          final imgName = merch.namaMerch.toLowerCase().replaceAll(' ', '-');
+          final assetPath =
+              "http://10.0.2.2:8000/storage/foto_merch/${imgName}.jpg";
+
+          debugPrint('Loading image from: $assetPath');
           return Card(
-            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  assetPath,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) =>
+                      const Icon(Icons.broken_image),
+                ),
+              ),
               title: Text(merch.namaMerch),
-              subtitle: Text('Cost: ${merch.poinMerch} pts | Stock: ${merch.stock}'),
+              subtitle:
+                  Text('Cost: ${merch.poinMerch} pts | Stock: ${merch.stock}'),
               trailing: ElevatedButton(
                 onPressed: merch.stock > 0 ? () => _redeemMerch(merch) : null,
-                child: Text('Redeem'),
+                child: const Text('Redeem'),
               ),
             ),
           );

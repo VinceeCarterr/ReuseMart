@@ -1,5 +1,3 @@
-// lib/view/hunter/profile_hunter_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -8,16 +6,32 @@ import 'package:reusemart_mobile/services/pegawai_service.dart';
 import 'package:reusemart_mobile/services/komisi_service.dart';
 import 'package:reusemart_mobile/view/login_screen.dart';
 
-/// Holds user profile and total komisi
-class _ProfileData {
-  final PegawaiModel pegawai;
-  final double totalKomisi;
-  _ProfileData(this.pegawai, this.totalKomisi);
-}
-
-class ProfileHunterPage extends StatelessWidget {
+class ProfileHunterPage extends StatefulWidget {
   final int hunterId;
   const ProfileHunterPage({Key? key, required this.hunterId}) : super(key: key);
+
+  @override
+  State<ProfileHunterPage> createState() => _ProfileHunterPageState();
+}
+
+class _ProfileHunterPageState extends State<ProfileHunterPage> {
+  PegawaiModel? _pegawai;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPegawai();
+  }
+
+  Future<void> _loadPegawai() async {
+    final data = await PegawaiService().fetchPegawai(widget.hunterId);
+    setState(() => _pegawai = data);
+  }
+
+  Future<double> _loadTotalKomisi() async {
+    final komisis = await KomisiService().fetchKomisiByHunter(widget.hunterId);
+    return komisis.fold<double>(0, (sum, k) => sum + k.komisiHunter);
+  }
 
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,78 +43,67 @@ class ProfileHunterPage extends StatelessWidget {
     );
   }
 
-  Future<_ProfileData> _loadData() async {
-    final pegawai = await PegawaiService().fetchPegawai(hunterId);
-    final komisis = await KomisiService().fetchKomisiByHunter(hunterId);
-    final totalKomisi = komisis.fold<double>(0, (sum, k) => sum + k.komisiHunter);
-    return _ProfileData(pegawai, totalKomisi);
-  }
-
   @override
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,##0', 'id_ID');
-    return FutureBuilder<_ProfileData>(
-      future: _loadData(),
-      builder: (ctx, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
-        }
-        if (snap.hasError) {
-          return Scaffold(
-              body: Center(child: Text('Error: ${snap.error}')));
-        }
-        final data = snap.data!;
-        final pegawai = data.pegawai;
-        // format komisi with dots
-        final komisiStr = fmt.format(data.totalKomisi);
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: Column(
-            children: [
-              Expanded(flex: 2, child: _TopPortion(pegawai: pegawai)),
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    children: [
-                      Text(
-                        pegawai.name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        pegawai.email,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      FloatingActionButton.extended(
-                        onPressed: () => _logout(context),
-                        heroTag: 'logout',
-                        elevation: 0,
-                        backgroundColor: Colors.red,
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Logout'),
-                      ),
-                      const SizedBox(height: 16),
-                      _ProfileInfoRow(
-                        phone: pegawai.noTelp ?? 'N/A',
-                        birthDate: pegawai.tanggalLahir ?? 'N/A',
-                        komisi: 'Rp$komisiStr',
-                      ),
-                    ],
+
+    if (_pegawai == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Expanded(flex: 2, child: _TopPortion(pegawai: _pegawai!)),
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  Text(
+                    _pegawai!.name,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _pegawai!.email,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  FloatingActionButton.extended(
+                    onPressed: () => _logout(context),
+                    heroTag: 'logout',
+                    elevation: 0,
+                    backgroundColor: Colors.red,
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Logout'),
+                  ),
+                  const SizedBox(height: 16),
+                  FutureBuilder<double>(
+                    future: _loadTotalKomisi(),
+                    builder: (context, snapshot) {
+                      final komisiStr = snapshot.hasData
+                          ? 'Rp${fmt.format(snapshot.data!)}'
+                          : 'Loading...';
+
+                      return _ProfileInfoRow(
+                        phone: _pegawai!.noTelp ?? 'N/A',
+                        birthDate: _pegawai!.tanggalLahir ?? 'N/A',
+                        komisi: komisiStr,
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -109,7 +112,11 @@ class _ProfileInfoRow extends StatelessWidget {
   final String phone;
   final String birthDate;
   final String komisi;
-  const _ProfileInfoRow({required this.phone, required this.birthDate, required this.komisi});
+  const _ProfileInfoRow({
+    required this.phone,
+    required this.birthDate,
+    required this.komisi,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +125,7 @@ class _ProfileInfoRow extends StatelessWidget {
       _InfoItem(title: 'Birth Date', value: birthDate),
       _InfoItem(title: 'Total Komisi', value: komisi, isGreen: true),
     ];
-    return Container(
+    return SizedBox(
       height: 120,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

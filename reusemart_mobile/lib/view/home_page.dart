@@ -334,8 +334,8 @@ class _HomePageState extends State<HomePage> {
               )
             : SingleChildScrollView(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -408,7 +408,8 @@ class _HomePageState extends State<HomePage> {
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: kesempatanList.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 12),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 12),
                               itemBuilder: (ctx, idx) {
                                 final barang = kesempatanList[idx];
                                 return SizedBox(
@@ -429,8 +430,10 @@ class _HomePageState extends State<HomePage> {
                         itemCount: _filteredList()
                             .where((b) =>
                                 b.status.toLowerCase() == "available" &&
-                                (b.status_periode.toLowerCase() == "periode 1" ||
-                                    b.status_periode.toLowerCase() == "periode 2"))
+                                (b.status_periode.toLowerCase() ==
+                                        "periode 1" ||
+                                    b.status_periode.toLowerCase() ==
+                                        "periode 2"))
                             .length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -443,8 +446,10 @@ class _HomePageState extends State<HomePage> {
                           final gridItems = _filteredList()
                               .where((b) =>
                                   b.status.toLowerCase() == "available" &&
-                                  (b.status_periode.toLowerCase() == "periode 1" ||
-                                      b.status_periode.toLowerCase() == "periode 2"))
+                                  (b.status_periode.toLowerCase() ==
+                                          "periode 1" ||
+                                      b.status_periode.toLowerCase() ==
+                                          "periode 2"))
                               .toList();
                           final barang = gridItems[idx];
                           return _buildProductCard(barang);
@@ -474,7 +479,8 @@ class _HomePageState extends State<HomePage> {
                   : const Center(
                       child: Text(
                         "Riwayat tidak tersedia untuk role ini",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
       MerchPage(),
@@ -547,7 +553,10 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
-        onTap: (index) {
+        onTap: (index) async {
+          if (index == 3) {
+            await _loadUser();
+          }
           setState(() {
             _selectedIndex = index;
           });
