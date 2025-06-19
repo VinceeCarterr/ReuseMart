@@ -22,70 +22,66 @@ class ProfileKurirPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final pegawaiService = PegawaiService();
 
-    return Scaffold(
-      body: FutureBuilder<PegawaiModel>(
-        future: pegawaiService.fetchPegawai(kurirId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('No data available'));
-          }
+    return FutureBuilder<PegawaiModel>(
+      future: pegawaiService.fetchPegawai(kurirId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData) {
+          return const Center(child: Text('No data available'));
+        }
 
-          final pegawai = snapshot.data!;
+        final pegawai = snapshot.data!;
 
-          return Column(
-            children: [
-              Expanded(
-                flex: 2,
-                child: _TopPortion(pegawai: pegawai),
-              ),
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        pegawai.name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        pegawai.email,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          FloatingActionButton.extended(
-                            onPressed: () => _logout(context),
-                            heroTag: 'logout',
-                            elevation: 0,
-                            backgroundColor: Colors.red,
-                            label: const Text("Logout"),
-                            icon: const Icon(Icons.logout),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _ProfileInfoRow(pegawai: pegawai),
-                    ],
-                  ),
+        return Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: _TopPortion(pegawai: pegawai),
+            ),
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Text(
+                      pegawai.name,
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      pegawai.email,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FloatingActionButton.extended(
+                          onPressed: () => _logout(context),
+                          heroTag: 'logout',
+                          elevation: 0,
+                          backgroundColor: Colors.red,
+                          label: const Text("Logout"),
+                          icon: const Icon(Icons.logout),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _ProfileInfoRow(pegawai: pegawai),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

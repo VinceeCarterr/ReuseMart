@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reusemart_mobile/view/login_screen.dart';
 
 class PengirimanService {
   static const String baseUrl = "http://10.0.2.2:8000/api";
@@ -15,7 +17,7 @@ class PengirimanService {
     };
   }
 
-  Future<void> markAsArrived(int idPengiriman) async {
+  Future<void> markAsArrived(BuildContext context, int idPengiriman) async {
     try {
       final headers = await _getHeaders();
       final response = await http.patch(
@@ -27,17 +29,20 @@ class PengirimanService {
       );
 
       if (response.statusCode != 200) {
-        if (response.statusCode == 401) {
-          throw Exception('Unauthenticated: Please log in again');
+        await _handleError(context, response, 'Failed to mark as arrived');
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pengiriman marked as Arrived')),
+          );
         }
-        throw Exception('Failed to mark as arrived: ${response.body}');
       }
     } catch (e) {
-      throw Exception('Error marking arrived: $e');
+      await _handleError(context, e, 'Error marking arrived');
     }
   }
 
-  Future<List<dynamic>> fetchPengiriman() async {
+  Future<List<dynamic>> fetchPengiriman(BuildContext context) async {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
@@ -48,38 +53,66 @@ class PengirimanService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        if (response.statusCode == 401) {
-          throw Exception('Unauthenticated: Please log in again');
-        }
-        throw Exception('Failed to fetch pengiriman: ${response.body}');
+        await _handleError(context, response, 'Failed to fetch pengiriman');
+        return [];
       }
     } catch (e) {
-      throw Exception('Error fetching pengiriman: $e');
+      await _handleError(context, e, 'Error fetching pengiriman');
+      return [];
     }
   }
 
-  Future<List<dynamic>> fetchDeliveryHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    if (token == null) {
-      throw Exception('Unauthenticated');
+  Future<List<dynamic>> fetchDeliveryHistory(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) {
+        throw Exception('Unauthenticated');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/history-kurir'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)['data'];
+      } else {
+        await _handleError(
+            context, response, 'Failed to load delivery history');
+        return [];
+      }
+    } catch (e) {
+      await _handleError(context, e, 'Error fetching delivery history');
+      return [];
     }
+  }
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/history-kurir'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)['data'];
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthenticated');
+  Future<void> _handleError(
+      BuildContext context, dynamic error, String defaultMessage) async {
+    if (error is http.Response && error.statusCode == 401 ||
+        error.toString().contains('Unauthenticated')) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('remember_me');
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     } else {
-      throw Exception(
-          'Failed to load delivery history: ${response.statusCode}');
+      final errorMessage = error is http.Response
+          ? '$defaultMessage: ${error.body}'
+          : '$defaultMessage: $error';
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     }
   }
 }

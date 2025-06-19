@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\Penitipan;
 use App\Models\User;
+use App\Models\Kategori;
 use App\Models\FcmToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -29,6 +30,20 @@ class BarangController extends Controller
     public function index()
     {
         $barangs = Barang::with('foto')->get();
+        return response()->json($barangs);
+    }
+
+    public function indexWithKategori()
+    {
+        $barangs = Barang::with(['foto','kategori'])->get();
+        $barangs = $barangs->map(function($b) {
+            $data = $b->toArray();
+
+            $data['subKategori'] = $b->kategori['sub_kategori'] ?? [];
+
+            return $data;
+        });
+
         return response()->json($barangs);
     }
 
