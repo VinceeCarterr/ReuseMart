@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Login'), backgroundColor: Colors.green),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -183,7 +183,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
                       onPressed: _login,
-                      child: const Text('Login'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
             ),
           ],
