@@ -1,11 +1,11 @@
-// lib/view/hunter/history_hunter_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../model/transaction_line.dart';
 import '../../services/transaction_service.dart';
 import '../../components/simple_bottom_navigation.dart';
 import '../hunter/profile_hunter_page.dart';
+
+enum SortOrder { ascending, descending }
 
 class HistoryHunterPage extends StatefulWidget {
   final int hunterId;
@@ -17,6 +17,8 @@ class HistoryHunterPage extends StatefulWidget {
 
 class _HistoryHunterPageState extends State<HistoryHunterPage> {
   int _currentIndex = 0;
+  SortOrder _sortOrder = SortOrder.descending;
+
   final _service = TransactionService();
   late Future<Map<String, List<TransactionLine>>> _futureGroups;
   final NumberFormat _fmt = NumberFormat('#,##0', 'id_ID');
@@ -38,6 +40,22 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
+        actions: [
+          PopupMenuButton<SortOrder>(
+            icon: const Icon(Icons.filter_list, color: Colors.black54),
+            onSelected: (order) => setState(() => _sortOrder = order),
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: SortOrder.ascending,
+                child: Text('Asc'),
+              ),
+              const PopupMenuItem(
+                value: SortOrder.descending,
+                child: Text('Desc'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -73,17 +91,25 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
         }
 
         final entries = groups.entries.toList();
+        final sortedEntries = [...entries]..sort((a, b) {
+          final totalA = a.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
+          final totalB = b.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
+          return _sortOrder == SortOrder.ascending
+              ? totalA.compareTo(totalB)
+              : totalB.compareTo(totalA);
+        });
+
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          itemCount: entries.length,
+          itemCount: sortedEntries.length,
           itemBuilder: (ctx, i) {
-            final lines = entries[i].value;
+            final lines = sortedEntries[i].value;
             final nota = lines.first.transaksi.noNota;
             final totalItems = lines.length;
-            final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-            final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
-
-            final photoUrl = lines.first.barang.imageUrl;
+            final totalPrice =
+                lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
+            final totalKomisi = lines.fold<double>(
+                0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -163,7 +189,8 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
 
   void _showDetail(BuildContext ctx, List<TransactionLine> lines) {
     final totalPrice = lines.fold<double>(0, (sum, l) => sum + l.barang.harga);
-    final totalKomisi = lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
+    final totalKomisi =
+        lines.fold<double>(0, (sum, l) => sum + (l.komisi?.hunter ?? 0));
 
     showModalBottomSheet(
       context: ctx,
@@ -253,6 +280,11 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     );
   }
 
-  Widget _buildProfileTab() =>
-      ProfileHunterPage(hunterId: widget.hunterId);
+  _buildProfileTab() {
+    return ProfileHunterPage(
+      key: ValueKey(_currentIndex),
+      hunterId: widget.hunterId,
+    );
+  }
 }
+

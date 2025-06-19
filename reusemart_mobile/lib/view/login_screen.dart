@@ -3,7 +3,7 @@ import 'package:reusemart_mobile/model/user_model.dart';
 import 'package:reusemart_mobile/services/user_service.dart';
 import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:reusemart_mobile/view/hunter/history_hunter_page.dart';
-import 'package:reusemart_mobile/view/kurir/profile_kurir_page.dart';
+import 'package:reusemart_mobile/view/kurir/pengiriman_list_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,17 +104,18 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
         case 'kurir':
           try {
-            target = ProfileKurirPage(kurirId: uid);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setInt('kurir_id', uid);
+            target = const PengirimanListPage();
           } catch (e) {
             setState(() {
-              _errorMessage = 'Failed to load courier profile: $e';
+              _errorMessage = 'Failed to load list pengiriman: $e';
             });
             return;
           }
           break;
       }
     }
-    
 
     if (target != null) {
       Navigator.pushReplacement(
