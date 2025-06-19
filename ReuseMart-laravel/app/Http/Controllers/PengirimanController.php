@@ -117,23 +117,24 @@ class PengirimanController extends Controller
         }
     }
 
-public function getByTransaksi($transaksiId)
-{
-    try {
-        $pengiriman = Pengiriman::where('id_transaksi', $transaksiId)
-            ->with('pegawai')
-            ->first();
+    public function getByTransaksi($transaksiId)
+    {
+        try {
+            $pengiriman = Pengiriman::where('id_transaksi', $transaksiId)
+                ->with('pegawai')
+                ->first();
 
-        if (!$pengiriman) {
-            Log::info("No pengiriman found for transaksiId: $transaksiId");
-            return response()->json(['error' => 'Pengiriman not found'], 404);
+            if (!$pengiriman) {
+                Log::info("No pengiriman found for transaksiId: $transaksiId");
+                return response()->json(['error' => 'Pengiriman not found'], 404);
+            }
+
+            Log::info("Pengiriman found: " . json_encode($pengiriman));
+            return response()->json($pengiriman);
+        } catch (\Exception $e) {
+            Log::error('Error fetching pengiriman by transaksi: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch pengiriman'], 500);
         }
-
-        Log::info("Pengiriman found: " . json_encode($pengiriman));
-        return response()->json($pengiriman);
-    } catch (\Exception $e) {
-        Log::error('Error fetching pengiriman by transaksi: ' . $e->getMessage());
-        return response()->json(['error' => 'Failed to fetch pengiriman'], 500);
     }
 
     public function showPengiriman()
@@ -141,5 +142,4 @@ public function getByTransaksi($transaksiId)
         $pengiriman = Pengiriman::with(['transaksi', 'pegawai'])->get();
         return response()->json($pengiriman);
     }
-}
 }
