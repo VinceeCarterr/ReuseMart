@@ -163,3 +163,13 @@
 .navbar-pembeli .dropdown-menu .dropdown-item:hover {
     background-color: #e9ecef;
 }
+
+.mega-menu-link.btn.btn-link,
+.mega-menu-link.btn.btn-link:focus,
+.mega-menu-link.btn.btn-link:hover {
+  text-decoration: none !important;
+  color: #333          !important;
+}
+.mega-menu-link.btn.btn-link:hover {
+  color: #198754       !important;
+}
