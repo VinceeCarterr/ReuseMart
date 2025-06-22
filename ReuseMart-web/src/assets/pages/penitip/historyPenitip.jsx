@@ -369,41 +369,6 @@ const HistoryPenitip = () => {
             </div>
             {/* Actions */}
             <div className="col-auto d-flex align-items-center gap-4 pe-5">
-              <div
-                className="mega-dropdown"
-                onMouseEnter={() => setShowMega(true)}
-                onMouseLeave={() => setShowMega(false)}
-              >
-                <button className="category-toggle">Kategori</button>
-                {showMega && (
-                  <div className="mega-menu">
-                    <div className="mega-menu-sidebar">
-                      {groupedCats.map((cat, idx) => (
-                        <div
-                          key={cat.nama_kategori}
-                          className={`mega-menu-item ${
-                            idx === activeCatIdx ? "active" : ""
-                          }`}
-                          onMouseEnter={() => setActiveCatIdx(idx)}
-                        >
-                          {cat.nama_kategori}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mega-menu-content">
-                      {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
-                        <Link
-                          key={sub.id}
-                          to={`/kategori/${sub.id}`}
-                          className="mega-menu-link"
-                        >
-                          {sub.nama}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
               <Link to="/cart" className="text-dark fs-3 icon-link">
                 <FiShoppingCart />
               </Link>

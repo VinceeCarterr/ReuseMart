@@ -122,8 +122,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:penitip')->group(function () {
         Route::get('transaksi/historyPenitip', [TransaksiController::class, 'historyPenitip']);
+        Route::patch('transaksi/historyPenitip/{id}', [TransaksiController::class, 'updateHistoryPenitip']);
     });
-
 
     //kelola alamat
     Route::middleware('role:pembeli,organisasi')->group(function () {
