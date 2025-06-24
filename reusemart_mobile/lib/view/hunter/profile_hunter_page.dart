@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reusemart_mobile/view/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:reusemart_mobile/model/pegawai_model.dart';
@@ -38,7 +39,7 @@ class _ProfileHunterPageState extends State<ProfileHunterPage> {
     await prefs.remove('access_token');
     await prefs.remove('remember_me');
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const HomePage()),
       (route) => false,
     );
   }

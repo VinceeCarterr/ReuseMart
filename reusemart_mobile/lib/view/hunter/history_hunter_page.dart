@@ -36,26 +36,37 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        title: const Text('Hi, Hunter!'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
-        actions: [
-          PopupMenuButton<SortOrder>(
-            icon: const Icon(Icons.filter_list, color: Colors.black54),
-            onSelected: (order) => setState(() => _sortOrder = order),
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: SortOrder.ascending,
-                child: Text('Asc'),
-              ),
-              const PopupMenuItem(
-                value: SortOrder.descending,
-                child: Text('Desc'),
-              ),
-            ],
+        automaticallyImplyLeading: false, // no back arrow
+        backgroundColor: Colors.green, // same green as HomePage
+        centerTitle: false,
+        title: const Text(
+          'Hi, Hunter!',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
+        actions: _currentIndex == 0 // only on “History” tab
+            ? [
+                PopupMenuButton<SortOrder>(
+                  icon: const Icon(Icons.filter_list, color: Colors.white),
+                  onSelected: (order) => setState(() {
+                    _sortOrder = order;
+                  }),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: SortOrder.ascending,
+                      child: Text('Asc'),
+                    ),
+                    PopupMenuItem(
+                      value: SortOrder.descending,
+                      child: Text('Desc'),
+                    ),
+                  ],
+                ),
+              ]
+            : [], // no actions on Profile tab
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -64,13 +75,23 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
           _buildProfileTab(),
         ],
       ),
-      bottomNavigationBar: SimpleBottomNavigation(
-        navBarItems: const [
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_outlined),
+            activeIcon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline_rounded),
+            activeIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
         ],
-        initialIndex: _currentIndex,
-        onIndexChanged: (i) => setState(() => _currentIndex = i),
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+        onTap: (i) => setState(() => _currentIndex = i),
       ),
     );
   }
@@ -92,12 +113,14 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
 
         final entries = groups.entries.toList();
         final sortedEntries = [...entries]..sort((a, b) {
-          final totalA = a.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
-          final totalB = b.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
-          return _sortOrder == SortOrder.ascending
-              ? totalA.compareTo(totalB)
-              : totalB.compareTo(totalA);
-        });
+            final totalA =
+                a.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
+            final totalB =
+                b.value.fold<double>(0, (sum, l) => sum + l.barang.harga);
+            return _sortOrder == SortOrder.ascending
+                ? totalA.compareTo(totalB)
+                : totalB.compareTo(totalA);
+          });
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -287,4 +310,3 @@ class _HistoryHunterPageState extends State<HistoryHunterPage> {
     );
   }
 }
-
