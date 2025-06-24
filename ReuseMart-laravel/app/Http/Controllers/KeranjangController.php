@@ -245,7 +245,7 @@ class KeranjangController extends Controller
                     'tanggal_transaksi' => now(),
                 ]);
 
-                $noNota = sprintf('%s-%s-%s', now()->format('Y'), now()->format('m'), $transaksi->id_transaksi);
+                $noNota = sprintf('%s%s%s', now()->format('Y'), now()->format('m'), $transaksi->id_transaksi);
                 $transaksi->update(['no_nota' => $noNota]);
 
                 // Update payment with id_transaksi
