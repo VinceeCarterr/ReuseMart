@@ -75,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()), // Navigate to LoginPage after logout
+      MaterialPageRoute(builder: (_) => const HomePage()), // Navigate to LoginPage after logout
       (route) => false,
     );
   }

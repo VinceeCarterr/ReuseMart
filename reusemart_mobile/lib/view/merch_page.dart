@@ -62,7 +62,8 @@ class _MerchPageState extends State<MerchPage> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('Merchandise Shop'),
+        title: const Text('Merchandise Shop',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),

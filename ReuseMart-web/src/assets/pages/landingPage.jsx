@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { FaStar } from "react-icons/fa"; // Import FaStar for Top Seller icon
+import { FaStar } from "react-icons/fa";
 import api from "../../api/api.js";
 import "./landingPage.css";
 import NavbarLandingPage from "../components/Navbar/navbar.jsx";
