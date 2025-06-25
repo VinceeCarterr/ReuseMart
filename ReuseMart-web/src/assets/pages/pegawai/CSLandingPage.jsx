@@ -106,7 +106,7 @@ export default function CSLandingPage() {
   const fetchPenitip = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get("/penitip");
+      const { data } = await api.get("/daftar-penitip");
       setPenitipList(data);
       setError(null);
     } catch (err) {
@@ -155,7 +155,7 @@ export default function CSLandingPage() {
         fetchPenitip={fetchPenitip}
       />
 
-      <Container className="mt-5" style={{background:'none'}}>
+      <Container className="mt-5" style={{ background: 'none' }}>
         <Row className="align-items-center mb-2">
           <Col md={4}>
             <h2 className="text-success fw-bold">Daftar Penitip</h2>

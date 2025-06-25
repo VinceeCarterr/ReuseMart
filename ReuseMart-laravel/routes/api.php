@@ -62,7 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('kategori', [KategoriController::class, 'index']);
-   
+
     Route::post('/register-token', [FcmTokenController::class, 'store']);
     Route::get('/getUserPegawai', [UserController::class, 'getUserPegawai']);
 
@@ -136,7 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::middleware('role:cs')->group(function () {
-        Route::get('/penitip', [UserController::class, 'penitip']);
+        Route::get('/daftar-penitip', [UserController::class, 'penitip']);
         Route::put('/penitip/{id}', [UserController::class, 'updatePenitip']);
         Route::delete('/penitip/{id}', [UserController::class, 'destroyPenitip']);
         Route::post('/user/check-nik', [UserController::class, 'checkNIK']);

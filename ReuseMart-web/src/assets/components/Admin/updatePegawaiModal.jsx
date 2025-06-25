@@ -115,7 +115,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
         try {
             setIsSubmitting(true);
             const errors = validateForm();
-            
+
             if (Object.keys(errors).length > 0) {
                 setFormErrors(errors);
                 showToast("Harap perbaiki kesalahan pada formulir", "danger");
@@ -131,7 +131,7 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             };
 
             const id_jabatan = jabatanMap[formData.selectedJabatan];
-            
+
             if (!id_jabatan) {
                 setFormErrors({ selectedJabatan: 'Jabatan tidak valid' });
                 showToast('Jabatan tidak valid', 'danger');
@@ -150,15 +150,15 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
             };
 
             const response = await api.put(`/pegawai/${pegawai.id_pegawai}`, payload);
-            
+
             onHide();
             showToast('Berhasil mengupdate pegawai', 'success');
             fetchPegawai();
         } catch (err) {
             console.error('Update error:', err);
-            
+
             let errorMessage = 'Gagal mengupdate pegawai';
-            
+
             if (err.response) {
                 if (err.response.status === 422 && err.response.data?.errors) {
                     const validationErrors = err.response.data.errors;
@@ -302,8 +302,8 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                         </Row>
                         <Row className="mt-4 mb-3">
                             <Col md={6}>
-                                <Button 
-                                    variant="outline-danger" 
+                                <Button
+                                    variant="outline-danger"
                                     onClick={handleResetPassword}
                                     disabled={isSubmitting}
                                 >
@@ -311,8 +311,8 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                                 </Button>
                             </Col>
                             <Col md={6}>
-                                <Button 
-                                    variant="success" 
+                                <Button
+                                    variant="success"
                                     onClick={handleConfirmUpdate}
                                     disabled={isSubmitting}
                                 >
@@ -324,10 +324,10 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                 </Modal.Body>
             </Modal>
 
-            <Modal 
-                show={showConfirmModal} 
-                onHide={handleCancelConfirm} 
-                centered 
+            <Modal
+                show={showConfirmModal}
+                onHide={handleCancelConfirm}
+                centered
                 backdrop={true}
                 size="sm"
             >
@@ -338,15 +338,15 @@ const UpdatePegawaiModal = ({ show, onHide, pegawai, fetchPegawai }) => {
                     Apakah Anda yakin ingin memperbarui data pegawai?
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button 
-                        variant="secondary" 
+                    <Button
+                        variant="secondary"
                         onClick={handleCancelConfirm}
                         disabled={isSubmitting}
                     >
                         Batal
                     </Button>
-                    <Button 
-                        variant="success" 
+                    <Button
+                        variant="success"
                         onClick={handleConfirmSubmit}
                         disabled={isSubmitting}
                     >
