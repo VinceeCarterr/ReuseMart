@@ -44,7 +44,7 @@ export default function NavbarCS() {
             onClick={() => setExpanded(!expanded)}
           />
           <Navbar.Collapse id="navbar-content">
-            <Nav className="mx-auto align-items-center">
+            <Nav className="nav-container mx-auto align-items-center">
               {[
                 ["Penitip", "/CSLP"],
                 ["Klaim Merchandise", "/klaimMerch"],

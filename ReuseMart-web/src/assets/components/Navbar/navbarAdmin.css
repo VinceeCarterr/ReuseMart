@@ -90,3 +90,71 @@
   font-size: 0.85rem;
   color: #198754;
 }
+
+/* Nav pills */
+.navbar-Admin .nav-container .nav-link {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: #333;
+  background: none;
+  border-radius: 0.25rem;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease;
+  text-decoration: none !important;
+}
+
+/* hover state */
+.navbar-Admin .nav-container .nav-link:hover {
+  background-color: #f8f9fa;
+  color:            #198754;
+}
+
+/* pressed/click or keyboard focus */
+.navbar-Admin .nav-container .nav-link:active,
+.navbar-Admin .nav-container .nav-link:focus {
+  transform:        translateY(1px);
+  background-color: #e2e6ea;
+  color:            #155724;
+}
+
+/* “current page” state (react-router .active) */
+.navbar-Admin .nav-container .nav-link.active {
+  background-color: #198754;
+  color:            #fff !important;
+}
+
+/* Top Seller button → pill-style too */
+.navbar-Admin .nav-container .top-seller-btn {
+  margin-left: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  border-radius: 0.25rem;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease;
+}
+
+/* hover for Top Seller */
+.navbar-Admin .nav-container .top-seller-btn:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  color:            #198754;
+}
+
+/* pressed/click for Top Seller */
+.navbar-Admin .nav-container .top-seller-btn:active:not(:disabled),
+.navbar-Admin .nav-container .top-seller-btn:focus:not(:disabled) {
+  transform:        translateY(1px);
+  background-color: #e2e6ea;
+  color:            #155724;
+}
+
+/* disabled state */
+.navbar-Admin .nav-container .top-seller-btn:disabled {
+  opacity: 0.6;
+}
+
+

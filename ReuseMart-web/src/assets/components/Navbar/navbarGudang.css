@@ -60,3 +60,38 @@
   color: #198754;
   margin-top: 0.1rem;
 }
+
+/* pill‐style nav links */
+.navbar-Gudang .nav-container .nav-link {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: #333;
+  border-radius: 0.25rem;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease;
+}
+
+/* hover state */
+.navbar-Gudang .nav-container .nav-link:hover {
+  background-color: #f8f9fa;
+  color:     #198754;
+}
+
+/* pressed/active state when mouse is down */
+.navbar-Gudang .nav-container .nav-link:active,
+.navbar-Gudang .nav-container .nav-link:focus {
+  /* tiny “push” effect */
+  transform: translateY(1px);
+  /* slightly darker background */
+  background-color: #e2e6ea;
+  color: #155724;
+}
+
+/* the “current page” state from react-router’s isActive → adds the .active class */
+.navbar-Gudang .nav-container .nav-link.active {
+  background-color: #198754;
+  color:            #fff !important;
+}

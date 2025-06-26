@@ -44,7 +44,7 @@ export default function NavbarGudang() {
             onClick={() => setExpanded(!expanded)}
           />
           <Navbar.Collapse id="navbar-content">
-            <Nav className="mx-auto align-items-center">
+            <Nav className="nav-container mx-auto align-items-center">
               <NavLink
                 to="/gudangLP"
                 className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}

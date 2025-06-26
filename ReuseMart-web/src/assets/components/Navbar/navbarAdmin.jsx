@@ -89,7 +89,7 @@ export default function NavbarAdmin() {
             onClick={() => setExpanded(!expanded)}
           />
           <Navbar.Collapse id="navbar-content">
-            <Nav className="mx-auto align-items-center">
+            <Nav className="nav-container mx-auto align-items-center">
               <NavLink
                 to="/admin"
                 className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}

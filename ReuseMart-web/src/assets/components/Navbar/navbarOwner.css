@@ -59,3 +59,35 @@
   font-size: 0.85rem;
   color: #198754;
 }
+
+.navbar-Owner .nav-container .nav-link {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: #333;
+  border-radius: 0.25rem;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease;
+}
+
+/* hover state */
+.navbar-Owner .nav-container .nav-link:hover {
+  background-color: #f8f9fa;
+  color:            #198754;
+}
+
+/* pressed/click or keyboard focus */
+.navbar-Owner .nav-container .nav-link:active,
+.navbar-Owner .nav-container .nav-link:focus {
+  transform: translateY(1px);
+  background-color: #e2e6ea;
+  color:            #155724;
+}
+
+/* “current page” state from react-router → .active */
+.navbar-Owner .nav-container .nav-link.active {
+  background-color: #198754;
+  color:            #fff !important;
+}
