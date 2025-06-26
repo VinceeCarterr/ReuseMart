@@ -7,8 +7,8 @@ import LaporanBarangExpiredModal from '../../components/Owner/laporanBarangExpir
 import LaporanDonasiBarangModal from '../../components/Owner/laporanDonasiBarangModal.jsx';
 import LaporanRequestDonasiModal from '../../components/Owner/laporanRequestDonasiModal.jsx';
 import LaporanTransaksiPenitipModal from '../../components/Owner/laporanTransaksiPenitipModal.jsx';
-import LaporanKomisiBulananPerProduk from '../../components/Owner/laporanKomisiBUlananPerProduk.jsx';
-import LaporanPenjualanKeseluruhan from '../../components/Owner/laporanPenjualanKeseluruhan.jsx'; // Import the new component
+import LaporanKomisiBulananPerProduk from '../../components/Owner/laporanKomisiBulananPerProduk.jsx';
+import LaporanPenjualanKeseluruhan from '../../components/Owner/laporanPenjualanKeseluruhan.jsx';
 import './pelaporanPage.css';
 
 const PelaporanPage = () => {
