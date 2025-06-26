@@ -580,7 +580,7 @@ const Penjadwalan = () => {
 
   const handleOnDelivery = async (t) => {
     try {
-      await api.put(`/pengiriman/${t.pengiriman.id_pengiriman}/arrived`, {
+      await api.patch(`/pengiriman/${t.pengiriman.id_pengiriman}/arrived`, {
         status_pengiriman: "On Delivery",
       });
 
