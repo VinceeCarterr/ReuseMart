@@ -4,7 +4,7 @@ import 'package:reusemart_mobile/model/pegawai_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PegawaiService {
-  final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = 'https://mediumvioletred-newt-905266.hostingersite.com/api';
 
   Future<PegawaiModel> fetchPegawai(int idPegawai) async {
     final prefs = await SharedPreferences.getInstance();

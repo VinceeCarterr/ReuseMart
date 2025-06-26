@@ -117,7 +117,7 @@ class _ProductPageState extends State<ProductPage> {
   /// Simply launch the web URL; no add‐to‐cart logic on mobile
   Future<void> _launchWebCart() async {
     // On Android emulator: use 10.0.2.2
-    final Uri url = Uri.parse("http://10.0.2.2:5173/");
+    final Uri url = Uri.parse("https://reuse-mart.vercel.app/");
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gagal membuka browser')),
@@ -190,7 +190,7 @@ class _ProductPageState extends State<ProductPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    "http://10.0.2.2:8000/storage/${_selectedPhotoPath!}",
+                    "https://mediumvioletred-newt-905266.hostingersite.com/storage/${_selectedPhotoPath!}",
                     height: 250,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -227,7 +227,7 @@ class _ProductPageState extends State<ProductPage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: Image.network(
-                              "http://10.0.2.2:8000/storage/${f.path}",
+                              "https://mediumvioletred-newt-905266.hostingersite.com/storage/${f.path}",
                               width: 70,
                               height: 70,
                               fit: BoxFit.cover,

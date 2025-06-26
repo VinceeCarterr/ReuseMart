@@ -176,7 +176,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   final fotos = snapshot.data!;
                   if (fotos.isNotEmpty) {
                     imageUrl =
-                        "http://10.0.2.2:8000/storage/${fotos.first.path}";
+                        "https://mediumvioletred-newt-905266.hostingersite.com/storage/${fotos.first.path}";
                   }
                 }
 

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:reusemart_mobile/model/user_model.dart';
 
 class UserService {
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'https://mediumvioletred-newt-905266.hostingersite.com/api';
 
   Future<UserModel> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/login');

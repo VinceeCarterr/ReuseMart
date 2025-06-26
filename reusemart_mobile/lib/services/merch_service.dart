@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const _baseUrl = 'http://10.0.2.2:8000/api';
+  static const _baseUrl = 'https://mediumvioletred-newt-905266.hostingersite.com/api';
 
   static Future<List<Merch>> getMerchList() async {
     final prefs = await SharedPreferences.getInstance();

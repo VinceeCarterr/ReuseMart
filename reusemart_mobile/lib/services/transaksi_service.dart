@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../model/transaksi_model.dart';
 
 class TransaksiService {
-  static const String _base = 'http://10.0.2.2:8000/api';
+  static const String _base = 'https://mediumvioletred-newt-905266.hostingersite.com/api';
 
 static Future<List<Transaksi>> fetchAllTransaksi() async {
   final prefs = await SharedPreferences.getInstance();

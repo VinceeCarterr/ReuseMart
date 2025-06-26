@@ -77,7 +77,7 @@ class _MerchPageState extends State<MerchPage> {
           final merch = _merchList[index];
           final imgName = merch.namaMerch.toLowerCase().replaceAll(' ', '-');
           final assetPath =
-              "http://10.0.2.2:8000/storage/foto_merch/${imgName}.jpg";
+              "https://mediumvioletred-newt-905266.hostingersite.com/storage/Foto_merch/${imgName}.jpg";
 
           debugPrint('Loading image from: $assetPath');
           return Card(

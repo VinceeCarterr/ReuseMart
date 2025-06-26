@@ -7,7 +7,7 @@ import '../model/foto_barang_model.dart';
 import '../model/komentar_model.dart';
 
 class ProductService {
-  static const String _baseUrl = "http://10.0.2.2:8000/api";
+  static const String _baseUrl = "https://mediumvioletred-newt-905266.hostingersite.com/api";
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

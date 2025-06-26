@@ -244,7 +244,7 @@ class _TopPortion extends StatelessWidget {
                 ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: profilePictureUrl != null
-                        ? 'http://10.0.2.2:8000$profilePictureUrl'
+                        ? 'https://mediumvioletred-newt-905266.hostingersite.com/storage/$profilePictureUrl'
                         : 'https://via.placeholder.com/150',
                     fit: BoxFit.cover,
                     placeholder: (context, url) =>

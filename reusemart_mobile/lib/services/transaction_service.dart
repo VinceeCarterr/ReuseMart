@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../model/transaction_line.dart';
 
 class TransactionService {
-  final _base = 'http://10.0.2.2:8000/api';
+  final _base = 'https://mediumvioletred-newt-905266.hostingersite.com/api';
 
   Future<Map<String, List<TransactionLine>>> fetchHunterTransactions(
       int hunterId) async {
