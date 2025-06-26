@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Spinner } from "react-bootstrap";
 import api from "../../../api/api.js";
-import "./TambahPenitipModal.css";
+import "./tambahPenitipModal.css";
 
 export default function DetailPenitipModal({
   show,
