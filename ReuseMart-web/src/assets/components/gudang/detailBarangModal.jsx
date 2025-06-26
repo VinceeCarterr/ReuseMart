@@ -76,7 +76,7 @@ const DetailBarangModal = ({ show, onHide, barang, penitipanUser, barangPegawai,
                         <Col xs={12} md={6}>
                             <div className="main-image-container mb-3" style={{ width: '100%', maxHeight: '400px', overflow: 'hidden' }}>
                                 <img 
-                                    src={selectedPhoto ? `http://127.0.0.1:8000/storage/${selectedPhoto}` : "http://127.0.0.1:8000/storage/defaults/no-image.png"}
+                                    src={selectedPhoto ? `https://mediumvioletred-newt-905266.hostingersite.com/storage/${selectedPhoto}` : "http://127.0.0.1:8000/storage/defaults/no-image.png"}
                                     alt={barang?.nama_barang || "No image available"}
                                     className="main-image"
                                     style={{ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' }}
@@ -101,7 +101,7 @@ const DetailBarangModal = ({ show, onHide, barang, penitipanUser, barangPegawai,
                                                 }}
                                             >
                                                 <img 
-                                                    src={`http://127.0.0.1:8000/storage/${foto.path}`}
+                                                    src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${foto.path}`}
                                                     alt={`Foto ${index + 1}`}
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />

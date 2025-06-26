@@ -340,7 +340,7 @@ const ReqDonasi = () => {
                     <Row>
                       <Col xs={4}>
                         <Image
-                          src={`http://127.0.0.1:8000/storage/${req.contoh_foto}`}
+                          src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${req.contoh_foto}`}
                           thumbnail
                         />
                       </Col>

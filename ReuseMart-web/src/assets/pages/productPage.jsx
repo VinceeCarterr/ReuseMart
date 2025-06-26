@@ -266,7 +266,7 @@ const ProductPage = () => {
                     <Col md={6} className="my-5 d-flex flex-column align-items-center">
                         <div className="main-image-container mb-3">
                             <img
-                                src={selectedPhoto ? `http://localhost:8000/storage/${selectedPhoto}` : "image.png"}
+                                src={selectedPhoto ? `https://mediumvioletred-newt-905266.hostingersite.com/storage/${selectedPhoto}` : "image.png"}
                                 alt={barang.nama_barang}
                                 className="main-image"
                             />
@@ -281,7 +281,7 @@ const ProductPage = () => {
                                             onClick={() => setSelectedPhoto(foto.path)}
                                         >
                                             <img
-                                                src={`http://localhost:8000/storage/${foto.path}`}
+                                                src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${foto.path}`}
                                                 alt={`Foto ${index + 1}`}
                                                 className="thumbnail-image"
                                             />

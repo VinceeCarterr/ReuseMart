@@ -274,7 +274,7 @@ const HistoryPembeli = () => {
                       {groupedCats[activeCatIdx]?.sub_kategori.map((sub) => (
                         <Link
                           key={sub.id}
-                          to={`/kategori/${sub.id}`}
+                          to={`/pembeliLp`}
                           className="mega-menu-link"
                         >
                           {sub.nama}
@@ -585,7 +585,7 @@ const HistoryPembeli = () => {
                       <tr key={dt.id_dt}>
                         <td>
                           <Image
-                            src={`http://127.0.0.1:8000/storage/${fp}`}
+                            src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${fp}`}
                             thumbnail
                             style={{ width: 150 }}
                           />
@@ -640,7 +640,7 @@ const HistoryPembeli = () => {
               {showSSInline && selectedTx.pembayaran?.ss_pembayaran && (
                 <div className="text-center mb-4">
                   <Image
-                    src={`http://127.0.0.1:8000/storage/${selectedTx.pembayaran.ss_pembayaran}`}
+                    src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${selectedTx.pembayaran.ss_pembayaran}`}
                     fluid
                     style={{ maxWidth: "100%", maxHeight: 400 }}
                   />

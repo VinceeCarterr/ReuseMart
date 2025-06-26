@@ -369,9 +369,6 @@ const HistoryPenitip = () => {
             </div>
             {/* Actions */}
             <div className="col-auto d-flex align-items-center gap-4 pe-5">
-              <Link to="/cart" className="text-dark fs-3 icon-link">
-                <FiShoppingCart />
-              </Link>
               <Link to="/historyPenitip" className="text-dark fs-3 icon-link">
                 <FiClock />
               </Link>
@@ -382,10 +379,7 @@ const HistoryPenitip = () => {
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={openProfileModal}>
-                    Profil
-                  </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/orders">
-                    Pesanan Saya
+                    Tampil Profil
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={openLogoutModal}>
@@ -496,7 +490,7 @@ const HistoryPenitip = () => {
                         <Image
                           src={
                             item.foto?.length
-                              ? `http://127.0.0.1:8000/storage/${item.foto[0]}`
+                              ? `https://mediumvioletred-newt-905266.hostingersite.com/storage/${item.foto[0]}`
                               : "/placeholder.jpg"
                           }
                           thumbnail
@@ -836,7 +830,7 @@ const HistoryPenitip = () => {
                           <Carousel.Item key={i}>
                             <img
                               className="d-block w-100"
-                              src={`http://127.0.0.1:8000/storage/${path}`}
+                              src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${path}`}
                               alt={`Slide ${i + 1}`}
                               style={{ maxHeight: 300, objectFit: "contain" }}
                             />

@@ -13,7 +13,7 @@ const ReqDonasiCard = ({ reqDonasi, getUserNameById }) => (
                 <Row>
                     <Col xs={4}>
                         <Image
-                            src={`http://localhost:8000/storage/${reqDonasi.contoh_foto}`}
+                            src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${reqDonasi.contoh_foto}`}
                             thumbnail
                         />
                     </Col>

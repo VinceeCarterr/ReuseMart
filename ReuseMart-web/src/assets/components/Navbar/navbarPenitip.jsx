@@ -67,11 +67,6 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
             {/* actions */}
             <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
 
-              {/* Cart */}
-              <Link to="/cart" className="text-dark fs-3 icon-link">
-                <FiShoppingCart />
-              </Link>
-
               {/* HistoryPenitip */}
               <Link to="/historyPenitip" className="text-dark fs-3 icon-link">
                 <FiClock />
@@ -85,10 +80,7 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={openProfileModal}>
-                    Profil
-                  </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/orders">
-                    Pesanan Saya
+                    Tampil Profil
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={openLogoutModal}>

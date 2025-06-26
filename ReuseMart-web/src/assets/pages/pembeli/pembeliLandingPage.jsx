@@ -17,7 +17,7 @@ const ProductCard = ({ barang }) => (
       style={{ height: "150px", backgroundColor: "#ccc", overflow: "hidden" }}
     >
       <img
-        src={`http://127.0.0.1:8000/storage/${
+        src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${
           barang.foto?.[0]?.path ?? "defaults/no-image.png"
         }`}
         alt="Gambar 1"

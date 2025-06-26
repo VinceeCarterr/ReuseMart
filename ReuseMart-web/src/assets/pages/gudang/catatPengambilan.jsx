@@ -149,7 +149,7 @@ const CatatPengambilan = () => {
               ? new Date(tanggalTitipDate.getTime() + 30 * 24 * 3600 * 1000)
               : null;
             const imgSrc = item.foto?.length
-              ? `http://127.0.0.1:8000/storage/${
+              ? `https://mediumvioletred-newt-905266.hostingersite.com/storage/${
                   item.foto[0].path ?? item.foto[0]
                 }`
               : "/placeholder.jpg";

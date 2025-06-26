@@ -1,57 +1,78 @@
 .navbar-CS {
-    position: relative;
-    z-index: 1045;
-    background-color: #fffcf7;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    border-bottom: 4px solid #f0f0f0;
-    transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  background-color: #fffcf7;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  border-bottom: 4px solid #f0f0f0;
+  z-index: 1045;
 }
 
-.navbar-CS:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-CS .logo-container {
-    padding-right: 2rem;
-    padding-left: 1rem;
-}
-
+/* logo + divider */
 .logo-container {
-    position: relative;
-    border-right: 1px solid rgba(0, 0, 0, 0.15);
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin-right: 2rem;
+  padding-right: 1.5rem;
+  margin-right: 1.5rem;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
 }
-
-.logo-container a:hover .logo-img,
-.logo-container a:hover .logo-text {
-    transform: scale(1.05);
-    transition: transform 0.2s;
-}
-
 .logo-img {
-    height: 48px;
+  height: 48px;
+  width: auto;
 }
-
 .logo-text {
-    color: #198754;
+  color: #198754;
 }
 
-.navbar-CS .nav-link {
-    color: #333;
-    text-decoration: underline;
-    transition: color 0.2s, text-decoration-color 0.2s;
+/* nav pills */
+.nav-container .nav-link {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: #333;
+  text-decoration: underline;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+.nav-container .nav-link:hover {
+  background-color: #f8f9fa;
+  color: #198754;
+}
+.nav-container .nav-link.active {
+  background-color: #198754;
+  color: #fff !important;
+  text-decoration: none;
 }
 
-.navbar-CS .nav-link:hover {
-    color: #198754;
-    text-decoration: underline;
+/* user info */
+.user-container .user-info .username {
+  font-weight: 500;
+  color: #333;
+}
+.user-container .user-info .jabatan {
+  font-size: 0.9rem;
+  margin-top: 0.1rem;
 }
 
-.navbar-CS .active {
-    color: #198754 !important;
-    font-weight: bold;
-    text-decoration: underline;
+/* 1. Remove underlines everywhere in the navbar */
+.navbar-CS a,
+.navbar-CS a:hover {
+  text-decoration: none !important;
 }
+
+/* 2. Tidy up the user info (Vince Carter / CS) */
+.user-container {
+  display: flex;
+  align-items: center;
+}
+
+/* make name a bit bolder, darker */
+.user-container .username {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* move jabatan below or alongside, smaller & green */
+.user-container .jabatan {
+  font-size: 0.85rem;
+  color: #198754;
+}
+
