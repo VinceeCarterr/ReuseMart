@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pembayaran;
 use App\Models\Transaksi;
-use App\Models\Detiltransaksi;
+use App\Models\DetilTransaksi;
 use App\Models\Barang;
 use App\Models\FcmToken;
 use App\Models\User;

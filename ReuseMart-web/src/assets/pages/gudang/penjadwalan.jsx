@@ -1030,7 +1030,7 @@ const Penjadwalan = () => {
                                 <Carousel.Item key={i}>
                                   <img
                                     className="d-block w-100"
-                                    src={`http://127.0.0.1:8000/storage/${f.path}`}
+                                    src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${f.path}`}
                                     alt={`Slide ${i + 1}`}
                                     style={{
                                       maxHeight: 150,
@@ -1044,7 +1044,7 @@ const Penjadwalan = () => {
                             <Image
                               src={
                                 fotos.length === 1
-                                  ? `http://127.0.0.1:8000/storage/${fotos[0].path}`
+                                  ? `https://mediumvioletred-newt-905266.hostingersite.com/storage/${fotos[0].path}`
                                   : "/placeholder.jpg"
                               }
                               thumbnail

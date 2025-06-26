@@ -1,57 +1,62 @@
+/* top‐level navbar */
 .navbar-Gudang {
-    position: relative;
-    z-index: 1045;
-    background-color: #fffcf7;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    border-bottom: 4px solid #f0f0f0;
-    transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  background-color: #fffcf7;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  border-bottom: 4px solid #f0f0f0;
+  z-index: 1045;
 }
 
-.navbar-Gudang:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+/* remove underlines everywhere */
+.navbar-Gudang a,
+.navbar-Gudang a:hover {
+  text-decoration: none !important;
 }
 
-.navbar-Gudang .logo-container {
-    padding-right: 2rem;
-    padding-left: 1rem;
-}
-
+/* logo + vertical divider */
 .logo-container {
-    position: relative;
-    border-right: 1px solid rgba(0, 0, 0, 0.15);
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin-right: 2rem;
+  padding-right: 1.5rem;
+  margin-right: 1.5rem;
+  border-right: 1px solid rgba(0,0,0,0.15);
 }
-
-.logo-container a:hover .logo-img,
-.logo-container a:hover .logo-text {
-    transform: scale(1.05);
-    transition: transform 0.2s;
-}
-
 .logo-img {
-    height: 48px;
+  height: 48px;
+  width: auto;
 }
-
 .logo-text {
-    color: #198754;
+  color: #198754;
 }
 
-.navbar-Gudang .nav-link {
-    color: #333;
-    text-decoration: underline;
-    transition: color 0.2s, text-decoration-color 0.2s;
+/* pill‐style nav links */
+.nav-container .nav-link {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: #333;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+.nav-container .nav-link:hover {
+  background-color: #f8f9fa;
+  color: #198754;
+}
+.nav-container .nav-link.active {
+  background-color: #198754;
+  color: #fff !important;
 }
 
-.navbar-Gudang .nav-link:hover {
-    color: #198754;
-    text-decoration: underline;
+/* user info styling */
+.user-container {
+  display: flex;
+  align-items: center;
 }
-
-.navbar-Gudang .active {
-    color: #198754 !important;
-    font-weight: bold;
-    text-decoration: underline;
+.user-container .username {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+.user-container .jabatan {
+  font-size: 0.85rem;
+  color: #198754;
+  margin-top: 0.1rem;
 }

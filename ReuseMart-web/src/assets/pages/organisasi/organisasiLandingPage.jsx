@@ -13,7 +13,7 @@ const ProductCard = ({ barang }) => (
   <Card className="ProductCart mb-2" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
     <div style={{ height: '150px', backgroundColor: '#ccc', overflow: 'hidden' }}>
       <img 
-        src={`http://127.0.0.1:8000/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
+        src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${barang.foto?.[0]?.path ?? 'defaults/no-image.png'}`} 
         alt="Gambar 1" 
         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
       />

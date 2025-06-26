@@ -144,9 +144,6 @@ const NavbarPembeli = ({ searchQuery, onSearchChange, onCategorySelect }) => {
                   <Dropdown.Item onClick={openProfileModal}>
                     Profil
                   </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/orders">
-                    Pesanan Saya
-                  </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/alamat">
                     Atur Alamat
                   </Dropdown.Item>

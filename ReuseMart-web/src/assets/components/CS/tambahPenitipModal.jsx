@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Spinner, InputGroup } from "react-bootstrap";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from "../../../api/api.js";
-import "./TambahPenitipModal.css";
+import "./tambahPenitipModal.css";
 
 export default function TambahPenitipModal({ show, onHide, fetchPenitip }) {
   const [firstName, setFirstName] = useState("");

@@ -15,7 +15,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../api/api.js';
 import NavbarPembeliPage from '../../components/Navbar/navbarPembeli.jsx';
-import './CheckoutOptionsPage.css';
+import './checkOutOptionsPage.css';
 
 const CheckoutOptionsPage = () => {
     const { state } = useLocation();

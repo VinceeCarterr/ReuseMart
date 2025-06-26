@@ -185,13 +185,13 @@ const VerifPembayaranPage = () => {
                                     {selectedPayment.ss_pembayaran ? (
                                         <>
                                             <img
-                                                src={`http://127.0.0.1:8000/storage/${selectedPayment.ss_pembayaran}`}
+                                                src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${selectedPayment.ss_pembayaran}`}
                                                 alt="Bukti Pembayaran"
                                                 className="img-fluid rounded"
                                                 style={{ maxWidth: "100%" }}
                                                 onError={(e) => {
                                                     console.log("Failed to load image:", e.target.src);
-                                                    e.target.src = "/placeholder-image.jpg"; // Fallback
+                                                    e.target.src = "/placeholder-image.jpg";
                                                 }}
                                             />
                                         </>

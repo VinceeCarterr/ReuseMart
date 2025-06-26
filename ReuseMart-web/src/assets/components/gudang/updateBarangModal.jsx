@@ -541,7 +541,7 @@ const UpdateBarangModal = ({ show, onHide, barangId, onUpdate }) => {
                                             {formData.existingPhotos[fileIndex]?.path ? (
                                                 <div className="photo-preview">
                                                     <img
-                                                        src={`http://127.0.0.1:8000/storage/${formData.existingPhotos[fileIndex].path}`}
+                                                        src={`https://mediumvioletred-newt-905266.hostingersite.com/storage/${formData.existingPhotos[fileIndex].path}`}
                                                         alt={`Foto ${fileIndex + 1}`}
                                                         style={{ maxWidth: '150px', maxHeight: '150px' }}
                                                     />
