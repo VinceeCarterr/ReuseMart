@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, Navbar, Nav, Container } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 import "./navbarGudang.css";
 
 export default function NavbarGudang() {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userName, setUserName] = useState("User");
   const [jabatan, setJabatan] = useState("");
@@ -27,71 +28,72 @@ export default function NavbarGudang() {
   const handleConfirmLogout = () => {
     localStorage.clear();
     navigate("/");
+    setExpanded(false);
   };
 
   return (
     <>
-      <div className="navbar-Gudang py-3">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-
-          {/* Logo + divider */}
-          <div className="logo-container d-flex align-items-center">
-            <NavLink to="/gudangLP" className="logo-link d-flex align-items-center">
-              <img
-                src="/logo_ReuseMart.png"
-                alt="ReuseMart"
-                className="logo-img"
-              />
-              <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
-            </NavLink>
-          </div>
-
-          {/* Center nav pills */}
-          <div className="nav-container d-flex align-items-center">
-            <NavLink
-              to="/gudangLP"
-              className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
-            >
-              Barang
-            </NavLink>
-            <NavLink
-              to="/penitipanBarang"
-              className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
-            >
-              Penitipan
-            </NavLink>
-            <NavLink
-              to="/catatPengambilan"
-              className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
-            >
-              Catat Pengambilan
-            </NavLink>
-            <NavLink
-              to="/penjadwalan"
-              className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
-            >
-              Penjadwalan
-            </NavLink>
-          </div>
-
-          {/* User info + logout */}
-          <div className="user-container d-flex align-items-center">
-            <div className="user-info text-end">
-              <div className="username">{userName}</div>
-              {jabatan && <div className="jabatan">{jabatan}</div>}
+      <Navbar expand="lg" className="navbar-Gudang py-3" expanded={expanded}>
+        <Container fluid>
+          <Navbar.Brand as={NavLink} to="/gudangLP" className="logo-link d-flex align-items-center">
+            <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+            <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+          </Navbar.Brand>
+          <Navbar.Toggle
+            aria-controls="navbar-content"
+            onClick={() => setExpanded(!expanded)}
+          />
+          <Navbar.Collapse id="navbar-content">
+            <Nav className="mx-auto align-items-center">
+              <NavLink
+                to="/gudangLP"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Barang
+              </NavLink>
+              <NavLink
+                to="/penitipanBarang"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Penitipan
+              </NavLink>
+              <NavLink
+                to="/catatPengambilan"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Catat Pengambilan
+              </NavLink>
+              <NavLink
+                to="/penjadwalan"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Penjadwalan
+              </NavLink>
+            </Nav>
+            <div className="user-container d-flex align-items-center mt-2 mt-lg-0">
+              <div className="user-info text-end">
+                <div className="username">{userName}</div>
+                {jabatan && <div className="jabatan">{jabatan}</div>}
+              </div>
+              <Button
+                variant="outline-danger"
+                className="ms-3"
+                onClick={() => {
+                  openLogoutModal();
+                  setExpanded(false);
+                }}
+              >
+                Logout
+              </Button>
             </div>
-            <Button
-              variant="outline-danger"
-              className="ms-3"
-              onClick={openLogoutModal}
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-      {/* Logout confirmation */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>

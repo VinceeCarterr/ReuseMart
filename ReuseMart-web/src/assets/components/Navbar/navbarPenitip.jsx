@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Form, Dropdown, Modal, Button } from "react-bootstrap";
+import { Form, Dropdown, Modal, Button, Navbar, Nav, Container } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FiShoppingCart, FiClock, FiUser } from "react-icons/fi";
 import api from "../../../api/api.js";
 import ProfilePenitipModal from "../Penitip/profilePenitipModal.jsx";
 import "./navbarPenitip.css";
 
-const NavbarPenitip = ({searchQuery, onSearchChange}) => {
+const NavbarPenitip = ({ searchQuery, onSearchChange }) => {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
 
   let userName = "Penitip";
   try {
@@ -15,7 +16,7 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
     const fn = prof.first_name ?? prof.firstName ?? prof.name;
     const ln = prof.last_name ?? prof.lastName;
     userName = fn && ln ? `${fn} ${ln}` : fn || "Penitip";
-  } catch { }
+  } catch {}
 
   // modals
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -26,6 +27,7 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
   const handleConfirmLogout = () => {
     localStorage.clear();
     navigate("/");
+    setExpanded(false);
   };
 
   const openProfileModal = () => setShowProfileModal(true);
@@ -33,65 +35,60 @@ const NavbarPenitip = ({searchQuery, onSearchChange}) => {
 
   return (
     <>
-      <div className="py-3 navbar-penitip">
-        <div className="container-fluid">
-          <div className="row align-items-center justify-content-between">
-            {/* Logo */}
-            <div className="col-auto logo-container">
-              <Link
-                to="/penitipLP"
-                className="d-flex align-items-center text-decoration-none logo-link"
-              >
-                <img
-                  src="/logo_ReuseMart.png"
-                  alt="ReuseMart"
-                  className="logo-img"
-                />
-                <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
-              </Link>
-            </div>
-
-            {/* Search */}
-            <div className="col-md-6 px-2">
-              <Form>
+      <Navbar expand="lg" className="py-3 navbar-penitip" expanded={expanded}>
+        <Container fluid>
+          <Navbar.Brand as={Link} to="/penitipLP" className="d-flex align-items-center text-decoration-none logo-link">
+            <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+            <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+          </Navbar.Brand>
+          <Navbar.Toggle
+            aria-controls="navbar-content"
+            onClick={() => setExpanded(!expanded)}
+          />
+          <Navbar.Collapse id="navbar-content">
+            <Nav className="ms-auto align-items-center w-100">
+              <Form className="d-flex mx-auto my-2 my-lg-0" style={{ maxWidth: "600px", width: "100%" }}>
                 <Form.Control
                   type="search"
                   placeholder="Mau cari apa hari ini?"
                   className="search-input"
                   value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  onChange={(e) => {
+                    onSearchChange(e.target.value);
+                    setExpanded(false);
+                  }}
                 />
               </Form>
-            </div>
-
-            {/* actions */}
-            <div className="col-auto d-flex align-items-center gap-4 action-group pe-5">
-
-              {/* HistoryPenitip */}
-              <Link to="/historyPenitip" className="text-dark fs-3 icon-link">
-                <FiClock />
-              </Link>
-
-              {/* Profile */}
-              <Dropdown>
-                <Dropdown.Toggle variant="light" className="profile-toggle">
-                  <FiUser className="me-2 fs-3" />
-                  <span className="fw-bold">{userName}</span>
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={openProfileModal}>
-                    Tampil Profil
-                  </Dropdown.Item>
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={openLogoutModal}>
-                    Keluar
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div className="d-flex align-items-center gap-4 action-group pe-lg-5">
+                <Nav.Link as={Link} to="/historyPenitip" className="text-dark fs-3 icon-link" onClick={() => setExpanded(false)}>
+                  <FiClock />
+                </Nav.Link>
+                <Dropdown>
+                  <Dropdown.Toggle variant="light" className="profile-toggle">
+                    <FiUser className="me-2 fs-3" />
+                    <span className="fw-bold">{userName}</span>
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={() => {
+                      openProfileModal();
+                      setExpanded(false);
+                    }}>
+                      Tampil Profil
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={() => {
+                      openLogoutModal();
+                      setExpanded(false);
+                    }}>
+                      Keluar
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
       {/* Logout Confirmation */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>

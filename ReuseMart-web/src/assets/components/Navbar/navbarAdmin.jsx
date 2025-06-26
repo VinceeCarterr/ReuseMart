@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, Navbar, Nav, Container } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 import api from "../../../api/api.js";
 import "./navbarAdmin.css";
 
 export default function NavbarAdmin() {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userName, setUserName] = useState("User");
   const [jabatan, setJabatan] = useState("");
@@ -14,7 +15,7 @@ export default function NavbarAdmin() {
   const [hasAttemptedThisMonth, setHasAttemptedThisMonth] = useState(false);
 
   useEffect(() => {
-    // load profile
+    // Load profile
     try {
       const prof = JSON.parse(localStorage.getItem("profile") || "{}");
       const fn = prof.first_name ?? prof.firstName ?? prof.name;
@@ -45,6 +46,7 @@ export default function NavbarAdmin() {
   const handleConfirmLogout = () => {
     localStorage.clear();
     navigate("/");
+    setExpanded(false);
   };
 
   const handleSetTopSeller = async () => {
@@ -53,7 +55,7 @@ export default function NavbarAdmin() {
       if (res.status !== 200) {
         throw new Error(res.data.error || "Gagal mengatur Top Seller");
       }
-      // mark attempt
+      // Mark attempt
       const today = new Date();
       const key = `${today.getFullYear()}-${today.getMonth() + 1}`;
       localStorage.setItem("topSellerLastAttempt", key);
@@ -71,61 +73,71 @@ export default function NavbarAdmin() {
       });
     }
     setTimeout(() => setNotification(null), 3000);
+    setExpanded(false);
   };
 
   return (
     <>
-      <div className="navbar-Admin py-3">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          {/* Logo + divider */}
-          <div className="logo-container d-flex align-items-center">
-            <NavLink to="/adminPage" className="logo-link d-flex align-items-center">
-              <img
-                src="/logo_ReuseMart.png"
-                alt="ReuseMart"
-                className="logo-img"
-              />
-              <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
-            </NavLink>
-          </div>
-
-          {/* Center nav + Top Seller */}
-          <div className="nav-container d-flex align-items-center">
-            <NavLink to="/admin" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-              Pegawai
-            </NavLink>
-            <NavLink to="/organisasi" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-              Organisasi
-            </NavLink>
-            <Button
-              variant="outline-success"
-              className="top-seller-btn"
-              onClick={handleSetTopSeller}
-              disabled={!isTopSellerButtonEnabled}
-              title={
-                hasAttemptedThisMonth
-                  ? "Top Seller sudah diatur untuk bulan ini"
-                  : "Hanya tersedia pada tanggal 11 Juni 2025"
-              }
-            >
-              Top Seller
-            </Button>
-          </div>
-
-          {/* User info + logout */}
-          <div className="user-container d-flex align-items-center">
-            <div className="user-info text-end">
-              <div className="username">{userName}</div>
-              {jabatan && <div className="jabatan">{jabatan}</div>}
+      <Navbar expand="lg" className="navbar-Admin py-3" expanded={expanded}>
+        <Container fluid>
+          <Navbar.Brand as={NavLink} to="/adminPage" className="logo-link d-flex align-items-center">
+            <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+            <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+          </Navbar.Brand>
+          <Navbar.Toggle
+            aria-controls="navbar-content"
+            onClick={() => setExpanded(!expanded)}
+          />
+          <Navbar.Collapse id="navbar-content">
+            <Nav className="mx-auto align-items-center">
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Pegawai
+              </NavLink>
+              <NavLink
+                to="/organisasi"
+                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                onClick={() => setExpanded(false)}
+              >
+                Organisasi
+              </NavLink>
+              <Button
+                variant="outline-success"
+                className="top-seller-btn mt-2 mt-lg-0"
+                onClick={handleSetTopSeller}
+                disabled={!isTopSellerButtonEnabled}
+                title={
+                  hasAttemptedThisMonth
+                    ? "Top Seller sudah diatur untuk bulan ini"
+                    : "Hanya tersedia pada tanggal 11 Juni 2025"
+                }
+              >
+                Top Seller
+              </Button>
+            </Nav>
+            <div className="user-container d-flex align-items-center mt-2 mt-lg-0">
+              <div className="user-info text-end">
+                <div className="username">{userName}</div>
+                {jabatan && <div className="jabatan">{jabatan}</div>}
+              </div>
+              <Button
+                variant="outline-danger"
+                className="ms-3"
+                onClick={() => {
+                  openLogoutModal();
+                  setExpanded(false);
+                }}
+              >
+                Logout
+              </Button>
             </div>
-            <Button variant="outline-danger" className="ms-3" onClick={openLogoutModal}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-      {/* Logout confirmation */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>
@@ -141,7 +153,6 @@ export default function NavbarAdmin() {
         </Modal.Footer>
       </Modal>
 
-      {/* Notification toast */}
       {notification && (
         <div
           className={`alert alert-${

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, Navbar, Nav, Container } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 import "./navbarCS.css";
 
 export default function NavbarCS() {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userName, setUserName] = useState("User");
   const [jabatan, setJabatan] = useState("");
@@ -27,59 +28,58 @@ export default function NavbarCS() {
   const handleConfirmLogout = () => {
     localStorage.clear();
     navigate("/");
+    setExpanded(false);
   };
 
   return (
     <>
-      <div className="navbar-CS py-3">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          {/* logo + vertical divider */}
-          <div className="logo-container d-flex align-items-center">
-            <NavLink to="/CSLP" className="logo-link d-flex align-items-center">
-              <img
-                src="/logo_ReuseMart.png"
-                alt="ReuseMart"
-                className="logo-img"
-              />
-              <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
-            </NavLink>
-          </div>
-
-          {/* center nav */}
-          <div className="nav-container d-flex">
-            {[
-              ["Penitip", "/CSLP"],
-              ["Klaim Merchandise", "/klaimMerch"],
-              ["Verifikasi Pembayaran", "/verif-pembayaran"],
-            ].map(([label, to]) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `nav-link${isActive ? " active" : ""}`
-                }
+      <Navbar expand="lg" className="navbar-CS py-3" expanded={expanded}>
+        <Container fluid>
+          <Navbar.Brand as={NavLink} to="/CSLP" className="logo-link d-flex align-items-center">
+            <img src="/logo_ReuseMart.png" alt="ReuseMart" className="logo-img" />
+            <span className="ms-2 fs-4 fw-bold logo-text">ReuseMart</span>
+          </Navbar.Brand>
+          <Navbar.Toggle
+            aria-controls="navbar-content"
+            onClick={() => setExpanded(!expanded)}
+          />
+          <Navbar.Collapse id="navbar-content">
+            <Nav className="mx-auto align-items-center">
+              {[
+                ["Penitip", "/CSLP"],
+                ["Klaim Merchandise", "/klaimMerch"],
+                ["Verifikasi Pembayaran", "/verif-pembayaran"],
+              ].map(([label, to]) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                  onClick={() => setExpanded(false)}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </Nav>
+            <div className="user-container d-flex align-items-center mt-2 mt-lg-0">
+              <div className="user-info text-end">
+                <div className="username">{userName}</div>
+                {jabatan && <small className="jabatan">{jabatan}</small>}
+              </div>
+              <Button
+                variant="outline-danger"
+                className="ms-3"
+                onClick={() => {
+                  openLogoutModal();
+                  setExpanded(false);
+                }}
               >
-                {label}
-              </NavLink>
-            ))}
-          </div>
+                Logout
+              </Button>
+            </div>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-          {/* user info + logout */}
-          <div className="user-container">
-            <div className="username">{userName}</div>
-            {jabatan && <small className="jabatan">{jabatan}</small>}
-            <Button
-              variant="outline-danger"
-              className="ms-3"
-              onClick={openLogoutModal}
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* logout confirm */}
       <Modal show={showLogoutModal} onHide={closeLogoutModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Konfirmasi Logout</Modal.Title>

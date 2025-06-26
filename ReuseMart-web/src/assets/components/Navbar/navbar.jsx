@@ -1,39 +1,62 @@
-import React from "react";
-import { Form, Button } from "react-bootstrap";
+import React, { useState } from "react";
+import { Form, Button, Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "./navbar.css";
 
 const NavbarLandingPage = ({ onLoginClick, onRegisterClick, searchQuery, onSearchChange }) => {
-  return (
-    <div className="py-3 navbar-landingPage">
-      <div className="container-fluid">
-        <div className="row align-items-center">
-          <div className="col text-center fw-bold text-success">
-            <Link to="/">
-              <img src="/logo_ReuseMart.png" alt="ReuseMart Logo" style={{ height: "60px" }} />
-              <span className="ms-2 fs-4 fw-bold text-success logo-text">ReuseMart</span>
-            </Link>
-          </div>
+  const [expanded, setExpanded] = useState(false);
 
-          <div className="col-6">
-            <Form className="d-flex">
+  return (
+    <Navbar expand="lg" className="py-3 navbar-landingPage" expanded={expanded}>
+      <Container fluid>
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <img src="/logo_ReuseMart.png" alt="ReuseMart Logo" style={{ height: "60px" }} />
+          <span className="ms-2 fs-4 fw-bold text-success logo-text">ReuseMart</span>
+        </Navbar.Brand>
+        <Navbar.Toggle 
+          aria-controls="navbar-content" 
+          onClick={() => setExpanded(!expanded)}
+        />
+        <Navbar.Collapse id="navbar-content">
+          <Nav className="ms-auto align-items-center w-100">
+            <Form className="d-flex mx-auto my-2 my-lg-0" style={{ maxWidth: "600px", width: "100%" }}>
               <Form.Control
                 type="search"
                 placeholder="Mau cari apa hari ini?"
                 className="me-2"
                 value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  setExpanded(false);
+                }}
               />
             </Form>
-          </div>
-
-          <div className="col text-center">
-            <Button variant="outline-success" className="me-2" onClick={onLoginClick}>Masuk</Button>
-            <Button variant="success" onClick={onRegisterClick}>Daftar</Button>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div className="d-flex justify-content-center justify-content-lg-end">
+              <Button 
+                variant="outline-success" 
+                className="me-2 my-1" 
+                onClick={() => {
+                  onLoginClick();
+                  setExpanded(false);
+                }}
+              >
+                Masuk
+              </Button>
+              <Button 
+                variant="success" 
+                className="my-1" 
+                onClick={() => {
+                  onRegisterClick();
+                  setExpanded(false);
+                }}
+              >
+                Daftar
+              </Button>
+            </div>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 };
 
