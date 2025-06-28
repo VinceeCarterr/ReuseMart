@@ -47,7 +47,7 @@ class Barang {
   /// Full URL to the first photo, or a default if none.
   String get imageUrl {
     if (foto.isNotEmpty) {
-      return "http://10.0.2.2:8000/storage/${foto.first.path}";
+      return "https://mediumvioletred-newt-905266.hostingersite.com/storage/${foto.first.path}";
     }
     return "http://10.0.2.2:8000/storage/defaults/no-image.png";
   }
